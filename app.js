@@ -40,6 +40,7 @@ app.listen(4000, () => {
 //--------------------
 const userRouter =  require('./router/usersRouter');
 const postRouter =  require('./router/postRouter');
+const authRouter =  require('./router/authRouter');
 
 
 
@@ -53,6 +54,7 @@ app.get('/', (req, res, next) => {
 })
 app.use('/users', userRouter)
 app.use('/posts', postRouter)
+app.use('/auth', authRouter)
 
 app.use((req, res, next) => {
     return res.status(400).send({ message: "400 bad request" })

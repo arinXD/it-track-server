@@ -11,14 +11,13 @@ datasource db {
 }
 
 model Student {
-  id       Int    @id @default(autoincrement())
-  stu_id   String @unique
-  email    String @unique
-  password String @db.VarChar(255)
-  name     String 
+  id       Int     @id @default(autoincrement())
+  stu_id   String? @unique
+  email    String  @unique
+  password String  @db.VarChar(255)
+  name     String
+  image     String?
 }
-
-
 
 model Post {
   id        Int      @id @default(autoincrement())
