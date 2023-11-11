@@ -23,14 +23,14 @@ app.use(cors({
     origin: ["http://localhost:4000"]
 }))
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.use(logger('dev'));
 app.use(session({
     secret: "secret",
     resave: false,
     saveUninitialized: true,
 }))
-// app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, 'public')))
 
 //--------------------
 // 
@@ -60,7 +60,7 @@ app.listen(port, async () => {
 
 //--------------------
 // 
-//  router
+//  import router
 //
 //--------------------
 const userRouter = require('./router/usersRouter');
@@ -69,7 +69,7 @@ const studentAuthRouter = require('./router/studentAuthRouter');
 
 //--------------------
 // 
-//  routing
+//  middleware router
 //
 //--------------------
 app.get('/', (req, res, next) => {
@@ -94,7 +94,7 @@ app.get("/api/test", async (req, res) => {
 })
 
 app.use((req, res, next) => {
-    return res.status(400).send({ message: "400 bad request" })
+    return res.status(400).json({ message: "400 bad request" })
 });
 
 module.exports = app;

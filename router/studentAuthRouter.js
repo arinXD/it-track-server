@@ -2,6 +2,11 @@ var express = require('express');
 var router = express.Router();
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
+const multer  = require('multer');
+const upload = multer();
+const bodyParser = require('body-parser');
+
+// router.use(bodyParser.urlencoded({ extended: true }));
 
 router.post('/signin', async (req, res, next) => {
     try {
