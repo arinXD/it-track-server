@@ -2,11 +2,7 @@ var express = require('express');
 var router = express.Router();
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
-const multer  = require('multer');
-const upload = multer();
-const bodyParser = require('body-parser');
-
-// router.use(bodyParser.urlencoded({ extended: true }));
+require("dotenv").config();
 
 router.post('/signin', async (req, res, next) => {
     try {
@@ -31,12 +27,12 @@ router.post('/signin', async (req, res, next) => {
                 name,
                 image: userData.image,
                 role: "student"
-            }, process.env.SECRET_KEY, { expiresIn: "1h" });
+            }, process.env.SECRET_KEY, { expiresIn: "2h" });
 
             return res.status(200).json({
                 ok: true,
-                // user: userData,
-                token
+                user: userData,
+                // token
             });
         } else {
             return res.status(401).json({

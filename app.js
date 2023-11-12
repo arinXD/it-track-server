@@ -20,7 +20,10 @@ const app = express()
 app.use(express.json());
 app.use(cors({
     credentials: true,
-    origin: ["http://localhost:4000"]
+    origin: [
+        "http://localhost:4000",
+        "http://localhost:3000",
+    ]
 }))
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
