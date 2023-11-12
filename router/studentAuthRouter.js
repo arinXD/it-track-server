@@ -22,16 +22,22 @@ router.post('/signin', async (req, res, next) => {
 
         if (match) {
             const name = `${userData.fname} ${userData.lname}`;
-            const token = jwt.sign({
-                email,
-                name,
-                image: userData.image,
-                role: "student"
-            }, process.env.SECRET_KEY, { expiresIn: "2h" });
+            // const token = jwt.sign({
+            //     email,
+            //     name,
+            //     image: userData.image,
+            //     role: "student"
+            // }, process.env.SECRET_KEY, { expiresIn: "2h" });
 
             return res.status(200).json({
                 ok: true,
-                user: userData,
+                user: {
+                    stu_id: userData.stu_id,
+                    email,
+                    name,
+                    image: userData.image,
+                    role: "student"
+                },
                 // token
             });
         } else {
