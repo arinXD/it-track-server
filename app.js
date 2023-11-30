@@ -23,6 +23,7 @@ app.use(cors({
     origin: [
         "http://localhost:4000",
         "http://localhost:3000",
+        // "http://192.168.31.116:3000",
     ]
 }))
 app.use(cookieParser());
@@ -49,11 +50,18 @@ const initMySQL = async () => {
         password: '',
         database: "it_track"
     })
+    // conn = await mysql.createConnection({
+    //     host: '172.104.62.106',
+    //     user: 'arincvaq_arin',
+    //     password: '0847172849aB_',
+    //     database: "arincvaq_it_track"
+    // })
 }
 app.listen(port, async () => {
     try {
         await initMySQL()
     } catch (err) {
+        console.error(err);
         console.log("!!!!WARNING!!!!");
         console.log(` - Check database connection`);
     } finally {
