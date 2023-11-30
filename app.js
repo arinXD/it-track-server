@@ -84,7 +84,7 @@ const studentAuthRouter = require('./router/studentAuthRouter');
 //
 //--------------------
 app.get('/', (req, res, next) => {
-    return res.json({ message: 'Hi' })
+    return res.json({ message: 'IT Track by IT64' })
 })
 app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
