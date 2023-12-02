@@ -76,7 +76,7 @@ app.listen(port, async () => {
 //--------------------
 const userRouter = require('./router/usersRouter');
 const postRouter = require('./router/postRouter');
-const studentAuthRouter = require('./router/studentAuthRouter');
+const authRouter = require('./router/authRouter');
 
 //--------------------
 // 
@@ -88,7 +88,7 @@ app.get('/', (req, res, next) => {
 })
 app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
-app.use('/api/auth/student', studentAuthRouter)
+app.use('/api/auth', authRouter)
 
 app.get("/api/test", async (req, res) => {
     try {
