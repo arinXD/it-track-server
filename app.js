@@ -4,11 +4,10 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors')
+const session = require('express-session')
 
 const mysql = require('mysql2/promise')
-const jwt = require("jsonwebtoken")
-const bcrypt = require("bcrypt")
-const session = require('express-session')
+const { Sequelize, DataTypes } = require('sequelize')
 
 const app = express()
 
@@ -57,9 +56,25 @@ const initMySQL = async () => {
     //     database: "arincvaq_it_track"
     // })
 }
+const sequelize = new Sequelize('it_track', 'root', '', {
+    host: 'localhost',
+    dialect: 'mysql'
+})
+
+const Acadyear = sequelize.define('acadyears', {
+    acadyear: {
+        type: DataTypes.INTEGER
+    },
+}, {
+    paranoid: true, // Enable soft deletes
+    timestamps: true, // Include timestamps (createdAt, updatedAt)
+    underscored: true, // Use snake_case for column names
+    deletedAt: 'deleted_at' // Custom name for the deletedAt column
+});
 app.listen(port, async () => {
     try {
         await initMySQL()
+        // await sequelize.sync()
     } catch (err) {
         console.error(err);
         console.log("!!!!WARNING!!!!");
@@ -77,6 +92,8 @@ app.listen(port, async () => {
 const userRouter = require('./router/usersRouter');
 const postRouter = require('./router/postRouter');
 const authRouter = require('./router/authRouter');
+const studentRouter = require('./router/studentRouter');
+const acadYearRouter = require('./router/acadYearRouter');
 
 //--------------------
 // 
@@ -89,6 +106,8 @@ app.get('/', (req, res, next) => {
 app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
 app.use('/api/auth', authRouter)
+app.use('/api/student', studentRouter)
+app.use('/api/acadyear', acadYearRouter)
 
 app.get("/api/test", async (req, res) => {
     try {
