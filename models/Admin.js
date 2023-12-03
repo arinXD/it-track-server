@@ -3,14 +3,17 @@ const {
     Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-    class Student extends Model {
+    class Admin extends Model {
+        /**
+         * Helper method for defining associations.
+         * This method is not a part of Sequelize lifecycle.
+         * The `models/index` file will call this method automatically.
+         */
         static associate(models) {
-            // define association (relation) here
-            this.hasOne(models.EmailVerify);
+            // define association here
         }
     }
-    Student.init({
-        stu_id: DataTypes.INTEGER,
+    Admin.init({
         email: DataTypes.STRING,
         password: DataTypes.STRING,
         fname: DataTypes.STRING,
@@ -20,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
         verification: DataTypes.BOOLEAN,
     }, {
         sequelize,
-        modelName: 'Student',
+        modelName: 'Admin',
     });
-    return Student;
+    return Admin;
 };

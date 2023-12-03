@@ -1,5 +1,8 @@
 const bcrypt = require("bcrypt")
 const nodemailer = require("nodemailer")
+const models = require('../models');
+const EmailVerify = models.EmailVerify
+const Student = models.Student
 require("dotenv").config();
 
 var mailSender = nodemailer.createTransport({
@@ -13,16 +16,27 @@ var mailSender = nodemailer.createTransport({
 const verifyEmail = async (req, res) => {
     try {
         const { id: studentId, uniqueString } = req.params
-        const [userVerify] = await conn.query(`SELECT * FROM email_verify WHERE student_id='${studentId}'`);
+        const userVerify = await EmailVerify.findOne({ where: { student_id: studentId } })
+        // const [userVerify] = await conn.query(`SELECT * FROM email_verify WHERE student_id='${studentId}'`);
 
-        if (userVerify.length > 0) {
-            const { expired_at, verify_string } = userVerify[0]
+        if (userVerify) {
+            const { expired_at, verify_string } = userVerify
             const hastUniqueString = verify_string
             const now = new Date()
             if (expired_at < now || expired_at == now) {
                 // expired || หมดเวลายืนยัน
-                await conn.query(`DELETE FROM email_verify WHERE student_id='${studentId}'`)
-                await conn.query(`DELETE FROM students WHERE id='${studentId}'`)
+                // await conn.query(`DELETE FROM email_verify WHERE student_id='${studentId}'`)
+                // await conn.query(`DELETE FROM students WHERE id='${studentId}'`)
+                await EmailVerify.destroy({
+                    where: {
+                        student_id: studentId
+                    },
+                });
+                await Student.destroy({
+                    where: {
+                        id: studentId
+                    },
+                });
                 return res.status(400).json({
                     ok: false,
                     message: "This link has expired. Please sign up again."
@@ -33,16 +47,29 @@ const verifyEmail = async (req, res) => {
                     .then(async result => {
                         if (result) {
                             // update student email verify
-                            await conn.query(`UPDATE students SET verification = 1 WHERE id='${studentId}'`)
+                            // await conn.query(`UPDATE students SET verification = 1 WHERE id='${studentId}'`)
+                            await Student.update({ verification: 1 }, {
+                                where: {
+                                    id: studentId,
+                                },
+                            });
                             // delete email verification
-                            await conn.query(`DELETE FROM email_verify WHERE student_id='${studentId}'`)
-                            const stuData = await conn.query(`SELECT * FROM students WHERE id = '${studentId}'`)
-                            const { email } = stuData[0][0]
+                            // await conn.query(`DELETE FROM email_verify WHERE student_id='${studentId}'`)
+                            await EmailVerify.destroy({
+                                where: {
+                                    student_id: studentId
+                                },
+                            });
+                            // const stuData = await conn.query(`SELECT * FROM students WHERE id = '${studentId}'`)
+                            const studentEmail = await Student.findOne({
+                                where: { id: studentId }, attributes: ['email'],
+                            })
+                            // const { email } = stuData[0][0]
                             return res.status(200).json({
                                 ok: true,
                                 message: "Your email has verified.",
                                 userData: {
-                                    email,
+                                    email: studentEmail.email,
                                 }
                             });
                         } else {
@@ -90,13 +117,12 @@ const sendVerification = async (req, res) => {
         html: htmlTemplate
     }
     try {
-        const [user] = await conn.query(`SELECT id FROM students WHERE email='${email}'`)
-        const { id } = user[0]
-        const [checkVerify] = await conn.query(`SELECT * FROM email_verify WHERE student_id='${id}'`);
-        if (checkVerify[0]) {
-
+        // const [user] = await conn.query(`SELECT id FROM students WHERE email='${email}'`)
+        // const [checkVerify] = await conn.query(`SELECT * FROM email_verify WHERE student_id='${id}'`);
+        const user = await Student.findOne({ where: { email: email }, attributes: ['id'] })
+        const checkVerify = await EmailVerify.findOne({ where: { student_id: user.id } })
+        if (checkVerify) {
             await mailSender.sendMail(mailOption);
-
             return res.status(201).json({
                 ok: true,
                 message: "Sending verification."

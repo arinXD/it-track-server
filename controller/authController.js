@@ -2,6 +2,11 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const nodemailer = require("nodemailer")
 const { v4: uuidv4 } = require("uuid")
+const models = require('../models');
+const Student = models.Student
+const Teacher = models.Ttudent
+const Admin = models.Admin
+const EmailVerify = models.EmailVerify
 require("dotenv").config();
 
 var mailSender = nodemailer.createTransport({
@@ -34,7 +39,8 @@ const sendEmailVerification = async ({ id, email }) => {
             expired_at: new Date()
         }
         verifyData.expired_at.setHours(verifyData.expired_at.getHours() + 6);
-        await conn.query("INSERT INTO email_verify SET ?", verifyData)
+        // await conn.query("INSERT INTO email_verify SET ?", verifyData)
+        await EmailVerify.create(verifyData)
         await mailSender.sendMail(mailOption);
 
         // return เพื่อนำไปเก็บไว้ใน cookie สำหรับ resend email
@@ -49,31 +55,73 @@ const sendEmailVerification = async ({ id, email }) => {
 const getRole = (email) => {
     const studentEmail = "kkumail.com"
     const teacherEmail = "kku.ac.th"
+    const adminEmail = "admin.com"
+    let role, model
     if (email.includes(studentEmail)) {
-        return "student"
+        role = "student"
+        model = Student
     }
     else if (email.includes(teacherEmail)) {
-        return "teacher"
-    } else {
-        return "user"
+        role = "teacher"
+        model = Teacher
     }
+    else if (email.includes(adminEmail)) {
+        role = "admin"
+        model = Admin
+    } else {
+        role = "user"
+        model = Student
+    }
+    return { role, model }
 }
 
+/*
+*   1st method
+    if (role === "student" || role === "user") {
+        result = await Student.findOne({
+            where: { email: email }
+        });
+    } else if (role === "teacher") {
+        result = await Teacher.findOne({
+            where: { email: email }
+        });
+    } else if (role === "admin") {
+        result = await Admin.findOne({
+            where: { email: email }
+        });
+    }
+*/
 const signInCredentials = async (req, res, next) => {
     try {
+        /*
+        *   check execution time
+        *   1st codezup: 88.434ms
+        *   2nd codezup: 32.987ms
+        */
+        console.time('codezup')
+
+        /*
+        *   2nd method
+        */
+
         // console.log('Received form data:', req.body)
         const { email, password } = req.body;
-        const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
+        const { role, model } = getRole(email)
+        const userData = await model.findOne({
+            where: { email: email }
+        });
 
-        if (result.length === 0) {
+        console.timeEnd('codezup')
+        // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
+
+        if (!userData) {
             return res.status(401).json({
                 ok: false,
                 message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
             });
         }
 
-        const userData = result[0];
-        if (!userData.verification) {
+        if (!(userData.verification)) {
             return res.status(400).json({
                 ok: false,
                 message: "อีเมลของคุณยังไม่ถูกยืนยัน กรุณาตรวจสอบ inbox อีเมล"
@@ -83,18 +131,15 @@ const signInCredentials = async (req, res, next) => {
 
         if (match) {
             const name = `${userData.fname} ${userData.lname}`;
-            const role = getRole(email)
             // const token = jwt.sign({
             //     email,
             //     name,
             //     image: userData.image,
             //     role: "student"
             // }, process.env.SECRET_KEY, { expiresIn: "2h" });
-
             return res.status(200).json({
                 ok: true,
                 user: {
-                    stu_id: userData.stu_id,
                     email,
                     name,
                     image: userData.image,
@@ -123,33 +168,38 @@ const signInCredentials = async (req, res, next) => {
 const signInGoogle = async (req, res, next) => {
     try {
         const { email } = req.body;
-        const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
+        const { role, model } = getRole(email)
+
+        const result = await model.findOne({
+            where: { email: email }
+        });
+
+        // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
+
         // email doesn't match
-        if (result.length === 0) {
+        if (!result) {
             const useData = {
-                stu_id: null,
                 email,
                 sign_in_type: "google",
                 verification: 1,
             }
-            await conn.query("INSERT INTO students SET ?", useData)
-            const role = getRole(email)
+            // await conn.query("INSERT INTO students SET ?", useData)
+            const insertedData = await model.create(useData)
+            console.log(insertedData);
             return res.status(201).json({
                 ok: true,
                 data: {
-                    stu_id: null,
                     role
                 }
             })
         } else {
-            const { sign_in_type } = result[0]
+            const { sign_in_type } = result
             if (sign_in_type == "google") {
                 // email match
-                const role = getRole(email)
                 return res.status(200).json({
                     ok: true,
                     data: {
-                        ...result[0],
+                        ...result,
                         role
                     }
                 })
@@ -175,28 +225,27 @@ const signInGoogle = async (req, res, next) => {
 const signInVerify = async (req, res) => {
     const { email } = req.body;
     try {
-        const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
-        const userData = result[0];
+        // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
 
-        if (result.length === 0) {
+        const userData = await Student.findOne({ where: { email } });
+
+        if (!userData) {
             return res.status(401).json({
                 ok: false,
                 message: "ไม่พบที่อยู่อีเมล"
             });
         }
-        if (!userData.verification) {
+        if (!(userData.verification)) {
             return res.status(400).json({
                 ok: false,
                 message: "อีเมลของคุณยังไม่ถูกยืนยัน กรุณาตรวจสอบ inbox อีเมล"
             });
         }
         const name = `${userData.fname} ${userData.lname}`;
-        const role = getRole(email)
-
+        const { role } = getRole(email)
         return res.status(200).json({
             ok: true,
             userData: {
-                stu_id: userData.stu_id,
                 email,
                 name,
                 image: userData.image,
@@ -214,11 +263,14 @@ const signInVerify = async (req, res) => {
         });
     }
 }
+
 const signUp = async (req, res, next) => {
     try {
         const { email, password, fname, lname } = req.body
-        const [findEmail] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
-        if (findEmail.length) {
+        const { model } = getRole(email)
+        const findEmail = await model.findOne({ where: { email } })
+        // const [findEmail] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
+        if (findEmail) {
             return res.status(401).json({
                 ok: false,
                 message: "อีเมลนี้ถูกใช้งานแล้ว",
@@ -243,8 +295,10 @@ const signUp = async (req, res, next) => {
             image: "/image/user.png"
         }
 
-        const insertData = await conn.query("INSERT INTO students SET ?", useData)
-        const sendEmailStatus = await sendEmailVerification({ id: insertData[0].insertId, email })
+        // here
+        const insertData = await model.create(useData)
+        // const insertData = await conn.query("INSERT INTO students SET ?", useData)
+        const sendEmailStatus = await sendEmailVerification({ id: insertData.id, email })
         if (sendEmailStatus) {
             const token = jwt.sign({
                 email,
@@ -268,10 +322,10 @@ const signUp = async (req, res, next) => {
             })
         }
     } catch (err) {
-        if (err.code == "ER_DUP_ENTRY") {
+        if (err) {
             return res.status(409).json({
                 ok: false,
-                message: err.sqlMessage
+                message: err
             })
         }
         console.error(err);

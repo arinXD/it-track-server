@@ -1,23 +1,21 @@
 'use strict';
 const {
-  Model
+    Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class EmailVerify extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // define association here
+    class EmailVerify extends Model {
+        static associate(models) {
+            // define association here
+            this.belongsTo(models.Student);
+        }
     }
-  }
-  EmailVerify.init({
-    verify_string: DataTypes.STRING
-  }, {
-    sequelize,
-    modelName: 'EmailVerify',
-  });
-  return EmailVerify;
+    EmailVerify.init({
+        student_id: DataTypes.INTEGER,
+        verify_string: DataTypes.STRING,
+        expired_at: DataTypes.DATE
+    }, {
+        sequelize,
+        modelName: 'EmailVerify',
+    });
+    return EmailVerify;
 };
