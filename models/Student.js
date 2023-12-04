@@ -6,7 +6,9 @@ module.exports = (sequelize, DataTypes) => {
     class Student extends Model {
         static associate(models) {
             // define association (relation) here
-            this.hasOne(models.EmailVerify);
+            this.hasOne(models.EmailVerify, {
+                foreignKey: "student_id"
+            });
         }
     }
     Student.init({

@@ -5,8 +5,11 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class EmailVerify extends Model {
         static associate(models) {
-            // define association here
-            this.belongsTo(models.Student);
+            // Define association here
+            this.belongsTo(models.Student, {
+                foreignKey: 'student_id', // Specify the correct foreign key
+                targetKey: 'id', // Specify the target key in the Student model
+            });
         }
     }
     EmailVerify.init({
