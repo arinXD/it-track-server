@@ -1,4 +1,3 @@
-const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -73,6 +72,8 @@ const Acadyear = sequelize.define('acadyears', {
 });
 app.listen(port, async () => {
     try {
+        // await sequelize.sync({force:true})
+        await sequelize.sync()
         await initMySQL()
         // await sequelize.sync()
     } catch (err) {
@@ -97,6 +98,17 @@ const acadYearRouter = require('./router/acadYearRouter');
 
 //--------------------
 // 
+//  subject router
+//
+//--------------------
+
+const subjectRouter = require('./router/subjectRouter');
+const categoryRouter = require('./router/categoryRouter');
+const groupRouter = require('./router/groupRouter');
+const subGroupRouter = require('./router/subGroupRouter');
+
+//--------------------
+// 
 //  middleware router
 //
 //--------------------
@@ -108,6 +120,11 @@ app.use('/api/posts', postRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/student', studentRouter)
 app.use('/api/acadyear', acadYearRouter)
+
+app.use('/api/subjects', subjectRouter);
+app.use('/api/categories', categoryRouter);
+app.use('/api/groups', groupRouter);
+app.use('/api/subgroups', subGroupRouter);
 
 app.get("/api/test", async (req, res) => {
     try {
