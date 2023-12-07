@@ -1,14 +1,12 @@
-const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors')
+const session = require('express-session')
 
 const mysql = require('mysql2/promise')
-const jwt = require("jsonwebtoken")
-const bcrypt = require("bcrypt")
-const session = require('express-session')
+const { Sequelize, DataTypes } = require('sequelize')
 
 const app = express()
 
@@ -57,9 +55,27 @@ const initMySQL = async () => {
     //     database: "arincvaq_it_track"
     // })
 }
+const sequelize = new Sequelize('it_track', 'root', '', {
+    host: 'localhost',
+    dialect: 'mysql'
+})
+
+const Acadyear = sequelize.define('acadyears', {
+    acadyear: {
+        type: DataTypes.INTEGER
+    },
+}, {
+    paranoid: true, // Enable soft deletes
+    timestamps: true, // Include timestamps (createdAt, updatedAt)
+    underscored: true, // Use snake_case for column names
+    deletedAt: 'deleted_at' // Custom name for the deletedAt column
+});
 app.listen(port, async () => {
     try {
+        // await sequelize.sync({force:true})
+        await sequelize.sync()
         await initMySQL()
+        // await sequelize.sync()
     } catch (err) {
         console.error(err);
         console.log("!!!!WARNING!!!!");
@@ -76,7 +92,21 @@ app.listen(port, async () => {
 //--------------------
 const userRouter = require('./router/usersRouter');
 const postRouter = require('./router/postRouter');
-const studentAuthRouter = require('./router/studentAuthRouter');
+const authRouter = require('./router/authRouter');
+const studentRouter = require('./router/studentRouter');
+const acadYearRouter = require('./router/acadYearRouter');
+const adminRouter = require('./router/adminRouter');
+
+//--------------------
+// 
+//  subject router
+//
+//--------------------
+
+const subjectRouter = require('./router/subjectRouter');
+const categoryRouter = require('./router/categoryRouter');
+const groupRouter = require('./router/groupRouter');
+const subGroupRouter = require('./router/subGroupRouter');
 
 //--------------------
 // 
@@ -84,11 +114,19 @@ const studentAuthRouter = require('./router/studentAuthRouter');
 //
 //--------------------
 app.get('/', (req, res, next) => {
-    return res.json({ message: 'Hi' })
+    return res.json({ message: 'IT Track by IT64' })
 })
+app.use('/api/admin', adminRouter)
 app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
-app.use('/api/auth/student', studentAuthRouter)
+app.use('/api/auth', authRouter)
+app.use('/api/student', studentRouter)
+app.use('/api/acadyear', acadYearRouter)
+
+app.use('/api/subjects', subjectRouter);
+app.use('/api/categories', categoryRouter);
+app.use('/api/groups', groupRouter);
+app.use('/api/subgroups', subGroupRouter);
 
 app.get("/api/test", async (req, res) => {
     try {
