@@ -6,14 +6,14 @@ module.exports = (sequelize, DataTypes) => {
     class EmailVerify extends Model {
         static associate(models) {
             // Define association here
-            this.belongsTo(models.Student, {
-                foreignKey: 'student_id', // Specify the correct foreign key
+            this.belongsTo(models.User, {
+                foreignKey: 'user_id', // Specify the correct foreign key
                 targetKey: 'id', // Specify the target key in the Student model
             });
         }
     }
     EmailVerify.init({
-        student_id: DataTypes.INTEGER,
+        user_id: DataTypes.INTEGER,
         verify_string: DataTypes.STRING,
         expired_at: DataTypes.DATE
     }, {

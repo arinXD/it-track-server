@@ -95,6 +95,7 @@ const postRouter = require('./router/postRouter');
 const authRouter = require('./router/authRouter');
 const studentRouter = require('./router/studentRouter');
 const acadYearRouter = require('./router/acadYearRouter');
+const adminRouter = require('./router/adminRouter');
 
 //--------------------
 // 
@@ -115,6 +116,7 @@ const subGroupRouter = require('./router/subGroupRouter');
 app.get('/', (req, res, next) => {
     return res.json({ message: 'IT Track by IT64' })
 })
+app.use('/api/admin', adminRouter)
 app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
 app.use('/api/auth', authRouter)
