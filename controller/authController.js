@@ -64,6 +64,7 @@ const getRole = (email) => {
         model = Teacher
     } else {
         role = "user"
+        model = null
     }
     return { role, model }
 }
@@ -102,7 +103,7 @@ const signInCredentials = async (req, res, next) => {
         const { role, model } = getRole(email)
         const user = await User.findOne({
             where: { email: email },
-            includes: {
+            include: {
                 model
             }
         });
@@ -127,7 +128,7 @@ const signInCredentials = async (req, res, next) => {
 
         if (match) {
             let child = {}
-            if(model){
+            if (model) {
                 const modelName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
                 child = user[modelName]
             }
@@ -172,11 +173,19 @@ const signInGoogle = async (req, res, next) => {
     try {
         const { email } = req.body;
         const { role, model } = getRole(email)
-
-        const result = await User.findOne({
-            where: { email }
-        });
-
+        let result
+        if (model) {
+            result = await User.findOne({
+                where: { email },
+                include: {
+                    model
+                }
+            });
+        } else {
+            result = await User.findOne({
+                where: { email },
+            });
+        }
         // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
 
         // email doesn't match
@@ -185,25 +194,45 @@ const signInGoogle = async (req, res, next) => {
                 email,
                 sign_in_type: "google",
                 verification: 1,
+                role
             }
             // await conn.query("INSERT INTO students SET ?", useData)
             const user = await User.create(useData)
+            let child = {}
             if (model) {
-                await model.create({ user_id: user.id })
+                child = await model.create({ user_id: user.id })
+                child = {
+                    ...child.dataValues
+                }
+                if (user.role === "student") {
+                    child.stu_id = child.stu_id || null
+                }
             }
             return res.status(201).json({
                 ok: true,
                 data: {
-                    role
+                    role,
+                    ...child
                 }
             })
         } else {
             const { sign_in_type } = result
             if (sign_in_type == "google") {
                 // email match
+                let child = {}
+                if (model) {
+                    if (!(result.role === "user")) {
+                        const modelName = result.role.charAt(0).toUpperCase() + result.role.slice(1);
+                        child = result[modelName]
+                        child = { ...child.dataValues }
+                    }
+                }
                 return res.status(200).json({
                     ok: true,
-                    data: result
+                    data: {
+                        role: result.role,
+                        ...child
+                    },
                 })
             } else {
                 return res.status(409)

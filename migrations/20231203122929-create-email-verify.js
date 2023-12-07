@@ -11,13 +11,13 @@ module.exports = {
             },
             user_id: {
                 allowNull: false,
-                autoIncrement: false,
+                unique: true,
                 type: Sequelize.INTEGER,
                 references: {
                     model: 'users',
                     key: 'id',
-                    onDelete: 'CASCADE',
                 },
+                onDelete: 'CASCADE',
             },
             verify_string: {
                 type: Sequelize.STRING
