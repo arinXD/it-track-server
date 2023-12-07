@@ -224,7 +224,9 @@ const signInGoogle = async (req, res, next) => {
                     if (!(result.role === "user")) {
                         const modelName = result.role.charAt(0).toUpperCase() + result.role.slice(1);
                         child = result[modelName]
-                        child = { ...child.dataValues }
+                        if (child) {
+                            child = { ...child.dataValues }
+                        }
                     }
                 }
                 return res.status(200).json({
