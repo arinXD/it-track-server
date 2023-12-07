@@ -9,6 +9,7 @@ const mysql = require('mysql2/promise')
 const { Sequelize, DataTypes } = require('sequelize')
 
 const app = express()
+// test awdwdwd
 
 //--------------------
 // 
