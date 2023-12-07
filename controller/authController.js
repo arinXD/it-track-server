@@ -3,9 +3,9 @@ const jwt = require("jsonwebtoken")
 const nodemailer = require("nodemailer")
 const { v4: uuidv4 } = require("uuid")
 const models = require('../models');
+const User = models.User
 const Student = models.Student
-const Teacher = models.Ttudent
-const Admin = models.Admin
+const Teacher = models.Teacher
 const EmailVerify = models.EmailVerify
 require("dotenv").config();
 
@@ -34,7 +34,7 @@ const sendEmailVerification = async ({ id, email }) => {
     try {
         const hastUniqueString = await bcrypt.hash(uniqueString, 10)
         const verifyData = {
-            student_id: id,
+            user_id: id,
             verify_string: hastUniqueString,
             expired_at: new Date()
         }
@@ -55,22 +55,15 @@ const sendEmailVerification = async ({ id, email }) => {
 const getRole = (email) => {
     const studentEmail = "kkumail.com"
     const teacherEmail = "kku.ac.th"
-    const adminEmail = "admin.com"
     let role, model
     if (email.includes(studentEmail)) {
         role = "student"
         model = Student
-    }
-    else if (email.includes(teacherEmail)) {
+    } else if (email.includes(teacherEmail)) {
         role = "teacher"
         model = Teacher
-    }
-    else if (email.includes(adminEmail)) {
-        role = "admin"
-        model = Admin
     } else {
         role = "user"
-        model = Student
     }
     return { role, model }
 }
@@ -107,30 +100,39 @@ const signInCredentials = async (req, res, next) => {
         // console.log('Received form data:', req.body)
         const { email, password } = req.body;
         const { role, model } = getRole(email)
-        const userData = await model.findOne({
-            where: { email: email }
+        const user = await User.findOne({
+            where: { email: email },
+            includes: {
+                model
+            }
         });
 
         console.timeEnd('codezup')
         // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
 
-        if (!userData) {
+        if (!user) {
             return res.status(401).json({
                 ok: false,
-                message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
+                message: "อีเมลผู้ใช้ไม่ถูกต้อง"
             });
         }
 
-        if (!(userData.verification)) {
+        if (!(user.verification)) {
             return res.status(400).json({
                 ok: false,
                 message: "อีเมลของคุณยังไม่ถูกยืนยัน กรุณาตรวจสอบ inbox อีเมล"
             });
         }
-        const match = await bcrypt.compare(password, userData.password);
+        const match = await bcrypt.compare(password, user.password);
 
         if (match) {
-            const name = `${userData.fname} ${userData.lname}`;
+            let child = {}
+            if(model){
+                const modelName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                child = user[modelName]
+            }
+            const name = `${user.fname} ${user.lname}`;
+
             // const token = jwt.sign({
             //     email,
             //     name,
@@ -146,14 +148,15 @@ const signInCredentials = async (req, res, next) => {
                     role,
                     fname: userData.fname,
                     lname: userData.lname,
-                    verification: userData.verification
+                    verification: userData.verification,
+                    ...child
                 },
                 // token
             });
         } else {
             return res.status(401).json({
                 ok: false,
-                message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
+                message: "รหัสผ่านไม่ถูกต้อง"
             });
         }
     } catch (err) {
@@ -170,8 +173,8 @@ const signInGoogle = async (req, res, next) => {
         const { email } = req.body;
         const { role, model } = getRole(email)
 
-        const result = await model.findOne({
-            where: { email: email }
+        const result = await User.findOne({
+            where: { email }
         });
 
         // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
@@ -184,8 +187,10 @@ const signInGoogle = async (req, res, next) => {
                 verification: 1,
             }
             // await conn.query("INSERT INTO students SET ?", useData)
-            const insertedData = await model.create(useData)
-            console.log(insertedData);
+            const user = await User.create(useData)
+            if (model) {
+                await model.create({ user_id: user.id })
+            }
             return res.status(201).json({
                 ok: true,
                 data: {
@@ -198,10 +203,7 @@ const signInGoogle = async (req, res, next) => {
                 // email match
                 return res.status(200).json({
                     ok: true,
-                    data: {
-                        ...result,
-                        role
-                    }
+                    data: result
                 })
             } else {
                 return res.status(409)
@@ -227,7 +229,7 @@ const signInVerify = async (req, res) => {
     try {
         // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
 
-        const userData = await Student.findOne({ where: { email } });
+        const userData = await User.findOne({ where: { email } });
 
         if (!userData) {
             return res.status(401).json({
@@ -242,14 +244,13 @@ const signInVerify = async (req, res) => {
             });
         }
         const name = `${userData.fname} ${userData.lname}`;
-        const { role } = getRole(email)
         return res.status(200).json({
             ok: true,
             userData: {
                 email,
                 name,
                 image: userData.image,
-                role,
+                role: userData.role,
                 fname: userData.fname,
                 lname: userData.lname,
                 verification: userData.verification
@@ -267,8 +268,8 @@ const signInVerify = async (req, res) => {
 const signUp = async (req, res, next) => {
     try {
         const { email, password, fname, lname } = req.body
-        const { model } = getRole(email)
-        const findEmail = await model.findOne({ where: { email } })
+        const { role, model } = getRole(email)
+        const findEmail = await User.findOne({ where: { email } })
         // const [findEmail] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
         if (findEmail) {
             return res.status(401).json({
@@ -277,28 +278,25 @@ const signUp = async (req, res, next) => {
                 errorField: "email"
             });
         }
-        // const [findStuId] = await conn.query(`SELECT * FROM students WHERE stu_id='${stu_id}'`);
-        // if (findStuId.length) {
-        //     return res.status(401).json({
-        //         ok: false,
-        //         message: "รหัสนักศึกษานี้ถูกไปใช้งานแล้ว",
-        //         errorField: "stu_id"
-        //     });
-        // }
 
         const passwordHash = await bcrypt.hash(password, 10)
         const useData = {
             email,
             password: passwordHash,
+            image: "/image/user.png",
+            role,
             fname,
             lname,
-            image: "/image/user.png"
+            sign_in_type: "credentials",
         }
 
-        // here
-        const insertData = await model.create(useData)
+        const user = await User.create(useData)
+        if (model) {
+            await model.create({ user_id: user.id })
+        }
+
         // const insertData = await conn.query("INSERT INTO students SET ?", useData)
-        const sendEmailStatus = await sendEmailVerification({ id: insertData.id, email })
+        const sendEmailStatus = await sendEmailVerification({ id: user.id, email })
         if (sendEmailStatus) {
             const token = jwt.sign({
                 email,

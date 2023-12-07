@@ -15,32 +15,14 @@ module.exports = {
                 defaultValue: null,
                 type: Sequelize.STRING
             },
-            email: {
+            user_id: {
                 allowNull: false,
                 unique: true,
-                type: Sequelize.STRING
-            },
-            password: {
-                allowNull: true,
-                defaultValue: null,
-                type: Sequelize.STRING
-            },
-            fname: {
-                type: Sequelize.STRING
-            },
-            lname: {
-                type: Sequelize.STRING
-            },
-            image: {
-                type: Sequelize.STRING
-            },
-            sign_in_type: {
-                type: Sequelize.STRING
-            },
-            verification: {
-                allowNull: false,
-                defaultValue: 0,
-                type: Sequelize.BOOLEAN
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'users',
+                    key: 'id'
+                },
             },
             createdAt: {
                 type: Sequelize.DATE,

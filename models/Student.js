@@ -6,20 +6,15 @@ module.exports = (sequelize, DataTypes) => {
     class Student extends Model {
         static associate(models) {
             // define association (relation) here
-            this.hasOne(models.EmailVerify, {
-                foreignKey: "student_id"
+            this.belongsTo(models.User, {
+                foreignKey: 'user_id', // Specify the correct foreign key
+                targetKey: 'id', // Specify the target key in the Student model
             });
         }
     }
     Student.init({
+        user_id: DataTypes.INTEGER,
         stu_id: DataTypes.INTEGER,
-        email: DataTypes.STRING,
-        password: DataTypes.STRING,
-        fname: DataTypes.STRING,
-        lname: DataTypes.STRING,
-        image: DataTypes.STRING,
-        sign_in_type: DataTypes.STRING,
-        verification: DataTypes.BOOLEAN,
     }, {
         sequelize,
         modelName: 'Student',

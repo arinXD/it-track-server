@@ -9,16 +9,15 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-            student_id: {
+            user_id: {
                 allowNull: false,
                 autoIncrement: false,
-                primaryKey: true,
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'students',
-                    key: 'id'
+                    model: 'users',
+                    key: 'id',
+                    onDelete: 'CASCADE',
                 },
-                allowNull: false
             },
             verify_string: {
                 type: Sequelize.STRING

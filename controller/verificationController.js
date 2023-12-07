@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt")
 const nodemailer = require("nodemailer")
 const models = require('../models');
 const EmailVerify = models.EmailVerify
-const Student = models.Student
+const User = models.User
 require("dotenv").config();
 
 var mailSender = nodemailer.createTransport({
@@ -15,8 +15,8 @@ var mailSender = nodemailer.createTransport({
 
 const verifyEmail = async (req, res) => {
     try {
-        const { id: studentId, uniqueString } = req.params
-        const userVerify = await EmailVerify.findOne({ where: { student_id: studentId } })
+        const { id: user_id, uniqueString } = req.params
+        const userVerify = await EmailVerify.findOne({ where: { user_id } })
         // const [userVerify] = await conn.query(`SELECT * FROM email_verify WHERE student_id='${studentId}'`);
 
         if (userVerify) {
@@ -29,12 +29,12 @@ const verifyEmail = async (req, res) => {
                 // await conn.query(`DELETE FROM students WHERE id='${studentId}'`)
                 await EmailVerify.destroy({
                     where: {
-                        student_id: studentId
+                        user_id
                     },
                 });
-                await Student.destroy({
+                await User.destroy({
                     where: {
-                        id: studentId
+                        id: user_id
                     },
                 });
                 return res.status(400).json({
@@ -48,28 +48,28 @@ const verifyEmail = async (req, res) => {
                         if (result) {
                             // update student email verify
                             // await conn.query(`UPDATE students SET verification = 1 WHERE id='${studentId}'`)
-                            await Student.update({ verification: 1 }, {
+                            await User.update({ verification: 1 }, {
                                 where: {
-                                    id: studentId,
+                                    id: user_id,
                                 },
                             });
                             // delete email verification
                             // await conn.query(`DELETE FROM email_verify WHERE student_id='${studentId}'`)
                             await EmailVerify.destroy({
                                 where: {
-                                    student_id: studentId
+                                    user_id
                                 },
                             });
                             // const stuData = await conn.query(`SELECT * FROM students WHERE id = '${studentId}'`)
-                            const studentEmail = await Student.findOne({
-                                where: { id: studentId }, attributes: ['email'],
+                            const userEmail = await User.findOne({
+                                where: { id: user_id }, attributes: ['email'],
                             })
                             // const { email } = stuData[0][0]
                             return res.status(200).json({
                                 ok: true,
                                 message: "Your email has verified.",
                                 userData: {
-                                    email: studentEmail.email,
+                                    email: userEmail.email,
                                 }
                             });
                         } else {
@@ -119,8 +119,8 @@ const sendVerification = async (req, res) => {
     try {
         // const [user] = await conn.query(`SELECT id FROM students WHERE email='${email}'`)
         // const [checkVerify] = await conn.query(`SELECT * FROM email_verify WHERE student_id='${id}'`);
-        const user = await Student.findOne({ where: { email: email }, attributes: ['id'] })
-        const checkVerify = await EmailVerify.findOne({ where: { student_id: user.id } })
+        const user = await User.findOne({ where: { email: email }, attributes: ['id'] })
+        const checkVerify = await EmailVerify.findOne({ where: { user_id: user.id } })
         if (checkVerify) {
             await mailSender.sendMail(mailOption);
             return res.status(201).json({
