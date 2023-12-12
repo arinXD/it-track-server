@@ -9,7 +9,6 @@ const mysql = require('mysql2/promise')
 const { Sequelize, DataTypes } = require('sequelize')
 
 const app = express()
-// test awdwdwd
 
 //--------------------
 // 
@@ -88,7 +87,7 @@ app.listen(port, async () => {
 
 //--------------------
 // 
-//  import router
+//  import router && middleware
 //
 //--------------------
 const userRouter = require('./router/usersRouter');
@@ -97,6 +96,7 @@ const authRouter = require('./router/authRouter');
 const studentRouter = require('./router/studentRouter');
 const acadYearRouter = require('./router/acadYearRouter');
 const adminRouter = require('./router/adminRouter');
+const adminMiddleware = require("./middleware/adminMiddleware")
 
 //--------------------
 // 
@@ -122,8 +122,7 @@ app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/student', studentRouter)
-app.use('/api/acadyear', acadYearRouter)
-
+app.use('/api/acadyear', adminMiddleware, acadYearRouter)
 app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/groups', groupRouter);
