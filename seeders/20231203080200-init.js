@@ -30,9 +30,20 @@ module.exports = {
                 updatedAt: new Date()
             },
         ], {});
+        await queryInterface.bulkInsert('users', [
+            {
+                email: "rakuzanoat@gmail.com",
+                role: "admin",
+                sign_in_type: "google",
+                verification: 1,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+        ], {});
     },
 
     async down(queryInterface, Sequelize) {
         await queryInterface.bulkDelete('acadyears', null, {});
+        await queryInterface.bulkDelete('users', null, {});
     }
 };

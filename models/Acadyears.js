@@ -10,11 +10,16 @@ module.exports = (sequelize, DataTypes) => {
         }
     }
     Acadyears.init({
-        acadyear: DataTypes.INTEGER,
+        acadyear: {
+            type: DataTypes.INTEGER,
+            primaryKey: true, // Add this line to specify acadyear as the primary key
+        },
         daletedAt: DataTypes.DATE
     }, {
         sequelize,
         modelName: 'Acadyears',
+        paranoid: true,
+        deletedAt: 'daletedAt',
     });
     return Acadyears;
 };
