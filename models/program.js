@@ -1,26 +1,27 @@
 'use strict';
 const {
-  Model
+    Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Program extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // define association (relation) here
-      this.hasOne(models.ProgramCode, {
-        foreignKey: 'program_id'
-      });
+    class Program extends Model {
+
+        static associate(models) {
+            // define association (relation) here
+            this.hasOne(models.ProgramCode, {
+                foreignKey: 'program'
+            });
+        }
     }
-  }
-  Program.init({
-    program_title: DataTypes.STRING
-  }, {
-    sequelize,
-    modelName: 'Program',
-  });
-  return Program;
+    Program.init({
+        program: {
+            type: DataTypes.STRING,
+            primaryKey: true, // Add this line to specify acadyear as the primary key
+        },
+        title_en: DataTypes.STRING,
+        title_th: DataTypes.STRING,
+    }, {
+        sequelize,
+        modelName: 'Program',
+    });
+    return Program;
 };

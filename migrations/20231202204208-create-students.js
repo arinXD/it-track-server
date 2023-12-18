@@ -25,6 +25,41 @@ module.exports = {
                 },
                 onDelete: 'CASCADE',
             },
+            program: {
+                allowNull: true,
+                defaultValue: null,
+                type: Sequelize.STRING,
+                references: {
+                    model: 'programs',
+                    key: 'program',
+                },
+                onDelete: 'SET NULL',
+            },
+            courses_type: {
+                allowNull: true,
+                defaultValue: null,
+                type: Sequelize.STRING,
+            },
+            acadyear: {
+                allowNull: true,
+                defaultValue: null,
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'acadyears',
+                    key: 'acadyear',
+                },
+                onDelete: 'SET NULL',
+            },
+            track: {
+                allowNull: true,
+                defaultValue: null,
+                type: Sequelize.STRING,
+                references: {
+                    model: 'tracks',
+                    key: 'track',
+                },
+                onDelete: 'SET NULL',
+            },
             createdAt: {
                 type: Sequelize.DATE,
             },

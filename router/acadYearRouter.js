@@ -11,9 +11,9 @@ const formatDateTime = (date) => {
         year: "numeric",
         month: "numeric",
         day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
+        // hour: "numeric",
+        // minute: "numeric",
+        // second: "numeric",
         hour12: false,
     };
 
@@ -79,27 +79,27 @@ router.get("/:id", async (req, res) => {
 })
 
 router.post("/", async (req, res) => {
-    const data = req.body
+    const { acadyear } = req.body
     try {
-        const insertData = await Acadyears.create(data)
+        await Acadyears.create({ acadyear })
         return res.status(200).json({
             ok: true,
-            data: insertData
+            message: `เพิ่มปีการศึกษา ${acadyear} เรียบร้อย`
         })
     } catch (error) {
-        const { value, type } = error.errors.map(e => {
-            if (e.value && e.type) {
-                return {
-                    value: e.value,
-                    type: e.type,
-                };
-            }
-            return null;
-        }).filter(Boolean)[0];
+        // const { value, type } = error.errors.map(e => {
+        //     if (e.value && e.type) {
+        //         return {
+        //             value: e.value,
+        //             type: e.type,
+        //         };
+        //     }
+        //     return null;
+        // }).filter(Boolean)[0];
 
         return res.status(500).json({
             ok: false,
-            message: `type: ${type} (${value})`
+            message: `ปีการศึกษา ${acadyear} ถูกเพิ่มแล้ว`
         })
     }
 })
@@ -107,15 +107,28 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
     const id = req.params.id
     const data = req.body
+    if (id === data.acadyear) {
+        return res.status(200).json({
+            ok: true,
+            message: null
+        })
+    }
     try {
-        const result = await Acadyears.update(data, {
+        const acadData = await Acadyears.findOne({ where: { acadyear: id } })
+        if (!acadData) {
+            return res.status(404).json({
+                ok: true,
+                message: `หาปีการศึกษาไม่พบ (${id})`
+            })
+        }
+        await Acadyears.update(data, {
             where: {
                 acadyear: id,
             },
         });
         return res.status(200).json({
             ok: true,
-            data: result
+            message: `ปีการศึกษา ${id} ถูกแก้ไขเป็น ${data.acadyear}`
         })
     } catch (error) {
         console.log(error);
@@ -129,14 +142,41 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
     const id = req.params.id
     try {
-        const result = await Acadyears.destroy({
+        await Acadyears.destroy({
             where: {
                 acadyear: id
             },
+            force: true
         });
         return res.status(200).json({
             ok: true,
-            data: result
+            message: `ลบปีการศึกษา ${id} เรียบร้อย`
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error"
+        })
+    }
+})
+router.delete("/", async (req, res) => {
+    const { acadyears } = req.body
+    try {
+        const delAcad = []
+        acadyears.forEach(async acadyear => {
+            delAcad.push(acadyear)
+            await Acadyears.destroy({
+                where: {
+                    acadyear
+                },
+                force: true
+            });
+
+        });
+        return res.status(200).json({
+            ok: true,
+            message: `ลบปีการศึกษา ${delAcad.join(", ")} เรียบร้อย`
         })
     } catch (error) {
         console.log(error);

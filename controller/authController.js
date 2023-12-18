@@ -3,10 +3,12 @@ const jwt = require("jsonwebtoken")
 const nodemailer = require("nodemailer")
 const { v4: uuidv4 } = require("uuid")
 const models = require('../models');
+const { log } = require("console");
 const User = models.User
 const Student = models.Student
 const Teacher = models.Teacher
 const EmailVerify = models.EmailVerify
+const StudentData = models.StudentData
 require("dotenv").config();
 
 var mailSender = nodemailer.createTransport({
@@ -68,6 +70,14 @@ const getRole = (email) => {
     }
     return { role, model }
 }
+const getStdID = async (email) => {
+    const data = await StudentData.findOne({ where: { email } })
+    const stuId = data.student_code
+    return stuId
+}
+// const getStudentID = async (email)=>{
+//     const stuId = await 
+// }
 
 /*
 *   1st method
@@ -170,37 +180,51 @@ const signInCredentials = async (req, res, next) => {
 }
 
 const signInGoogle = async (req, res, next) => {
+    const { email } = req.body;
+    var dataEmail
     try {
-        const { email } = req.body;
+        const decode = jwt.verify(email, process.env.SECRET_KEY);
+        dataEmail = decode.data.email
+    } catch (err) {
+        return res.status(401).json({
+            ok: false,
+            message: "Authentication failed. Invalid token.",
+        });
+    }
+    try {
         const { role, model } = getRole(email)
         let result
         if (model) {
             result = await User.findOne({
-                where: { email },
+                where: { email: dataEmail },
                 include: {
                     model
                 }
             });
         } else {
             result = await User.findOne({
-                where: { email },
+                where: { email: dataEmail },
             });
         }
-        // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
-
         // email doesn't match
         if (!result) {
             const useData = {
-                email,
+                email: dataEmail,
                 sign_in_type: "google",
                 verification: 1,
                 role
             }
-            // await conn.query("INSERT INTO students SET ?", useData)
+
             const user = await User.create(useData)
             let child = {}
             if (model) {
-                child = await model.create({ user_id: user.id })
+                if (user.role === "student") {
+                    const stu_id = await getStdID(dataEmail)
+
+                    child = await model.create({ user_id: user.id, stu_id: stu_id })
+                } else {
+                    child = await model.create({ user_id: user.id })
+                }
                 child = {
                     ...child.dataValues
                 }

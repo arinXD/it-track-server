@@ -2,26 +2,29 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('SubGroups', {
-            id: {
+        await queryInterface.createTable('ProgramCodes', {
+            program_code: {
                 allowNull: false,
-                autoIncrement: true,
+                autoIncrement: false,
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-            sub_group_title: {
+            desc: {
                 type: Sequelize.STRING
             },
-            group_id: {
-                allowNull: false,
-                autoIncrement: false,
-                type: Sequelize.INTEGER,
-                references: {
-                    model: 'Groups',
-                    key: 'id'
-                },
-                allowNull: false,
+            version: {
+                type: Sequelize.INTEGER
             },
+            // program: {
+            //     allowNull: false,
+            //     autoIncrement: false,
+            //     type: Sequelize.STRING,
+            //     references: {
+            //         model: 'Programs',
+            //         key: 'program'
+            //     },
+            //     allowNull: false
+            // },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE
@@ -33,6 +36,6 @@ module.exports = {
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('SubGroups');
+        await queryInterface.dropTable('ProgramCodes');
     }
 };

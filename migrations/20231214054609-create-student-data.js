@@ -2,25 +2,28 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('SubGroups', {
+        await queryInterface.createTable('studentData', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-            sub_group_title: {
+            student_code: {
+                unique: true,
+                allowNull: false,
                 type: Sequelize.STRING
             },
-            group_id: {
+            fullname: {
+                type: Sequelize.STRING
+            },
+            email: {
+                unique: true,
                 allowNull: false,
-                autoIncrement: false,
-                type: Sequelize.INTEGER,
-                references: {
-                    model: 'Groups',
-                    key: 'id'
-                },
-                allowNull: false,
+                type: Sequelize.STRING
+            },
+            program: {
+                type: Sequelize.STRING
             },
             createdAt: {
                 allowNull: false,
@@ -33,6 +36,6 @@ module.exports = {
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('SubGroups');
+        await queryInterface.dropTable('StudentData');
     }
 };

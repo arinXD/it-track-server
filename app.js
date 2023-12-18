@@ -41,41 +41,22 @@ app.use(express.static(path.join(__dirname, 'public')))
 //--------------------
 const port = 4000
 global.conn = null
-const initMySQL = async () => {
-    conn = await mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        password: '',
-        database: "it_track"
-    })
-    // conn = await mysql.createConnection({
-    //     host: '172.104.62.106',
-    //     user: 'arincvaq_arin',
-    //     password: '0847172849aB_',
-    //     database: "arincvaq_it_track"
-    // })
-}
+// const initMySQL = async () => {
+//     conn = await mysql.createConnection({
+//         host: 'localhost',
+//         user: 'root',
+//         password: '',
+//         database: "it_track"
+//     })
+// }
 const sequelize = new Sequelize('it_track', 'root', '', {
     host: 'localhost',
     dialect: 'mysql'
 })
 
-const Acadyear = sequelize.define('acadyears', {
-    acadyear: {
-        type: DataTypes.INTEGER
-    },
-}, {
-    paranoid: true, // Enable soft deletes
-    timestamps: true, // Include timestamps (createdAt, updatedAt)
-    underscored: true, // Use snake_case for column names
-    deletedAt: 'deleted_at' // Custom name for the deletedAt column
-});
 app.listen(port, async () => {
     try {
-        // await sequelize.sync({force:true})
         await sequelize.sync()
-        await initMySQL()
-        // await sequelize.sync()
     } catch (err) {
         console.error(err);
         console.log("!!!!WARNING!!!!");
@@ -96,6 +77,7 @@ const authRouter = require('./router/authRouter');
 const studentRouter = require('./router/studentRouter');
 const acadYearRouter = require('./router/acadYearRouter');
 const adminRouter = require('./router/adminRouter');
+const studentDataRouter = require('./router/studentDataRouter');
 const adminMiddleware = require("./middleware/adminMiddleware")
 
 //--------------------
@@ -123,6 +105,7 @@ app.use('/api/posts', postRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/student', studentRouter)
 app.use('/api/acadyear', adminMiddleware, acadYearRouter)
+app.use('/api/student/data', adminMiddleware, studentDataRouter)
 app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/groups', groupRouter);

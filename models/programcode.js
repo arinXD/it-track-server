@@ -1,32 +1,34 @@
 'use strict';
 const {
-  Model
+    Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class ProgramCode extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // Define association here
-      this.belongsTo(models.Program, {
-        foreignKey: 'program_id',
-        targetKey: 'id', // Specify the correct foreign key 
-      });
-      this.hasOne(models.Subject, {
-        foreignKey: 'program_code_id'
-      });
+    class ProgramCode extends Model {
+        
+        static associate(models) {
+            // Define association here
+            // this.belongsTo(models.Program, {
+            //     foreignKey: 'program',
+            //     targetKey: 'program', // Specify the correct foreign key 
+            // });
+            this.hasOne(models.Subject, {
+                foreignKey: 'program_code'
+            });
+        }
     }
-  }
-  ProgramCode.init({
-    program_title: DataTypes.STRING,
-    desc: DataTypes.STRING,
-    version: DataTypes.INTEGER
-  }, {
-    sequelize,
-    modelName: 'ProgramCode',
-  });
-  return ProgramCode;
+    ProgramCode.init({
+        program_code: {
+            type: DataTypes.INTEGER,
+            primaryKey: true, // Add this line to specify acadyear as the primary key
+        },
+        desc: DataTypes.STRING,
+        version: DataTypes.INTEGER,
+        // program: DataTypes.STRING,
+        desc: DataTypes.STRING,
+        version: DataTypes.INTEGER
+    }, {
+        sequelize,
+        modelName: 'ProgramCode',
+    });
+    return ProgramCode;
 };
