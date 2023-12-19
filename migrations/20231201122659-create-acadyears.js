@@ -3,12 +3,6 @@
 module.exports = {
     async up(queryInterface, Sequelize) {
         await queryInterface.createTable('acadyears', {
-            // id: {
-            //     allowNull: false,
-            //     autoIncrement: true,
-            //     primaryKey: true,
-            //     type: Sequelize.INTEGER
-            // },
             acadyear: {
                 allowNull: false,
                 unique: true,
@@ -27,8 +21,6 @@ module.exports = {
             daletedAt: {
                 type: Sequelize.DATE,
                 allowNull: true,
-                validate: {
-                }
             }
         });
     },

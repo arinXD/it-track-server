@@ -11,9 +11,9 @@ module.exports = (sequelize, DataTypes) => {
             //     foreignKey: 'program',
             //     targetKey: 'program', // Specify the correct foreign key 
             // });
-            this.hasOne(models.Subject, {
-                foreignKey: 'program_code'
-            });
+            // this.hasOne(models.Subject, {
+            //     foreignKey: 'program_code'
+            // });
         }
     }
     ProgramCode.init({

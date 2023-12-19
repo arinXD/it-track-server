@@ -15,15 +15,22 @@ module.exports = {
                 defaultValue: null,
                 type: Sequelize.STRING
             },
+            email:{
+                allowNull: true,
+                unique: true,
+                defaultValue: null,
+                type: Sequelize.STRING
+            },
             user_id: {
-                allowNull: false,
+                allowNull: true,
+                defaultValue: null,
                 unique: true,
                 type: Sequelize.INTEGER,
                 references: {
                     model: 'users',
                     key: 'id',
                 },
-                onDelete: 'CASCADE',
+                onDelete: 'SET NULL',
             },
             program: {
                 allowNull: true,

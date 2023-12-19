@@ -6,6 +6,7 @@ module.exports = {
             track: {
                 allowNull: false,
                 primaryKey: true,
+                unique:true,
                 type: Sequelize.STRING
             },
             title_en: {
@@ -37,8 +38,6 @@ module.exports = {
             daletedAt: {
                 type: Sequelize.DATE,
                 allowNull: true,
-                validate: {
-                }
             }
         });
     },

@@ -3,7 +3,7 @@
 module.exports = {
     async up(queryInterface, Sequelize) {
         await queryInterface.createTable('Subjects', {
-            id: {
+            subject_id: {
                 allowNull: false,
                 autoIncrement: true,
                 primaryKey: true,
@@ -11,10 +11,11 @@ module.exports = {
             },
             semester: {
                 type: Sequelize.STRING,
-                defaultValue: 1
+                defaultValue: null
             },
             subject_code: {
                 type: Sequelize.STRING,
+                unique: true,
                 defaultValue: null
             },
             title_th: {
@@ -29,7 +30,7 @@ module.exports = {
                 type: Sequelize.STRING,
                 defaultValue: null
             },
-            cradit: {
+            credit: {
                 type: Sequelize.INTEGER,
                 defaultValue: 0,
             },

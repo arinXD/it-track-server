@@ -40,13 +40,64 @@ module.exports = {
                 updatedAt: new Date()
             },
         ], {});
-        await queryInterface.bulkInsert('studentdata', [
-            // STUDENTCODE	STUDENTFULLNAME	KKUMAIL	PROGRAMNAME
+
+        await queryInterface.bulkInsert('programs', [
             {
-                student_code: "643020423-0",
-                fullname: "อริญชวุธ กัลยานาม",
-                email: "arinchawut.k@kkumail.com",
-                program: "เทคโนโลยีสารสนเทศ",
+                program: "CS",
+                title_en: "Computer Science",
+                title_th: "วิทยาการคอมพิวเตอร์",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                program: "IT",
+                title_en: "Information Technology",
+                title_th: "เทคโนโลยีสารสนเทศ",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                program: "GIS",
+                title_en: "Geo-Informatics",
+                title_th: "ภูมิสารสนเทศศาสตร์",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                program: "AI",
+                title_en: "Artificial Intelligence",
+                title_th: "ปัญญาประดิษฐ์",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                program: "Cyber",
+                title_en: "Cybersecurity",
+                title_th: "ความมั่นคงปลอดภัยไซเบอร์",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+        ], {});
+
+        await queryInterface.bulkInsert('tracks', [
+            {
+                track: "BIS",
+                title_en: "Business Information Technology",
+                title_th: "เทคโนโลยีสารสนเทศทางธุรกิจ",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                track: "WEB",
+                title_en: "Mobile and Web Application Development",
+                title_th: "การพัฒนาโปรแกรมประยุกต์บนอุปกรณ์เคลื่อนที่และเว็บ",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                track: "Network",
+                title_en: "Network Systems, Information Technology Security, and Internet of Things (IoT)",
+                title_th: "ระบบ เครือข่าย ความมั่นคงเทคโนโลยีสารสนเทศ และอินเทอร์เน็ตของสรรพสิ่ง",
                 createdAt: new Date(),
                 updatedAt: new Date()
             },
@@ -56,6 +107,8 @@ module.exports = {
     async down(queryInterface, Sequelize) {
         await queryInterface.bulkDelete('acadyears', null, {});
         await queryInterface.bulkDelete('users', null, {});
-        await queryInterface.bulkDelete('studentdata', null, {});
+        await queryInterface.bulkDelete('programs', null, {});
+        await queryInterface.bulkDelete('tracks', null, {});
+        // await queryInterface.bulkDelete('studentdata', null, {});
     }
 };

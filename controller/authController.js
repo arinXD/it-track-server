@@ -4,6 +4,7 @@ const nodemailer = require("nodemailer")
 const { v4: uuidv4 } = require("uuid")
 const models = require('../models');
 const { log } = require("console");
+const { where } = require("sequelize");
 const User = models.User
 const Student = models.Student
 const Teacher = models.Teacher
@@ -71,8 +72,8 @@ const getRole = (email) => {
     return { role, model }
 }
 const getStdID = async (email) => {
-    const data = await StudentData.findOne({ where: { email } })
-    const stuId = data.student_code
+    const data = await Student.findOne({ where: { email } })
+    const stuId = data.stu_id
     return stuId
 }
 // const getStudentID = async (email)=>{
@@ -192,7 +193,7 @@ const signInGoogle = async (req, res, next) => {
         });
     }
     try {
-        const { role, model } = getRole(email)
+        const { role, model } = getRole(dataEmail)
         let result
         if (model) {
             result = await User.findOne({
@@ -219,14 +220,9 @@ const signInGoogle = async (req, res, next) => {
             let child = {}
             if (model) {
                 if (user.role === "student") {
-                    const stu_id = await getStdID(dataEmail)
-
-                    child = await model.create({ user_id: user.id, stu_id: stu_id })
+                    child = await model.update({ user_id: user.id }, { where: { email: dataEmail } })
                 } else {
                     child = await model.create({ user_id: user.id })
-                }
-                child = {
-                    ...child.dataValues
                 }
                 if (user.role === "student") {
                     child.stu_id = child.stu_id || null

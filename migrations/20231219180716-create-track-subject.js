@@ -2,35 +2,32 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('trackselections', {
+        await queryInterface.createTable('TrackSubjects', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-            acadyear: {
+            track_selection_id: {
                 allowNull: true,
                 defaultValue: null,
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'acadyears',
-                    key: 'acadyear',
+                    model: 'TrackSelections',
+                    key: 'id',
                 },
                 onDelete: 'SET NULL',
             },
-            title: {
-                type: Sequelize.STRING
-            },
-            startAt: {
+            subject_code: {
                 allowNull: true,
-                defaultValue: null,
-                type: Sequelize.DATE
-            },
-            expiredAt: {
-                allowNull: true,
-                defaultValue: null,
-                type: Sequelize.DATE
+                unique: false,
+                type: Sequelize.STRING,
+                references: {
+                    model: 'Subjects',
+                    key: 'subject_code'
+                },
+                defaultValue: null
             },
             createdAt: {
                 allowNull: false,
@@ -39,16 +36,10 @@ module.exports = {
             updatedAt: {
                 allowNull: false,
                 type: Sequelize.DATE
-            },
-            daletedAt: {
-                type: Sequelize.DATE,
-                allowNull: true,
-                validate: {
-                }
             }
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('TrackSelections');
+        await queryInterface.dropTable('TrackSubjects');
     }
 };

@@ -4,33 +4,39 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Subject extends Model {
-
         static associate(models) {
-            // this.belongsTo(models.ProgramCode, {
-            //     foreignKey: 'program_code',
-            //     targetKey: 'program_code', // Specify the correct foreign key 
-            //     allowNull: true
-            // });
             this.belongsTo(models.Group, {
                 foreignKey: 'group_id',
-                targetKey: 'id', // Specify the correct foreign key 
-                allowNull: true
-
+                targetKey: 'id',
+                allowNull: true,
             });
             this.belongsTo(models.SubGroup, {
                 foreignKey: 'sub_group_id',
-                targetKey: 'id', // Specify the correct foreign key 
-                allowNull: true
+                targetKey: 'id',
+                allowNull: true,
+            });
+            this.hasMany(models.Enrollment, {
+                foreignKey: 'subject_code',
+                sourceKey: 'subject_code',
+            });
+            this.belongsToMany(models.TrackSelection, {
+                through: 'TrackSubjects',
+                sourceKey: 'subject_code',
+                targetKey: 'subject_code'
             });
         }
     }
     Subject.init({
+        subject_id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+        },
         semester: DataTypes.STRING,
         subject_code: DataTypes.STRING,
         title_th: DataTypes.STRING,
         title_en: DataTypes.STRING,
         information: DataTypes.STRING,
-        cradit: DataTypes.INTEGER,
+        credit: DataTypes.INTEGER,
         sub_group_id: DataTypes.INTEGER,
         group_id: DataTypes.INTEGER,
         acadyear: DataTypes.INTEGER,
