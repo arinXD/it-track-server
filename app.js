@@ -77,7 +77,10 @@ const authRouter = require('./router/authRouter');
 const studentRouter = require('./router/studentRouter');
 const acadYearRouter = require('./router/acadYearRouter');
 const adminRouter = require('./router/adminRouter');
-const studentDataRouter = require('./router/studentDataRouter');
+const trackRouter = require('./router/trackRouter');
+const trackSelectionRouter = require('./router/trackSelectionRouter');
+
+// const studentDataRouter = require('./router/studentDataRouter');
 const adminMiddleware = require("./middleware/adminMiddleware")
 
 //--------------------
@@ -104,8 +107,11 @@ app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/student', studentRouter)
+
+// app.use('/api/student/data', adminMiddleware, studentDataRouter)
 app.use('/api/acadyear', adminMiddleware, acadYearRouter)
-app.use('/api/student/data', adminMiddleware, studentDataRouter)
+app.use('/api/tracks', trackRouter)
+app.use('/api/tracks/selects', trackSelectionRouter)
 app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/groups', groupRouter);

@@ -3,8 +3,6 @@ const jwt = require("jsonwebtoken")
 const nodemailer = require("nodemailer")
 const { v4: uuidv4 } = require("uuid")
 const models = require('../models');
-const { log } = require("console");
-const { where } = require("sequelize");
 const User = models.User
 const Student = models.Student
 const Teacher = models.Teacher
@@ -76,10 +74,6 @@ const getStdID = async (email) => {
     const stuId = data.stu_id
     return stuId
 }
-// const getStudentID = async (email)=>{
-//     const stuId = await 
-// }
-
 /*
 *   1st method
     if (role === "student" || role === "user") {

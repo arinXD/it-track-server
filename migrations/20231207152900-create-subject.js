@@ -16,6 +16,7 @@ module.exports = {
             subject_code: {
                 type: Sequelize.STRING,
                 unique: true,
+                primaryKey: true,
                 defaultValue: null
             },
             title_th: {

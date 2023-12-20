@@ -1,4 +1,3 @@
-const { log } = require("util");
 const model = require("../models");
 const User = model.User;
 const jwt = require("jsonwebtoken");

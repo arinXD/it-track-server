@@ -15,9 +15,9 @@ module.exports = (sequelize, DataTypes) => {
                 sourceKey: 'id',
             });
             this.belongsToMany(models.Subject, {
-                through: 'TrackSubjects',
-                sourceKey: 'id',
-                targetKey: 'track_id'
+                through: models.TrackSubject,
+                foreignKey: "track_selection_id",
+                otherKey: "subject_code"
             });
         }
     }

@@ -20,19 +20,19 @@ module.exports = (sequelize, DataTypes) => {
                 sourceKey: 'subject_code',
             });
             this.belongsToMany(models.TrackSelection, {
-                through: 'TrackSubjects',
-                sourceKey: 'subject_code',
-                targetKey: 'subject_code'
+                through: models.TrackSubject,
+                foreignKey: "subject_code",
+                otherKey: "track_selection_id"
             });
         }
     }
     Subject.init({
-        subject_id: {
-            type: DataTypes.INTEGER,
+        subject_id: DataTypes.INTEGER,
+        semester: DataTypes.STRING,
+        subject_code: {
+            type: DataTypes.STRING,
             primaryKey: true,
         },
-        semester: DataTypes.STRING,
-        subject_code: DataTypes.STRING,
         title_th: DataTypes.STRING,
         title_en: DataTypes.STRING,
         information: DataTypes.STRING,

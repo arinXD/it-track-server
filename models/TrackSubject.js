@@ -1,19 +1,25 @@
 'use strict';
 const {
-  Model
+    Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class TrackSubject extends Model {
-    static associate(models) {
-      // define association here
+    class TrackSubject extends Model {
+        static associate(models) {
+            this.belongsTo(models.TrackSelection, {
+                foreignKey: 'track_selection_id',
+            });
+            this.belongsTo(models.Subject, {
+                foreignKey: 'subject_code',
+            });
+        }
+
     }
-  }
-  TrackSubject.init({
-    track_id: DataTypes.INTEGER,
-    subject_code: DataTypes.STRING
-  }, {
-    sequelize,
-    modelName: 'TrackSubject',
-  });
-  return TrackSubject;
+    TrackSubject.init({
+        track_selection_id: DataTypes.INTEGER,
+        subject_code: DataTypes.STRING
+    }, {
+        sequelize,
+        modelName: 'TrackSubject',
+    });
+    return TrackSubject;
 };

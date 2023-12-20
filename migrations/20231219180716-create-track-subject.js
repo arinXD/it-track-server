@@ -14,20 +14,20 @@ module.exports = {
                 defaultValue: null,
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'TrackSelections',
+                    model: 'trackselections',
                     key: 'id',
                 },
                 onDelete: 'SET NULL',
             },
             subject_code: {
                 allowNull: true,
-                unique: false,
+                defaultValue: null,
                 type: Sequelize.STRING,
                 references: {
                     model: 'Subjects',
                     key: 'subject_code'
                 },
-                defaultValue: null
+                onDelete: 'SET NULL',
             },
             createdAt: {
                 allowNull: false,
