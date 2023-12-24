@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('selections', {
+        await queryInterface.createTable('Selections', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
@@ -24,35 +24,35 @@ module.exports = {
                 unique: false,
                 type: Sequelize.STRING,
                 references: {
-                    model: 'students',
+                    model: 'Students',
                     key: 'stu_id'
                 },
                 defaultValue: null
             },
             track_order_1: {
                 allowNull: false,
-                unique: true,
+                unique: false,
                 type: Sequelize.STRING,
                 references: {
-                    model: 'tracks',
+                    model: 'Tracks',
                     key: 'track'
                 },
             },
             track_order_2: {
                 allowNull: false,
-                unique: true,
+                unique: false,
                 type: Sequelize.STRING,
                 references: {
-                    model: 'tracks',
+                    model: 'Tracks',
                     key: 'track'
                 },
             },
             track_order_3: {
                 allowNull: false,
-                unique: true,
+                unique: false,
                 type: Sequelize.STRING,
                 references: {
-                    model: 'tracks',
+                    model: 'Tracks',
                     key: 'track'
                 },
             },

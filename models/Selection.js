@@ -14,15 +14,17 @@ module.exports = (sequelize, DataTypes) => {
                 targetKey: 'stu_id',
             });
             this.hasMany(models.SelectionDetail, {
-                foreignKey: 'track_selection_id',
+                foreignKey: 'selection_id',
                 sourceKey: 'id',
             });
         }
     }
     Selection.init({
-        selection_id: DataTypes.INTEGER,
+        track_selection_id: DataTypes.INTEGER,
         stu_id: DataTypes.STRING,
-        track_order_1: DataTypes.STRING
+        track_order_1: DataTypes.STRING,
+        track_order_2: DataTypes.STRING,
+        track_order_3: DataTypes.STRING,
     }, {
         sequelize,
         modelName: 'Selection',

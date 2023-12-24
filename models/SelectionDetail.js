@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     SelectionDetail.init({
         selection_id: DataTypes.INTEGER,
         subject_code: DataTypes.STRING,
-        grade: DataTypes.INTEGER
+        grade: DataTypes.STRING
     }, {
         sequelize,
         modelName: 'SelectionDetail',

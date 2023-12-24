@@ -14,7 +14,7 @@ module.exports = {
                 defaultValue: null,
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'trackselections',
+                    model: 'TrackSelections',
                     key: 'id',
                 },
                 onDelete: 'SET NULL',

@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.bulkInsert('acadyears', [
+        await queryInterface.bulkInsert('Acadyears', [
             {
                 acadyear: 2562,
                 createdAt: new Date(),
@@ -30,7 +30,7 @@ module.exports = {
                 updatedAt: new Date()
             },
         ], {});
-        await queryInterface.bulkInsert('users', [
+        await queryInterface.bulkInsert('Users', [
             {
                 email: "rakuzanoat@gmail.com",
                 role: "admin",
@@ -41,7 +41,7 @@ module.exports = {
             },
         ], {});
 
-        await queryInterface.bulkInsert('programs', [
+        await queryInterface.bulkInsert('Programs', [
             {
                 program: "CS",
                 title_en: "Computer Science",
@@ -79,7 +79,7 @@ module.exports = {
             },
         ], {});
 
-        await queryInterface.bulkInsert('tracks', [
+        await queryInterface.bulkInsert('Tracks', [
             {
                 track: "BIS",
                 title_en: "Business Information Technology",
@@ -102,13 +102,52 @@ module.exports = {
                 updatedAt: new Date()
             },
         ], {});
+
+        await queryInterface.bulkInsert('TrackSelections', [
+            {
+                id: 1,
+                acadyear: 2565,
+                title: "คัดแทรคประจำปีการศึกษา 2565",
+                startAt: new Date(),
+                expiredAt: new Date(),
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+        ], {});
+        await queryInterface.bulkInsert('TrackSubjects', [
+            {
+                track_selection_id: 1,
+                subject_code: "SC361002",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                track_selection_id: 1,
+                subject_code: "SC361003",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                track_selection_id: 1,
+                subject_code: "SC361004",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                track_selection_id: 1,
+                subject_code: "SC361005",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+        ], {});
     },
 
     async down(queryInterface, Sequelize) {
-        await queryInterface.bulkDelete('acadyears', null, {});
-        await queryInterface.bulkDelete('users', null, {});
-        await queryInterface.bulkDelete('programs', null, {});
-        await queryInterface.bulkDelete('tracks', null, {});
-        // await queryInterface.bulkDelete('studentdata', null, {});
+        await queryInterface.bulkDelete('Acadyears', null, {});
+        await queryInterface.bulkDelete('Users', null, {});
+        await queryInterface.bulkDelete('Programs', null, {});
+        await queryInterface.bulkDelete('Tracks', null, {});
+        await queryInterface.bulkDelete('TrackSelections', null, {});
+        await queryInterface.bulkDelete('TrackSubjects', null, {});
     }
 };

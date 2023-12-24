@@ -58,7 +58,7 @@ module.exports = {
                 defaultValue: null,
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'acadyears',
+                    model: 'Acadyears',
                     key: 'acadyear'
                 },
             },

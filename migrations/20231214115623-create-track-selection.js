@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('trackselections', {
+        await queryInterface.createTable('TrackSelections', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
@@ -14,7 +14,7 @@ module.exports = {
                 defaultValue: null,
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'acadyears',
+                    model: 'Acadyears',
                     key: 'acadyear',
                 },
                 onDelete: 'SET NULL',

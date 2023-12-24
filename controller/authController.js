@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken")
 const nodemailer = require("nodemailer")
 const { v4: uuidv4 } = require("uuid")
@@ -214,7 +214,11 @@ const signInGoogle = async (req, res, next) => {
             let child = {}
             if (model) {
                 if (user.role === "student") {
-                    child = await model.update({ user_id: user.id }, { where: { email: dataEmail } })
+                    await model.update({ user_id: user.id }, { where: { email: dataEmail } })
+                    child = await model.findOne({ where: { email: dataEmail } })
+                    if (child) {
+                        child = { ...child.dataValues }
+                    }
                 } else {
                     child = await model.create({ user_id: user.id })
                 }
@@ -227,7 +231,7 @@ const signInGoogle = async (req, res, next) => {
                 data: {
                     role,
                     ...child
-                }
+                },
             })
         } else {
             const { sign_in_type } = result

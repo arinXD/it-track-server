@@ -19,6 +19,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'subject_code',
                 sourceKey: 'subject_code',
             });
+            this.hasMany(models.SelectionDetail, {
+                foreignKey: 'subject_code',
+                sourceKey: 'subject_code',
+            });
             this.belongsToMany(models.TrackSelection, {
                 through: models.TrackSubject,
                 foreignKey: "subject_code",

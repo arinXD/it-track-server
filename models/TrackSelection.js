@@ -10,14 +10,18 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'acadyear',
                 targetKey: 'acadyear',
             });
-            this.hasMany(models.Enrollment, {
-                foreignKey: 'track_selection_id',
-                sourceKey: 'id',
-            });
             this.belongsToMany(models.Subject, {
                 through: models.TrackSubject,
                 foreignKey: "track_selection_id",
                 otherKey: "subject_code"
+            });
+            this.hasMany(models.Enrollment, {
+                foreignKey: 'track_selection_id',
+                sourceKey: 'id',
+            });
+            this.hasMany(models.Selection, {
+                foreignKey: 'track_selection_id',
+                sourceKey: 'id',
             });
         }
     }
@@ -26,6 +30,7 @@ module.exports = (sequelize, DataTypes) => {
         title: DataTypes.STRING,
         startAt: DataTypes.DATE,
         expiredAt: DataTypes.DATE,
+        has_finished: DataTypes.BOOLEAN,
         daletedAt: DataTypes.DATE,
     }, {
         sequelize,

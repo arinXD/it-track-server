@@ -4,10 +4,8 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors')
 const session = require('express-session')
-
-const mysql = require('mysql2/promise')
 const { Sequelize, DataTypes } = require('sequelize')
-
+require("dotenv").config();
 const app = express()
 
 //--------------------
@@ -16,14 +14,18 @@ const app = express()
 //
 //--------------------
 app.use(express.json());
-app.use(cors({
-    credentials: true,
-    origin: [
-        "http://localhost:4000",
-        "http://localhost:3000",
-        // "http://192.168.31.116:3000",
-    ]
-}))
+app.use(cors(
+    // {
+    //     credentials: true,
+    //     origin: [
+    // "https://it-track.arinchawut.com",
+    // "it-track-client.vercel.app",
+    //         "http://localhost:4000",
+    //         "http://localhost:3000",
+    //         // "http://192.168.31.116:3000",
+    //     ]
+    // }
+))
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(logger('dev'));
@@ -41,18 +43,15 @@ app.use(express.static(path.join(__dirname, 'public')))
 //--------------------
 const port = 4000
 global.conn = null
-// const initMySQL = async () => {
-//     conn = await mysql.createConnection({
-//         host: 'localhost',
-//         user: 'root',
-//         password: '',
-//         database: "it_track"
-//     })
-// }
-const sequelize = new Sequelize('it_track', 'root', '', {
-    host: 'localhost',
-    dialect: 'mysql'
-})
+const sequelize = new Sequelize(
+    process.env.DATABASE,
+    process.env.DATABASE_USER,
+    process.env.DATABASE_PASSWORD,
+    {
+        host: process.env.DATABASE_HOST,
+        dialect: 'mysql'
+    }
+)
 
 app.listen(port, async () => {
     try {
@@ -79,6 +78,7 @@ const acadYearRouter = require('./router/acadYearRouter');
 const adminRouter = require('./router/adminRouter');
 const trackRouter = require('./router/trackRouter');
 const trackSelectionRouter = require('./router/trackSelectionRouter');
+const enrollmentRouter = require('./router/enrollmentRouter.js');
 
 // const studentDataRouter = require('./router/studentDataRouter');
 const adminMiddleware = require("./middleware/adminMiddleware")
@@ -106,9 +106,9 @@ app.use('/api/admin', adminRouter)
 app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
 app.use('/api/auth', authRouter)
-app.use('/api/student', studentRouter)
-
-// app.use('/api/student/data', adminMiddleware, studentDataRouter)
+app.use('/api/students', studentRouter)
+app.use('/api/students', studentRouter)
+app.use('/api/students/enrollments', enrollmentRouter)
 app.use('/api/acadyear', adminMiddleware, acadYearRouter)
 app.use('/api/tracks', trackRouter)
 app.use('/api/tracks/selects', trackSelectionRouter)
