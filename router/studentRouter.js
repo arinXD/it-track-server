@@ -20,7 +20,27 @@ router.get("/", async (req, res) => {
         })
     }
 })
+
 router.get("/:id/track/select/", async (req, res) => {
+    const stu_id = req.params.id
+    try {
+        const select = await Selection.findOne({
+            where: { stu_id },
+        })
+        return res.status(200).json({
+            ok: true,
+            data: select
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+
+router.get("/:id/track/select/detail", async (req, res) => {
     const stu_id = req.params.id
     try {
         const select = await Selection.findOne({
@@ -86,7 +106,7 @@ router.post("/track/select", async (req, res) => {
         }
         const userSelection = await Selection.upsert(selectData)
         console.log(userSelection);
-        const insertedArray = []
+        // const insertedArray = []
         for (const index in subjectsData) {
             let selectDetail = subjectsData[index]
             if (selectId) {
@@ -95,13 +115,14 @@ router.post("/track/select", async (req, res) => {
             } else {
                 selectDetail.selection_id = userSelection[0].dataValues.id
             }
-            const insertData = await SelectionDetail.upsert(selectDetail)
-            insertedArray.push(insertData)
+            await SelectionDetail.upsert(selectDetail)
+            // const insertData = await SelectionDetail.upsert(selectDetail)
+            // insertedArray.push(insertData)
         }
         return res.status(201).json({
             ok: true,
-            data: userSelection,
-            insertedSubjects: insertedArray
+            data: selectId,
+            // insertedSubjects: insertedArray
         })
     } catch (error) {
         console.error(error);
