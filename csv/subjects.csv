@@ -1,0 +1,350 @@
+COURSECODE,COURSENAME,COURSENAMEENG,CREDITTOTAL
+000146,ความสุขของชีวิต,HAPPINESS OF LIFE,3
+000160,คอมพิวเตอร์และเทคโนโลยีสารสนเทศขั้นพื้นฐาน,BASIC COMPUTER AND INFORMATION TECHNOLOGY,3
+050108,ภาษาอังกฤษสำหรับวิทยาศาสตร์,ENGLISH FOR  SCIENCES,3
+300109,วิทยาศาสตร์กายภาพ,PHYSICAL SCIENCE,3
+300202,การเตรียมความพร้อมก่อนปฏิบัติงานสหกิจศึกษาสำหรับนักศึกษาคณะวิทยาศาสตร์,ORIENTATION TO CO-OPERATIVE EDUCATION FOR SCIENCE STUDENTS,1
+300302,นิติวิทยาศาสตร์เบื้องต้น,ELEMENTARY TO FORENSIC SCIENCE,3
+300304,หลักมูลการระบุรูปพรรณส่วนบุคคล,FUNDAMENTAL OF PERSONAL IDENTIFICATION,3
+300305,สารพิษชีวภาพทางนิติวิทยาศาสตร์,BIOTOXINS IN FORENSIC SCIENCE,3
+300306,พิษวิทยาในนิติวิทยาศาสตร์ขั้นแนะนำ,INTRODUCTION TO TOXICOLOGY IN FORENSIC SCIENCE,3
+314106,คณิตศาสตร์ทั่วไป,GENERAL MATHEMATICS,3
+314122,แคลคูลัสสำหรับวิทยาศาสตร์กายภาพ 2,CALCULUS FOR PHYSICAL SCIENCE II,3
+316201,สถิติขั้นต้น,INTRODUCTION TO STATISTICS,3
+322114,การเขียนโปรแกรมเชิงโครงสร้างสำหรับวิทยาการคอมพิวเตอร์,STRUCTURED PROGRAMMING FOR COMPUTER SCIENCE,3
+322161,เทคโนโลยีสารสนเทศและการสื่อสารขั้นแนะนำ,INTRODUCTION TO INFORMATION AND COMMUNICATION TECHNOLOGY,3
+322231,หลักการออกแบบและพัฒนาซอฟต์แวร์,PRINCIPLES OF SOFTWARE DESIGN AND DEVELOPMENT,3
+322232,ภูมิสารสนเทศขั้นแนะนำ,INTRODUCTION TO GEOINFORMATICS,3
+322254,การเขียนโปรแกรมสคริปต์,SCRIPT PROGRAMMING,3
+322325,ระบบปฏิบัติการและการเขียนโปรแกรมซีสเต็มคอล,OPERATING SYSTEM AND SYSTEM CALLS PROGRAMMING,3
+322336,ระบบฐานข้อมูลและการออกแบบ,DATABASE SYSTEMS AND DESIGN,3
+322352,การวิเคราะห์ขั้นตอนวิธี,ANALYSIS OF ALGORITHMS,3
+322371,วิศวกรรมซอฟต์แวร์,SOFTWARE ENGINEERING,3
+322421,ปฏิบัติการระบบข่ายงานและระบบปฏิบัติการ,NETWORKING AND OPERATING SYSTEMS LABORATORY,3
+322435,การโต้ตอบระหว่างมนุษย์และคอมพิวเตอร์,HUMAN-COMPUTER INTERACTION,3
+322444,การวิเคราะห์ข้อมูลขนาดใหญ่โดยแรพพิดไมเนอร์,BIG DATA ANALYTICS USING RAPIDMINER,3
+322462,การเชื่อมต่ออินเทอร์เน็ต,INTERNETWORKING,3
+322471,การจัดการเทคโนโลยีสารสนเทศ,MANAGEMANT OF INFORMATION TECHNOLOGY,3
+322498,โครงการวิจัยทางวิทยาการคอมพิวเตอร์ ระดับปริญญาตรี 1,UNDERGRADUATE RESEARCH PROJECT FOR COMPUTER SCIENCE I,3
+322499,โครงการวิจัยทางวิทยาการคอมพิวเตอร์ ระดับปริญญาตรี 2,UNDERADUATE RESEARCH PROJECT FOR COMPUTER SCIENCE II,3
+323246,วิยุตคณิตและการประยุกต์,DISCRETE MATHEMATICS AND APPLICATIONS,3
+323360,วิธีเชิงตัวเลขสำหรับวิทยาการคอมพิวเตอร์,NUMERICAL METHODS FOR COMPUTER SCIENCE,3
+324203,ภูมิสารสนเทศศาสตร์สำหรับชีวิตประจำวัน,GEO-INFORMATICS FOR DAILY LIFE,2
+324301,การเขียนโปรแกรมในระบบสารสนเทศภูมิศาสตร์,PROGRAMMING IN GEOGRAPHIC INFORMATION SYSTEM,3
+324302,การประยุกต์ทำแผนที่บนเว็บ,WEB MAPPING APPLICATION,3
+324303,การออกแบบและมาตรฐานข้อมูลเชิงพื้นที่,DESIGN AND STANDARD GEO-SPATIAL DATABASE,3
+324311,รูปถ่ายทางอากาศและการแปลความหมาย,AERIAL PHOTOGRAPH AND INTERPRETATION,3
+324321,ภูมิศาสตร์กายภาพ,PHYSICAL GEOGRAPHY,3
+324402,หลักการทำแผนที่,PRINCIPLES OF CARTORGRAPHY,2
+324403,การสำรวจรังวัดและระบบกำหนดตำแหน่งบนโลก,SURVEYING AND GLOBAL POSITIONING SYSTEM,3
+324411,การประมวลผลเชิงเลขของข้อมูลจากดาวเทียม,DIGITAL PROCESSING OF SATELLITE DATA,3
+324412,หลักการโฟโตแกรมเมตรี,PRINCIPLES OF PHOTOGRAMMETRY,3
+342117,การเขียนโปรแกรมเชิงโครงสร้างสำหรับเทคโนโลยีสารสนเทศ,STRUCTURED PROGRAMMING FOR INFORMATION TECHNOLOGY,3
+342131,การโต้ตอบระหว่างมนุษย์กับคอมพิวเตอร์,HUMAN-COMPUTER INTERACTION,3
+342162,องค์ประกอบและสถาปัตยกรรมคอมพิวเตอร์ขั้นแนะนำ,INTRODUCTION TO COMPUTER ORGANIZATION AND ARCHITECTURE,3
+342181,ตรรกะและแนวคิด,LOGIC AND CONCEPTS,3
+342211,ขั้นตอนวิธีและโครงสร้างข้อมูล,ALGORITHMS AND DATA STRUCTURES,3
+342221,ระบบปฏิบัติการ,OPERATING SYSTEMS,3
+342222,เครือข่ายคอมพิวเตอร์ขั้นแนะนำ,INTRODUCTION TO COMPUTER NETWORKING,3
+342224,ตรรกะดิจิทัลและระบบฝังตัว,DIGITAL LOGIC AND EMBEDDED SYSTEMS,3
+342233,การวิเคราะห์และออกแบบฐานข้อมูล,DATABASE ANALYSIS AND DESIGN,3
+342235,การทดสอบซอฟต์แวร์และการประกันคุณภาพ,SOFTWARE TESTING AND QUALITY ASSURANCE,3
+342236,การเขียนโปรแกรมประยุกต์บนเว็บ,WEB APPLICATION PROGRAMMING,3
+342264,เทคโนโลยีเคลื่อนที่และไร้สาย,MOBILE AND WIRELESS TECHNOLOGY,3
+342266,การพัฒนาโปรแกรมประยุกต์บนเว็บสำหรับอุปกรณ์เคลื่อน,MOBILE WEB APPLICATION DEVELOPMENT,3
+342267,การเขียนโปรแกรมอุปกรณ์เคลื่อนที่,MOBILE DEVICE PROGRAMMING,3
+342281,ระบบสารสนเทศทางธุรกิจ,BUSINESS INFORMATION SYSTEMS,3
+342365,การประมวลผลแบบกลุ่มเมฆและการประยุกต์,CLOUD COMPUTING AND APPLICATIONS,3
+342371,วิศวกรรมซอฟต์แวร์,SOFTWARE ENGINEERING,3
+342372,การวิเคราะห์และออกแบบระบบ,SYSTEMS ANALYSIS AND DESIGN,3
+342375,เทคโนโลยีเอ็กซ์เอ็มแอลและการประยุกต์,XML TECHNOLOGIES AND APPLICATIONS,3
+342376,ความมั่นคงเทคโนโลยีสารสนเทศและการสื่อสาร,INFORMATION AND COMMUNICATION TECHNOLOGY SECURITY,3
+342384,ระบบธุรกิจอัจฉริยะ,BUSINESS INTELLIGENCE SYSTEM,3
+342391,ระเบียบวิธีวิจัย,RESEARCH METHODOLOGY,3
+342431,เทคโนโลยีเว็บ,WEB TECHNOLOGY,3
+342432,เทคโนโลยีการออกแบบเว็บ,WEB DESIGN TECHNOLOGIES,3
+342436,เทคโนโลยีเว็บแบบสื่อความหมาย,SEMANTIC WEB TECHNOLOGY,3
+342471,การจัดการเชิงกลยุทธ์เทคโนโลยีสารสนเทศ,STRATEGIC MANAGEMENT OF INFORMATION TECHNOLOGY,3
+342473,การบริหารโครงการ,PROJECT MANAGEMENT,3
+342475,การทำเหมืองข้อมูล,DATA MINING,3
+342479,วิชาชีพเทคโนโลยีสารสนเทศ,INFORMATION TECHNOLOGY PROFESSION,3
+342491,สัมมนาทางเทคโนโลยีสารสนเทศ,SEMINAR IN INFORMATION TECHNOLOGY,1
+342494,โครงงานคอมพิวเตอร์ 1,COMPUTER PROJECT I,3
+342495,สหกิจศึกษา,CO-OPERATIVE EDUCATION,6
+342496,โครงงานคอมพิวเตอร์ 2,COMPUTER PROJECT II,3
+366118,ยาในชีวิตประจำวัน,DRUGS IN DAILY LIFE,2
+366128,ผลิตภัณฑ์เสริมอาหาร ยา และเครื่องสำอาง เพื่อสุขภาพ,"FOOD SUPPLEMENTS,  DRUGS AND COSMETICS FOR HEALTH",1
+371120,นิติวิทยาศาสตร์เบื้องต้น,ELEMENTARY FORENSIC SCIENCES,2
+380118,การบริบาลผู้สูงอายุ,CARE FOR ELDERLY,2
+419110,ปรัชญาขั้นแนะนำ,INTRODUCTION TO PHILOSOPHY,3
+419111,ตรรกศาสตร์,LOGIC,3
+419114,ประวัติปรัชญาตะวันตก,HISTORY OF WESTERN PHILOSOPHY,3
+419120,ศาสนาขั้นแนะนำ,INTRODUCTION TO RELIGION,3
+419121,ศาสนาเปรียบเทียบ,COMPARATIVE RELIGION,3
+419123,พุทธศาสนาเบื้องต้น,INTRODUCTION TO BUDDHISM,3
+419125,พุทธศาสนากับชีวิตประจำวัน,BUDDHISM AND DAILY LIFE,3
+419126,การพัฒนาจิต,MENTAL DEVELOPMENT,3
+419130,วัฒนธรรมไทย,THAI CULTURE,3
+419131,วัฒนธรรมอีสาน,ESARN CULTURE,3
+419314,ญาณวิทยา,EPISTEMOLOGY,3
+419315,ปรัชญาสังคม,SOCIAL PHILOSOPHY,3
+419425,ศิลปะการครองเรือนในพุทธศาสนา,ART OF WEDLOCK IN BUDDHISM,3
+511214,สุขภาพจิต,MENTAL HEALTH,2
+511414,การบริหารโครงการสาธารณสุข,PUBLIC HEALTH PROJECT ADMINISTRATION,3
+511416,การพัฒนาองค์กรสุขภาพและพฤติกรรมองค์กร,HEALTH ORGANIZATIONAL DEVELOPMENT AND ORGANIZATIONAL BEHAVIORS,3
+511419,นวัตกรรมสาธารณสุขและประชาสังคม,PUBLIC HEALTH INNOVATION AND CIVIL SOCIETY,3
+515121,นิรภัยศึกษา,SAFETY EDUCATION,2
+614201,สารพิษในชีวิตประจำวัน,TOXIC SUBSTANCES IN DAILY LIFE,3
+694102,วิทยาศาสตร์ของโลก,EARTH SCIENCE,3
+777100,ความรู้เบื้องต้นเกี่ยวกับกฎหมายทั่วไป,INTRODUCTION TO LAW,3
+852162,งานศิลปะประยุกต์,APPLIED ARTS WORKS,2
+853161,ศิลปหัตถกรรมเครื่องเคลือบดินเผาเพื่อการพาณิชย์,CERAMIC ART AND CRAFT FOR COMMERCIAL,3
+854163,ศิลปะภาพพิมพ์ตะแกรงไหม,SILK-SCREEN PRINTMAKING ART,2
+870151,การออกแบบการ์ตูน,CARTOON DESIGN,3
+870152,การออกแบบของที่ระลึก,SOUVENIR DESIGN,3
+870154,การออกแบบโฆษณา,ADVERTISING DESIGN,3
+962101,เศรษฐศาสตร์จุลภาคเบื้องต้น,PRELIMINARY MICROECONOMICS,3
+967261,หลักการจัดการ,PRINCIPLES OF MANAGEMENT,3
+967363,การจัดการธุรกิจขนาดกลางและขนาดย่อม,SMALL AND MEDIUM ENTERPRISES MANAGEMENT,3
+AG103008,เรื่องมหัศจรรย์ของแมลงและแมงมุม,The Tales of Insects and Spiders,3
+AG133005,พืชสวนสราญ,Amenity Horticulture,3
+AG133006,การผลิตกัญชง และกัญชาเพื่อการแพทย์ และอุตสาหกรรมที่เกี่ยวข้อง,Hemp and Marijuana Production for Medical and Related Industries,3
+AG134002,พืชเครื่องเทศและสมุนไพร,SPICE AND MEDICINAL PLANTS PRODUCTION,3
+AG143404,อุตุนิยมวิทยาเกษตร,AGRICULTURAL METEOROLOGY,3
+AG143411,ธัญพืช,CEREAL CROPS,2
+AG173303,การผลิตสัตว์เคี้ยวเอื้องขนาดเล็ก,SMALL RUMINANT PRODUCTION,3
+AG173334,พฤติกรรมและสวัสดิภาพของสัตว์เลี้ยง,BEHAVIOR AND WELFARE OF DOMESTIC ANIMALS,3
+AG173371,การจัดการอนุรักษ์สัตว์ป่า,WILDLIFE CONSERVATION MANAGEMENT,3
+BS931111,หลักการตลาด,PRINCIPLE OF MARKETING,3
+BS952261,หลักการจัดการ,PRINCIPLES OF MANAGEMENT,3
+BS953363,การจัดการธุรกิจขนาดกลางและขนาดย่อม,SMALL AND MEDIUM ENTERPRISES MANAGEMENT,3
+CP001001,เอ บี ซี ดี สำหรับทุกวิชาชีพ,ABCD for All Professions,3
+CP350001,การเขียนโปรแกรมคอมพิวเตอร์ 1,Computer Programming I,3
+CP350002,โครงสร้างข้อมูล,Data Structure,3
+CP351001,วิทยาการคอมพิวเตอร์หลักมูล,Fundamental Computer Science,3
+CP351002,การเขียนโปรแกรมเชิงโครงสร้างสำหรับวิทยาการคอมพิวเตอร์,Structure Programming Languages for Computer Science,3
+CP351003,การเขียนโปรแกรมเชิงวัตถุ,Object Oriented Programming,3
+CP351004,สถาปัตยกรรมคอมพิวเตอร์,Computer Architecture,3
+CP351101,วิทยาการคำนวณ,Computational Science,3
+CP351202,องค์ประกอบของการพัฒนาโมบายแอปพลิเคชัน,Elements of Mobile Application Development,3
+CP352001,โครงสร้างข้อมูล,Data Structure,3
+CP352002,การออกแบบประสบการณ์ผู้ใช้,User Experience Design,3
+CP352101,วิทยาการข้อมูลขั้นแนะนำ,Introduction to Data Science,3
+CP352107,การประมวลผลภาษาพูด,Spoken Language Processing,3
+CP352201,เทคโนโลยีการออกแบบเว็บ,Web Design Technologies,3
+CP353109,การประมวลผลภาษาธรรมชาติ,Natural Language Processing,3
+CP353205,การพัฒนาแอปพลิเคชันด้านภูมิสารสนเทศ,Geo-Informatics Application Development,3
+CP353305,อินเทอร์เน็ตของสรรพสิ่ง,Internet of Things,3
+CP362104,วิศวกรรมข้อมูลขั้นพื้นฐาน,Basics of Data Engineering,3
+CP363205,ภาษาอนุกรมข้อมูลและการประยุกต์,Data Serialization Languages and Applications,3
+CP371001,หลักมูลภูมิสารสนเทศศาสตร์,Fundamentals of Geo-informatics,3
+CP371031,เทคโนโลยีสารสนเทศขั้นพื้นฐาน,Basics of Information Technology,3
+CP371041,ภูมิศาสตร์กายภาพ,Physical Geography,3
+CP372002,ระบบสารสนเทศภูมิศาสตร์ขั้นแนะนำ,Introduction to Geographic Information System,3
+CP372011,หลักมูลการรับรู้จากระยะไกล,Fundamentals of Remote Sensing,3
+CP411105,ระบบคอมพิวเตอร์,Computer Systems,3
+CP411106,การเขียนโปรแกรมสำหรับการเรียนรู้ของเครื่อง,Programming for Machine Learning,3
+CP411701,แรงบันดาลใจของปัญญาประดิษฐ์,Artificial Intelligence Inspiration,2
+CP421011,ความบันดาลใจในวิชาชีพความมั่นคงปลอดภัยไซเบอร์,Inspiration in Cybersecurity Career,1
+CP421021,การเขียนโปรแกรมเชิงโครงสร้าง,Structured Programming,3
+CP422001,กฏหมายและจริยธรรมด้านความมั่นคงปลอดภัยไซเบอร์,Cybersecurity Law and Ethic,3
+ED060001,กิจกรรมพลศึกษา (แบดมินตัน),PHYSICAL EDUCATION ACTIVITY (BADMINTON),1
+ED060003,กิจกรรมพลศึกษา (มวย),PHYSICAL EDUCATION ACTIVITY (BOXING),1
+ED060006,กิจกรรมพลศึกษา (จ๊อกกิ้ง),PHYSICAL EDUCATION ACTIVITY (JOGGING),1
+ED060013,กิจกรรมพลศึกษา (เทนนิส),PHYSICAL EDUCATION ACTIVITY (TENNIS),1
+ED060016,กิจกรรมพลศึกษา (เทเบิลเทนนิส),PHYSICAL EDUCATION ACTIVITY (TABLE TENNIS),1
+ED060020,กิจกรรมพลศึกษา (แอโรบิกดานซ์),PHYSICAL EDUCATION ACTIVITY (AEROBIC DANCE),1
+ED060021,นันทนาการเบื้องต้น,INTRODUCTION TO RECREATION,2
+ED060022,กิจกรรมพลศึกษา  (มวยไทย),PHYSICAL EDUCATION ACTIVITY (MUAY THAI),1
+ED215002,การถ่ายภาพสร้างสรรค์,CREATIVE PHOTOGRAPHY,2
+FA110461,ศิลปะจากเศษวัสดุ,Art Works From Scrap Materials,3
+FA110462,การผสมศาสตร์สู่การสร้างสรรค์,Mixed sciences to creativity,3
+FA120407,ภาพยนตร์และสื่อดิจิทัลออนไลน์,Film and Digital Media Content Online,3
+FA120408,การจัดวางเพื่อการออกแบบ,Layout for Design,3
+FA301201,การขับร้องประสานเสียงขั้นพื้นฐาน,BASIC CHORAL SINGING,2
+FA301202,การปฏิบัติเครื่องดนตรีขั้นพื้นฐาน,BASIC INSTRUMENTAL PLAYING,2
+FA301203,ดนตรีสมัยนิยม,POPULAR MUSIC,2
+GE141166,ศาสตร์ของความสุข,SCIENCE OF HAPPINESS,3
+GE142145,ภาวะผู้นําและการจัดการ,LEADERSHIP AND MANAGEMENT,3
+GE151144,พหุวัฒนธรรม,MULTICULTURALISM,3
+GE151162,ความเป็นพลเมืองในสังคมประชาธิปไตย,CITIZENSHIP IN DEMOCRATIC SOCIETY,3
+GE153158,วิถีชุมชนและการเรียนรู้ชุมชน,COMMUNITY WAYS OF LIFE AND COMMUNITY LEARNING,3
+GE321415,ทักษะการเรียนรู้,LEARNING SKILLS,3
+GE341511,การคิดเชิงคำนวณและเชิงสถิติสำหรับเอบีซีดี,Computational & Statistical Thinking for ABCD,3
+GE362785,การคิดเชิงสร้างสรรค์และการแก้ปัญหา,CREATIVE THINKING AND PROBLEM SOLVING,3
+GE363789,ผู้ประกอบการสร้างสรรค์,CREATIVE ENTREPRENEURS,3
+GE363879,ผู้ประกอบการนวัตกรรม,INNOVATIVE ENTREPRENEURS,3
+GE821245,สมาธิเพื่อพัฒนาชีวิต,MEDITATION FOR LIFE DEVELOPMENT,3
+HS311001,ภาษาจีน 1,CHINESE I,3
+HS321001,ภาษาญี่ปุ่นขั้นต้น 1,BASIC JAPANESE I,3
+HS321002,ภาษาญี่ปุ่นขั้นต้น 2,BASIC JAPANESE II,3
+HS331001,ภาษาเกาหลีขั้นต้น 1,Basic Korean I,3
+HS331002,ภาษาเกาหลี 2,KOREAN II,3
+HS423115,สังคมวิทยาการเมือง,POLITICAL SOCIOLOGY,3
+HS711101,ภาษาสเปนขั้นพื้นฐาน 1,BASIC SPANISH I,3
+HS721101,ภาษาเยอรมันเพื่อการสื่อสาร  1,GERMAN FOR COMMUNICATION I,3
+HS731101,ภาษาฝรั่งเศสพื้นฐาน 1,FUNDAMENTAL FRENCH I,3
+HS801103,อารยธรรมโลก,World Civilization,3
+HS801109,ประวัติศาสตร์ยุโรปสมัยใหม่,HISTORY OF MODERN EUROPE,3
+HS801113,โบราณคดีในประเทศไทย,ARCHAEOLOGY IN THAILAND,3
+HS801114,ประวัติศาสตร์กับภาพยนตร์,HISTORY AND FILMS,3
+HS801116,ประวัติศาสตร์ยุโรปสมัยกลาง,MEDIEVAL EUROPE HISTORY,3
+HS821103,ตรรกศาสตร์,LOGIC,3
+HS821106,ประวัติปรัชญาตะวันตก,HISTORY OF WESTERN PHILOSOPHY,3
+HS821107,ปรัชญาในวรรณกรรมอาเซียน,PHILOSOPHY IN ASIAN LITERATURE,3
+HS821109,จริยศาสตร์,ETHICS,3
+HS821110,ปรัชญาอินเดีย,Indian Philosophy,3
+HS821116,สุนทรียศาสตร์,AESTHETICS,3
+HS821117,ปรัชญากับวิถีชีวิต,PHILOSOPHY AND WAY OF LIFE,3
+HS821118,อภิปรัชญา,Metaphysics,3
+HS821203,ศาสนาขั้นแนะนำ,INTRODUCTION TO RELIGION,3
+HS821205,ศาสนากับสังคมและวัฒนธรรม,RELIGION AND SOCIETY AND CULTURE,3
+HS821207,พุทธศาสนากับสังคมและวัฒนธรรม,BUDDHISM AND THAI SOCIETY AND CULTURE,3
+HS821208,พุทธศาสนากับชีวิตประจำวัน,BUDDHISM AND DAILY LIFE,3
+HS821219,พุทธศาสนาและสังคมและวัฒนธรรมไทย,BUDDHISM ON THAI SOCIETY AND CULTURE,3
+HS821220,วัฒนธรรมไทย,Thai Culture,3
+HS821222,ปรัชญาการเมือง,POLITICAL PHILOSOPHY,3
+HS921101,ภาษาลาว 1,LAOTIAN I,3
+HS941101,ภาษาเวียดนาม 1,VIETNAMESE I,3
+LI101001,ภาษาอังกฤษ 1,ENGLISH I,3
+LI101002,ภาษาอังกฤษ 2,ENGLISH II,3
+LI102003,ภาษาอังกฤษ 3,ENGLISH III,3
+LI102004,ภาษาอังกฤษ 4,ENGLISH IV,3
+LI203010,ภาษาอังกฤษสำหรับวิทยาศาสตร์และเทคโนโลยี,ENGLISH FOR SCIENCES AND TECHNOLOGY,3
+LI903001,ทักษะสำหรับการสอบภาษาอังกฤษเชิงวิชาการ,Skills for Academic English Tests,3
+LI903002,ภาษาอังกฤษเพื่อโอกาสในการทำงาน,English for Job Opportunities,3
+MD530207,การจัดการชีวิต,Life Management,2
+MD530208,การให้คำปรึกษาในชีวิตประจำวัน,Counseling in daily life,2
+MD600201,การจัดการภาวะฉุกเฉินทางการแพทย์ในชีวิตประจำวัน,BASIC MEDICAL EMERGENCY MANAGEMENT IN DAILY LIFE,2
+MD751226,การดูแลการบาดเจ็บ,Injury Care,2
+PH511101,แนะนําการสาธารณสุข,INTRODUCTION OF PUBLIC HEALTH,3
+PH515330,ความรอบรู้ด้านสุขภาพทางเพศ,Sexual Health Literacy,3
+SC001002,วิทยาศาสตร์ เทคโนโลยี และนวัตกรรมเพื่อการพัฒนาที่ยั่งยืน,SCIENCE TECHNOLOGY AND INNOVATION FOR SUSTAINABLE DEVELOPMENT,3
+SC002001,การเตรียมความพร้อมก่อนปฏิบัติงานสหกิจศึกษาสำหรับนักศึกษาคณะวิทยาศาสตร์,ORIENTATION TO CO-OPERATIVE EDUCATION FOR SCIENCE STUDENTS,1
+SC002002,นิติวิทยาศาสตร์เบื้องต้น,ELEMENTARY TO FORENSIC SCIENCE,3
+SC002004,หลักมูลการระบุรูปพรรณส่วนบุคคล,FUNDAMENTAL OF PERSONAL IDENTIFICATION,3
+SC002005,สารพิษชีวภาพทางนิติวิทยาศาสตร์,BIOTOXINS IN FORENSIC SCIENCE,3
+SC002006,พิษวิทยาในนิติวิทยาศาสตร์ขั้นแนะนำ,INTRODUCTION TO TOXICOLOGY IN FORENSIC SCIENCE,3
+SC002007,เทคนิคทางชีวโมเลกุลสำหรับนิติวิทยาศาสตร์ยุคใหม่,Molecular Techniques in the New Era of Forensic Science,3
+SC002104,วิทยาศาสตร์กายภาพ,PHYSICAL SCIENCE,3
+SC101009,ชีววิทยาสำหรับวิทยาศาสตร์กายภาพ,BIOLOGY FOR PHYSICAL SCIENCE,3
+SC101010,ปฏิบัติการชีววิทยาสำหรับวิทยาศาสตร์กายภาพ,BIOLOGY FOR PHYSICAL SCIENCE LABORATORY,1
+SC201006,ปฏิบัติการเคมีทั่วไป,GENERAL CHEMISTRY LABORATORY,1
+SC201008,เคมีหลักมูล,FUNDAMENTAL CHEMISTRY,3
+SC310001,การเขียนโปรแกรมคอมพิวเตอร์ 1,COMPUTER PROGRAMMING I,3
+SC310002,โครงสร้างข้อมูล,DATA STRUCTURES,3
+SC310003,ระบบฐานข้อมูลและการออกแบบ,DATABASE SYSTEMS AND DESIGN,3
+SC310004,ปฎิบัติการระบบฐานข้อมูลและการออกแบบ,DATABASE SYSTEMS AND DESIGN LABORATORY,1
+SC310006,การพัฒนาโปรแกรมประยุกต์สำหรับอุปกรณ์เคลื่อนที่และเว็บ,Mobile and Web Application Development,3
+SC311001,วิทยาการคอมพิวเตอร์หลักมูล,FUNDAMENTALS OF COMPUTER SCIENCE,3
+SC311002,การเขียนโปรแกรมเชิงโครงสร้างสำหรับวิทยาการคอมพิวเตอร์,STRUCTURED PROGRAMMING FOR COMPUTER SCIENCE,3
+SC311003,การเขียนโปรแกรมเชิงวัตถุ,OBJECT – ORIENTED PROGRAMMING,3
+SC311004,สถาปัตยกรรมระบบคอมพิวเตอร์,COMPUTER SYSTEMS ARCHITECTURE,3
+SC311301,การพัฒนาโปรแกรมประยุกต์บนเว็บ,WEB APPLICATION DEVELOPMENT,3
+SC311503,การเขียนโปรแกรมสคริปต์,SCRIPT PROGRAMMING,3
+SC312001,โครงสร้างข้อมูล,DATA STRUCTURES,3
+SC312002,การโต้ตอบระหว่างมนุษย์และคอมพิวเตอร์,HUMAN COMPUTER INTERACTION,3
+SC312003,ระบบจัดการฐานข้อมูลและการออกแบบฐานข้อมูล,DATABASE MANAGEMENT SYSTEM AND DATABASE DESIGN,3
+SC312004,ปฏิบัติการระบบฐานข้อมูลและการออกแบบ,DATABASE SYSTEMS AND DESIGN LABORATORY,1
+SC312005,เครือข่ายคอมพิวเตอร์,COMPUTER NETWORKS,3
+SC312006,การวิเคราะห์ขั้นตอนวิธี,ANALYSIS OF ALGORITHM,3
+SC312101,การเรียนรู้เชิงเครื่องจักรสำหรับวิทยาการข้อมูล,MACHINE LEARNING FOR DATA SCIENCE,3
+SC312102,การจัดการความรู้,KNOWLEDGE MANAGEMENT,3
+SC312104,วิทยาการข้อมูลขั้นแนะนำ,INTRODUCTION TO DATA SCIENCE,3
+SC312105,วิศวกรรมข้อมูลขั้นพื้นฐาน,BASICS OF DATA ENGINEERING,3
+SC312201,พื้นฐานการเขียนโปรแกรมเกม,BASIC OF GAME PROGRAMMING,3
+SC312302,เทคโนโลยีการออกแบบเว็บ,WEB DESIGN TECHNOLOGIES,3
+SC312303,การพัฒนาแอปพลิเคชันบนอุปกรณ์เคลื่อนที่,MOBILE APPLICATION DEVELOPMENT,3
+SC312503,การแข่งขันเขียนโปรแกรมคอมพิวเตอร์,Computer Programming Contest,3
+SC313001,ระบบปฏิบัติการและการเขียนโปรแกรมซีสเต็มคอล,OPERATING SYSTEMS AND SYSTEM CALLS PROGRAMMING,3
+SC313002,หลักการออกแบบพัฒนาซอฟต์แวร์,PRINCIPLES OF SOFTWARE DESIGN AND DEVELOPMENT,3
+SC313003,การวิเคราะห์และออกแบบระบบ,SYSTEM ANALYSIS AND DESIGN,3
+SC313004,วิศวกรรมซอฟต์แวร์,SOFTWARE ENGINEERING,3
+SC313005,ทฤษฎีการคำนวณ,THEORY OF COMPUTATION,3
+SC313006,ปัญญาประดิษฐ์,ARTIFICIAL INTELLIGENCE,3
+SC313101,วิทยาการคำนวณ,COMPUTATIONAL SCIENCE,3
+SC313102,โครงข่ายประสาท,NEURAL NETWORKS,3
+SC313103,การวิเคราะห์วิทยาข้อมูลและการทำเหมืองข้อมูล,DATA ANALYTICS AND MINING,3
+SC313107,การวิเคราะห์ข้อมูลขนาดใหญ่,BIG DATA ANALYTICS,3
+SC313201,การประมวลผลภาพดิจิทัล,DIGITAL IMAGE PROCESSING,3
+SC313302,การเชื่อมต่ออินเตอร์เน็ต,INTERNETWORKING,3
+SC313403,ความมั่นคงสารสนเทศและไซเบอร์,INFORMATION AND CYBER SECURITY,3
+SC313504,การประกันคุณภาพซอฟต์แวร์,SOFTWARE QUALITY ASSURANCE,3
+SC313506,พื้นฐานการทวนสอบเชิงรูปนัย,FUNDAMENTALS OF FORMAL VERIFICATION,3
+SC313761,สัมมนาทางวิทยาการคอมพิวเตอร์,SEMINAR IN COMPUTER SCIENCE,1
+SC313762,ระเบียบวิธีวิจัย,RESEARCH METHODOLOGY,3
+SC314774,โครงงานวิทยาการคอมพิวเตอร์ 1,COMPUTER SCIENCE PROJECT I,3
+SC314775,โครงงานวิทยาการคอมพิวเตอร์ 2,COMPUTER SCIENCE PROJECT II,3
+SC314785,สหกิจศึกษาทางวิทยาการคอมพิวเตอร์,CO-OPERATIVE EDUCATION IN COMPUTER SCIENCE,6
+SC322301,ตรรกะดิจิทัลและระบบฝังตัว,DIGITAL LOGIC AND EMBEDDED SYSTEMS,3
+SC331001,หลักมูลภูมิสารสนเทศศาสตร์,FUNDAMENTALS OF GEO-INFORMATICS,3
+SC331021,เทคโนโลยีสารสนเทศขั้นพื้นฐาน,BASICS OF INFORMATION TECHNOLOGY,3
+SC331031,ธรณีวิทยาขั้นแนะนำ,INTRODUCTION TO GEOLOGY,2
+SC331032,ภูมิศาสตร์กายภาพ,"PHYSICAL GEOGRAPHY_x000D_
+PHYSICAL",3
+SC332002,ระบบสารสนเทศภูมิศาสตร์ขั้นแนะนำ,INTRODUCTION TO GEOGRAPHIC INFORMATION SYSTEM,3
+SC332011,หลักมูลการรับรู้จากระยะไกล,FUNDAMENTALS OF REMOTE SENSING,3
+SC332101,ภูมิสารสนเทศศาสตร์สำหรับชีวิตประจำวัน,GEO-INFORMATICS FOR DAILY LIFE,2
+SC332102,หลักการทำแผนที่,PRINCIPLES OF CARTOGRAPHY,2
+SC332103,ระบบดาวเทียมนำทางสากลขั้นแนะนำ,INTRODUCTION TO GLOBAL NAVIGATION SATELLITE SYSTEM,3
+SC332211,รูปถ่ายทางอากาศและการแปลความหมาย,AERIAL PHOTOGRAPH AND INTERPRETATION,3
+SC332213,การสำรวจรังวัดและระบบกำหนดตำแหน่งบนโลก,SURVEYING AND GLOBAL POSITIONING SYSTEM,3
+SC333012,การประมวลผลเชิงเลขของข้อมูลจากดาวเทียม,DIGITAL PROCESSING OF SATELLITE DATA,3
+SC333033,ภูมิศาสตร์ของดิน,SOIL GEOGRAPHY,3
+SC333034,การวางแผนการใช้ที่ดินขั้นแนะนำ,INTRODUCTION TO LAND USE PLANNING,3
+SC333201,การวิเคราะห์เชิงพื้นที่,GEOSPATIAL ANALYSIS,3
+SC333202,การวางผังเมืองและภูมิสารสนเทศศาสตร์,CITY PLANNING AND GEO-INFORMATICS,3
+SC333212,หลักการโฟโตแกรมเมตรี,PRINCIPLES OF PHOTOGRAMMETRY,3
+SC333214,การรับรู้จากระยะไกลด้วยคลื่นไมโครเวฟขั้นแนะนำ,INTRODUCTION TO MICROWAVE REMOTE SENSING,3
+SC333301,การเขียนโปรแกรมในระบบสารสนเทศภูมิศาสตร์,PROGRAMMING IN GEOGRAPHIC INFORMATION SYSTEM,3
+SC333302,การประยุกต์ทำแผนที่บนเว็บ,WEB MAPPING APPLICATION,3
+SC333303,การออกแบบและมาตรฐานของฐานข้อมูลเชิงพื้นที่,DESIGN AND STANDARD GEO-SPATIAL DATABASE,3
+SC333701,สัมมนาทางภูมิสารสนเทศศาสตร์,SEMINAR IN GEO-INFORMATICS,1
+SC333702,ระเบียบวิธีวิจัยทางภูมิสารสนเทศศาสตร์,RESEARCH METHODOLOGY IN GEO-INFORMATICS,3
+SC334003,ภูมิสารสนเทศศาสตร์ประยุกต์,APPLIED GEO-INFORMATICS,3
+SC334703,โครงงานวิจัยทางภูมิสารสนเทศศาสตร์,RESEARCH PROJECT IN GEO-INFORMATICS,3
+SC334785,สหกิจศึกษา,CO-OPERATIVE EDUCATION,9
+SC361001,ความบันดาลใจในวิชาชีพเทคโนโลยีสารสนเทศ,Inspiration in IT Career,1
+SC361002,การเขียนโปรแกรมเชิงโครงสร้างสำหรับเทคโนโลยีสารสนเทศ,Structured Programming for Information Technology,3
+SC361003,แนวคิดและการเขียนโปรแกรมเชิงวัตถุ,Object Oriented Concepts and Programming,3
+SC361004,การโต้ตอบระหว่างมนุษย์กับคอมพิวเตอร์,Human-Computer Interaction,3
+SC361005,องค์ประกอบและสถาปัตยกรรมคอมพิวเตอร์ขั้นแนะนำ,Introduction to Computer Organization and Architecture,3
+SC362001,ระบบปฏิบัติการ,Operating Systems,3
+SC362002,ขั้นตอนวิธีและโครงสร้างข้อมูล,Algorithms and Data Structures,3
+SC362003,เครือข่ายคอมพิวเตอร์ขั้นแนะนำ,Introduction to Computer Networking,3
+SC362004,การเขียนโปรแกรมประยุกต์บนเว็บ,Web Application Programming,3
+SC362005,การวิเคราะห์และออกแบบฐานข้อมูล,Database Analysis and Design,3
+SC362006,ความมั่นคงเทคโนโลยีสารสนเทศและการสื่อสาร,Information and Communication Technology Security,3
+SC362007,การเขียนโปรแกรมอุปกรณ์เคลื่อนที่,Mobile Device Programming,3
+SC362101,ระบบสารสนเทศทางธุรกิจ,Business Information Systems,3
+SC362102,วิศวกรรมซอฟต์แวร์,Software Engineering,3
+SC362201,เทคโนโลยีการออกแบบเว็บ,Web Design Technologies,3
+SC362202,การพัฒนาโปรแกรมประยุกต์บนเว็บสำหรับอุปกรณ์เคลื่อนที่,Mobile Web Application Development,3
+SC362301,ตรรกะดิจิทัลและระบบฝังตัว,Digital Logic and Embedded Systems,3
+SC362302,เครือข่ายไร้สายและเคลื่อนที่กับอินเทอร์เน็ตของสรรพสิ่ง,Wireless and Mobile Networks with Internet of Things,3
+SC363001,การวิเคราะห์และออกแบบระบบ,Systems Analysis and Design,3
+SC363002,การจัดการเชิงกลยุทธ์เทคโนโลยีสารสนเทศ,Strategic Management of Information Technology,3
+SC363003,วิชาชีพเทคโนโลยีสารสนเทศ,Information Technology Profession,3
+SC363101,การทดสอบซอฟต์แวร์และการประกันคุณภาพ,Software Testing and Quality Assurance,3
+SC363102,ระบบธุรกิจอัจฉริยะ,Business Intelligence System,3
+SC363204,การพัฒนาโปรแกรมประยุกต์บนเว็บด้วยภาษาจาวา,Java Web Application Development,3
+SC363301,การบริหารและบำรุงรักษาระบบ,System Administrationand Maintenance,3
+SC363303,เทคโนโลยีความมั่นคงปลอดภัยไซเบอร์เกิดใหม่,Cybersecurity Emerging Technology,3
+SC363305,การประมวลผลแบบกลุ่มเมฆและการประยุกต์,Cloud Computing and Application,3
+SC363762,ระเบียบวิธีวิจัย,Research Methodology,3
+SC401001,คณิตศาสตร์สำหรับวิทยาศาสตร์สุขภาพ,MATHEMATICS FOR HEALTH SCIENCE,3
+SC401005,คณิตศาสตร์สำหรับวิทยาศาสตร์สุขภาพ,MATHEMATICS FOR HEALTH SCIENCE,3
+SC401006,คณิตศาสตร์ทั่วไป,GENERAL MATHEMATICS,3
+SC401201,แคลคูลัสสำหรับวิทยาศาสตร์กายภาพ 1,CALCULUS FOR PHYSICAL SCIENCE I,3
+SC401202,แคลคูลัสสำหรับวิทยาศาสตร์กายภาพ 2,CALCULUS  FOR PHYSICAL SCIENCE II,3
+SC402101,พีชคณิตเชิงเส้น 1,LINEAR ALGEBRA I,3
+SC402401,วิยุตคณิตและการประยุกต์,DISCRETE MATHEMATICS AND APPLICATIONS,3
+SC403602,วิธีเชิงตัวเลขสำหรับวิทยาการคอมพิวเตอร์,NUMERICAL METHODS FOR COMPUTER SCIENCE,3
+SC501000,ฟิสิกส์เบื้องต้น,ELEMENTARY PHYSICS,3
+SC501003,ปฏิบัติการฟิสิกส์ทั่วไป 1,GENERAL PHYSICS LABORATORY I,1
+SC602001,สถิติขั้นต้น,Introduction to Statistics,3
+SC602003,สถิติเบื้องต้น,ELEMENTARY STATISTICS,3
+SC602005,ความน่าจะเป็นและสถิติ,PROBABILITY AND STATISTICS,3
+SC902201,วิทยาศาสตร์สิ่งแวดล้อม,ENVIRONMENTAL SCIENCE,3
+TE035013,การถนอมอาหารเบื้องต้น,INTRODUCTION TO FOOD PRESERVATIONS,3
+TE041002,วิทยาศาสตร์ของโลก,EARTH SCIENCE,3

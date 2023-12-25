@@ -106,8 +106,8 @@ module.exports = {
         await queryInterface.bulkInsert('TrackSelections', [
             {
                 id: 1,
-                acadyear: 2565,
-                title: "คัดแทรคประจำปีการศึกษา 2565",
+                acadyear: 2564,
+                title: "การคัดเลือกความเชี่ยวชาญ วิทยาลัยการคอมพิวเตอร์ หลักสูตรเทคโนโลยีสารสนเทศ ปีการศึกษา 2564",
                 startAt: new Date(),
                 expiredAt: new Date(),
                 createdAt: new Date(),

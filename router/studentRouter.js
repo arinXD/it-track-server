@@ -89,7 +89,7 @@ router.post("/track/select", async (req, res) => {
     }
     const selectionDetailId = []
     try {
-        const selectId = await Selection.findOne({
+        let selectId = await Selection.findOne({
             where: { stu_id },
             include: [
                 {
@@ -105,8 +105,6 @@ router.post("/track/select", async (req, res) => {
             }
         }
         const userSelection = await Selection.upsert(selectData)
-        console.log(userSelection);
-        // const insertedArray = []
         for (const index in subjectsData) {
             let selectDetail = subjectsData[index]
             if (selectId) {
@@ -116,13 +114,12 @@ router.post("/track/select", async (req, res) => {
                 selectDetail.selection_id = userSelection[0].dataValues.id
             }
             await SelectionDetail.upsert(selectDetail)
-            // const insertData = await SelectionDetail.upsert(selectDetail)
-            // insertedArray.push(insertData)
         }
+        selectId.dataValues.updatedAt = new Date()
+        console.log(selectId);
         return res.status(201).json({
             ok: true,
             data: selectId,
-            // insertedSubjects: insertedArray
         })
     } catch (error) {
         console.error(error);
