@@ -15,16 +15,13 @@ const app = express()
 //--------------------
 app.use(express.json());
 app.use(cors(
-    // {
-    //     credentials: true,
-    //     origin: [
-    // "https://it-track.arinchawut.com",
-    // "it-track-client.vercel.app",
-    //         "http://localhost:4000",
-    //         "http://localhost:3000",
-    //         // "http://192.168.31.116:3000",
-    //     ]
-    // }
+    {
+        credentials: true,
+        origin: [
+            "it-track-client.vercel.app",
+            "http://localhost:3000",
+        ]
+    }
 ))
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
