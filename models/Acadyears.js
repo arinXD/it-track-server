@@ -6,15 +6,23 @@ module.exports = (sequelize, DataTypes) => {
     class Acadyears extends Model {
 
         static associate(models) {
-            // define association here
+            this.hasMany(models.TrackSelection, {
+                foreignKey: 'acadyear',
+                sourceKey: 'acadyear',
+            });
         }
     }
     Acadyears.init({
-        acadyear: DataTypes.INTEGER,
+        acadyear: {
+            type: DataTypes.INTEGER,
+            primaryKey: true, // Add this line to specify acadyear as the primary key
+        },
         daletedAt: DataTypes.DATE
     }, {
         sequelize,
         modelName: 'Acadyears',
+        paranoid: true,
+        deletedAt: 'daletedAt',
     });
     return Acadyears;
 };

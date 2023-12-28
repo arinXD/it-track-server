@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('students', {
+        await queryInterface.createTable('Students', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
@@ -15,15 +15,57 @@ module.exports = {
                 defaultValue: null,
                 type: Sequelize.STRING
             },
+            email:{
+                allowNull: true,
+                unique: true,
+                defaultValue: null,
+                type: Sequelize.STRING
+            },
             user_id: {
-                allowNull: false,
+                allowNull: true,
+                defaultValue: null,
                 unique: true,
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'users',
+                    model: 'Users',
                     key: 'id',
                 },
-                onDelete: 'CASCADE',
+                onDelete: 'SET NULL',
+            },
+            program: {
+                allowNull: true,
+                defaultValue: null,
+                type: Sequelize.STRING,
+                references: {
+                    model: 'Programs',
+                    key: 'program',
+                },
+                onDelete: 'SET NULL',
+            },
+            courses_type: {
+                allowNull: true,
+                defaultValue: null,
+                type: Sequelize.STRING,
+            },
+            acadyear: {
+                allowNull: true,
+                defaultValue: null,
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'Acadyears',
+                    key: 'acadyear',
+                },
+                onDelete: 'SET NULL',
+            },
+            track: {
+                allowNull: true,
+                defaultValue: null,
+                type: Sequelize.STRING,
+                references: {
+                    model: 'Tracks',
+                    key: 'track',
+                },
+                onDelete: 'SET NULL',
             },
             createdAt: {
                 type: Sequelize.DATE,
@@ -34,6 +76,6 @@ module.exports = {
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('students');
+        await queryInterface.dropTable('Students');
     }
 };

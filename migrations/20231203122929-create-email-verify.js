@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('emailverifies', {
+        await queryInterface.createTable('EmailVerifies', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
@@ -14,7 +14,7 @@ module.exports = {
                 unique: true,
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'users',
+                    model: 'Users',
                     key: 'id',
                 },
                 onDelete: 'CASCADE',
@@ -37,6 +37,6 @@ module.exports = {
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('emailverifies');
+        await queryInterface.dropTable('EmailVerifies');
     }
 };
