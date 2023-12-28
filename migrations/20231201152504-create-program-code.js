@@ -15,16 +15,16 @@ module.exports = {
             version: {
                 type: Sequelize.INTEGER
             },
-            // program: {
-            //     allowNull: false,
-            //     autoIncrement: false,
-            //     type: Sequelize.STRING,
-            //     references: {
-            //         model: 'Programs',
-            //         key: 'program'
-            //     },
-            //     allowNull: false
-            // },
+            program: {
+                allowNull: false,
+                autoIncrement: false,
+                type: Sequelize.STRING,
+                references: {
+                    model: 'Programs',
+                    key: 'program'
+                },
+                allowNull: false
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE
