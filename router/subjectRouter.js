@@ -64,7 +64,7 @@ router.post("/insertSubjectsFromExcel", async (req, res) => {
 router.get("/:id", async (req, res) => {
     try {
         const subjectId = req.params.id;
-        const subject = await Subject.findByPk(subjectId);
+        const subject = await Subject.findOne({ where: { subject_id: subjectId } });
 
         if (!subject) {
             return res.status(404).json({
@@ -90,7 +90,7 @@ router.post("/updateSubject/:id", async (req, res) => {
     try {
         const subjectId = req.params.id;
         const { semester, subject_code, title_th, title_en, information, cradit, sub_group_id, group_id, program_code_id } = req.body;
-        const updateSubject = await Subject.findByPk(subjectId);
+        const updateSubject = await Subject.findOne({ where: { subject_id: subjectId } });
 
         if (!updateSubject) {
             return res.status(404).json({
