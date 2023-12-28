@@ -18,7 +18,7 @@ app.use(cors(
     {
         credentials: true,
         origin: [
-            "it-track-client.vercel.app",
+            "https://it-track-client.vercel.app",
             "http://localhost:3000",
         ]
     }

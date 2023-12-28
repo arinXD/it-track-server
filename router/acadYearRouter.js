@@ -131,10 +131,9 @@ router.put("/:id", async (req, res) => {
             message: `ปีการศึกษา ${id} ถูกแก้ไขเป็น ${data.acadyear}`
         })
     } catch (error) {
-        console.log(error);
         return res.status(500).json({
             ok: false,
-            message: "Server error"
+            message: `ปีการศึกษา ${data.acadyear} ถูกเพิ่มแล้ว`
         })
     }
 })
