@@ -93,6 +93,15 @@ const subGroupRouter = require('./router/subGroupRouter');
 
 //--------------------
 // 
+//  program router
+//
+//--------------------
+
+const programRouter = require('./router/programRouter')
+const programCodeRouter = require('./router/programCodeRouter')
+
+//--------------------
+// 
 //  middleware router
 //
 //--------------------
@@ -112,6 +121,9 @@ app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/groups', groupRouter);
 app.use('/api/subgroups', subGroupRouter);
+
+app.use('/api/programs', programRouter);
+app.use('/api/programcodes', programCodeRouter);
 
 app.get("/api/test", async (req, res) => {
     try {

@@ -1,17 +1,17 @@
 var express = require('express');
 var router = express.Router();
 const models = require('../models');
-const Categorie = models.Categorie
+const Program = models.Program
 
 router.get("/", async (req, res) => {
     try {
-        const categories = await Categorie.findAll();
+        const programs = await Program.findAll();
         return res.status(200).json({
             ok: true,
-            data: categories
+            data: programs
         });
     } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('Error fetching programs:', error);
         return res.status(500).json({
             ok: false,
             error: 'Internal Server Error'
@@ -19,20 +19,20 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.post("/insertCategory", async (req, res) => {
+router.post("/insertProgram", async (req, res) => {
     try {
-        const { category_title } = req.body;
+        const { program_title } = req.body;
 
-        const newCategory = await Categorie.create({
-            category_title: category_title,
+        const newProgram = await Program.create({
+            program_title: program_title,
         });
 
         return res.status(201).json({
             ok: true,
-            data: newCategory
+            data: newProgram
         });
     } catch (error) {
-        console.error('Error inserting category:', error);
+        console.error('Error inserting program:', error);
         return res.status(500).json({
             ok: false,
             error: 'Internal Server Error'
@@ -40,25 +40,24 @@ router.post("/insertCategory", async (req, res) => {
     }
 });
 
-// Get a specific category by ID
 router.get("/:id", async (req, res) => {
     try {
-        const categoryId = req.params.id;
-        const category = await Categorie.findByPk(categoryId);
+        const programId = req.params.id;
+        const program = await Program.findByPk(programId);
 
-        if (!category) {
+        if (!program) {
             return res.status(404).json({
                 ok: false,
-                error: 'Category not found'
+                error: 'Program not found'
             });
         }
 
         return res.status(200).json({
             ok: true,
-            data: category
+            data: program
         });
     } catch (error) {
-        console.error('Error fetching category:', error);
+        console.error('Error fetching program:', error);
         return res.status(500).json({
             ok: false,
             error: 'Internal Server Error'
@@ -66,39 +65,38 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// Update a specific category by ID
-router.post("/updateCategory/:id", async (req, res) => {
+router.post("/updateProgram/:id", async (req, res) => {
     try {
-        const categoryId = req.params.id;
-        const { category_title } = req.body;
+        const programId = req.params.id;
+        const { program_title } = req.body;
 
-        if (!category_title) {
+        if (!program_title) {
             return res.status(400).json({
                 ok: false,
-                error: 'category_title is required in the request body'
+                error: 'program_title is required in the request body'
             });
         }
 
-        const existingCategory = await Categorie.findByPk(categoryId);
+        const existingProgram = await Program.findByPk(programId);
 
-        if (!existingCategory) {
+        if (!existingProgram) {
             return res.status(404).json({
                 ok: false,
-                error: 'Category not found'
+                error: 'Program not found'
             });
         }
 
-        await existingCategory.update({
-            category_title: category_title,
+        await existingProgram.update({
+            program_title: program_title,
             // Add other fields as needed
         });
 
         return res.status(200).json({
             ok: true,
-            data: existingCategory
+            data: existingProgram
         });
     } catch (error) {
-        console.error('Error updating category:', error);
+        console.error('Error updating program:', error);
         return res.status(500).json({
             ok: false,
             error: 'Internal Server Error'
@@ -106,29 +104,29 @@ router.post("/updateCategory/:id", async (req, res) => {
     }
 });
 
-router.delete("/deleteCategory/:id", async (req, res) => {
+router.delete("/deleteProgram/:id", async (req, res) => {
     try {
-        const categoryId = req.params.id;
+        const programId = req.params.id;
 
-        const result = await Categorie.destroy({
+        const result = await Program.destroy({
             where: {
-                id: categoryId
+                id: programId
             }
         });
 
         if (result === 0) {
             return res.status(404).json({
                 ok: false,
-                error: 'Category not found'
+                error: 'Program not found'
             });
         }
 
         return res.status(200).json({
             ok: true,
-            message: 'Category deleted successfully'
+            message: 'Program deleted successfully'
         });
     } catch (error) {
-        console.error('Error deleting category:', error);
+        console.error('Error deleting Program:', error);
         return res.status(500).json({
             ok: false,
             error: 'Internal Server Error'
@@ -136,4 +134,5 @@ router.delete("/deleteCategory/:id", async (req, res) => {
     }
 });
 
-module.exports = router;
+
+module.exports = router
