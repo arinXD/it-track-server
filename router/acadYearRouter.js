@@ -3,23 +3,6 @@ var router = express.Router();
 const models = require('../models');
 const Acadyears = models.Acadyears
 
-const formatDateTime = (date) => {
-    const originalDateTime = new Date(date);
-
-    const thailandOptions = {
-        timeZone: "Asia/Bangkok",
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-        // hour: "numeric",
-        // minute: "numeric",
-        // second: "numeric",
-        hour12: false,
-    };
-
-    const formattedDateTime = originalDateTime.toLocaleString("en-US", thailandOptions);
-    return formattedDateTime
-}
 
 router.get("/", async (req, res) => {
     try {
@@ -29,13 +12,6 @@ router.get("/", async (req, res) => {
                 ['acadyear', 'DESC'],
             ]
         })
-        for (let e of acadyears) {
-            e.dataValues.createdAt = formatDateTime(e.dataValues.createdAt)
-            e.dataValues.updatedAt = formatDateTime(e.dataValues.updatedAt)
-            if (e.dataValues.daletedAt) {
-                e.dataValues.daletedAt = formatDateTime(e.dataValues.daletedAt)
-            }
-        }
         return res.status(200).json({
             ok: true,
             data: acadyears
@@ -80,26 +56,34 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
     const { acadyear } = req.body
+    let result = []
     try {
-        await Acadyears.create({ acadyear })
+        if(acadyear.length===0){
+            return res.status(400).json({
+                ok: false,
+                message: `กรุณากรอกข้อมูล`
+            })
+        }
+        for(let element of acadyear) {
+            const acad = await Acadyears.findOne({ where: { acadyear: element } })
+            if(acad){
+                result.push({ok:false, message: `ปีการศึกษา ${element} ถูกเพิ่มแล้ว`})
+            }else{
+                await Acadyears.create({ acadyear: element })
+                result.push({ok:true, message: `เพิ่มปีการศึกษา ${element} เรียบร้อย`})
+            }
+        };
+        console.log(result);
         return res.status(200).json({
             ok: true,
-            message: `เพิ่มปีการศึกษา ${acadyear} เรียบร้อย`
+            message: `เพิ่มปีการศึกษาเรียบร้อย`,
+            data: result
         })
     } catch (error) {
-        // const { value, type } = error.errors.map(e => {
-        //     if (e.value && e.type) {
-        //         return {
-        //             value: e.value,
-        //             type: e.type,
-        //         };
-        //     }
-        //     return null;
-        // }).filter(Boolean)[0];
-
+        console.error(error);
         return res.status(500).json({
             ok: false,
-            message: `ปีการศึกษา ${acadyear} ถูกเพิ่มแล้ว`
+            message: "Data error",
         })
     }
 })
