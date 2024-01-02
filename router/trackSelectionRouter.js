@@ -3,7 +3,10 @@ var router = express.Router();
 const models = require('../models');
 const TrackSelection = models.TrackSelection
 const TrackSubject = models.TrackSubject
+const Selection = models.Selection
 const Subject = models.Subject
+const Student = models.Student
+const SelectionDetail = models.SelectionDetail
 const adminMiddleware = require("../middleware/adminMiddleware")
 
 const trackSelectAttr = []
@@ -43,6 +46,42 @@ router.get("/:id", async (req, res) => {
                 model: Subject,
                 attributes: subjectAttr,
             }, ],
+        })
+        return res.status(200).json({
+            ok: true,
+            data
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+router.get("/:id/subjects/students", adminMiddleware, async (req, res) => {
+    const id = req.params.id
+    try {
+        const data = await TrackSelection.findOne({
+            where: {
+                id
+            },
+            include: [{
+                    model: Subject,
+                    attributes: subjectAttr,
+                },
+                {
+                    model: Selection,
+                    include:[
+                        {
+                            model: Student
+                        },
+                        {
+                            model: SelectionDetail
+                        },
+                    ]
+                },
+            ],
         })
         return res.status(200).json({
             ok: true,
@@ -145,6 +184,28 @@ router.post("/", adminMiddleware, async (req, res) => {
                 message: `การคัดแทรคปีการศึกษา ${acadyear} ถูกเพิ่มไปแล้ว`
             })
         }
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+
+// del
+router.delete("/:id", adminMiddleware, async (req, res) => {
+    const id = req.params.id
+    try {
+        await TrackSelection.destroy({
+            where: {
+                acadyear: id
+            },
+        });
+        return res.status(200).json({
+            ok: true,
+            message: `ลบการคัดแทรคปีการศึกษา ${id} เรียบร้อย`
+        })
     } catch (err) {
         console.error(err);
         return res.status(500).json({

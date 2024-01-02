@@ -17,7 +17,7 @@ module.exports = {
                     model: 'TrackSelections',
                     key: 'id',
                 },
-                onDelete: 'SET NULL',
+                onDelete: 'CASCADE',
             },
             subject_code: {
                 allowNull: true,

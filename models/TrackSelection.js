@@ -15,10 +15,6 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "track_selection_id",
                 otherKey: "subject_code"
             });
-            this.hasMany(models.Enrollment, {
-                foreignKey: 'track_selection_id',
-                sourceKey: 'id',
-            });
             this.hasMany(models.Selection, {
                 foreignKey: 'track_selection_id',
                 sourceKey: 'id',
