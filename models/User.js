@@ -8,9 +8,6 @@ module.exports = (sequelize, DataTypes) => {
             this.hasOne(models.Student, {
                 foreignKey: "user_id"
             });
-            this.hasOne(models.Admin, {
-                foreignKey: "user_id"
-            });
             this.hasOne(models.Teacher, {
                 foreignKey: "user_id"
             });

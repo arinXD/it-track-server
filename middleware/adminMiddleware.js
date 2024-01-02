@@ -1,4 +1,3 @@
-const { log } = require("util");
 const model = require("../models");
 const User = model.User;
 const jwt = require("jsonwebtoken");
@@ -8,12 +7,11 @@ const accessRoll = ["admin", "teacher"];
 
 const isAdmin = async (req, res, next) => {
     const authToken = req.headers["authorization"];
-
     if (authToken) {
         try {
             const user = jwt.verify(authToken, process.env.SECRET_KEY);
             const userRole = await User.findOne({
-                where: { email: user.email },
+                where: { email: user.data.email },
                 attributes: ["role"],
             });
             let role;
@@ -31,7 +29,7 @@ const isAdmin = async (req, res, next) => {
                 });
             }
         } catch (err) {
-            // Handle wrong secret key or other verification errors
+            // Handle wrong secret key
             return res.status(401).json({
                 ok: false,
                 message: "Authentication failed. Invalid token.",

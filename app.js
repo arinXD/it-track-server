@@ -4,10 +4,8 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors')
 const session = require('express-session')
-
-const mysql = require('mysql2/promise')
 const { Sequelize, DataTypes } = require('sequelize')
-
+require("dotenv").config();
 const app = express()
 // test awdwdwd
 
@@ -17,14 +15,15 @@ const app = express()
 //
 //--------------------
 app.use(express.json());
-app.use(cors({
-    credentials: true,
-    origin: [
-        "http://localhost:4000",
-        "http://localhost:3000",
-        // "http://192.168.31.116:3000",
-    ]
-}))
+app.use(cors(
+    {
+        credentials: true,
+        origin: [
+            "https://it-track-client.vercel.app",
+            "http://localhost:3000",
+        ]
+    }
+))
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(logger('dev'));
@@ -42,41 +41,19 @@ app.use(express.static(path.join(__dirname, 'public')))
 //--------------------
 const port = 4000
 global.conn = null
-const initMySQL = async () => {
-    conn = await mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        password: '',
-        database: "it_track"
-    })
-    // conn = await mysql.createConnection({
-    //     host: '172.104.62.106',
-    //     user: 'arincvaq_arin',
-    //     password: '0847172849aB_',
-    //     database: "arincvaq_it_track"
-    // })
-}
-const sequelize = new Sequelize('it_track', 'root', '', {
-    host: 'localhost',
-    dialect: 'mysql'
-})
+const sequelize = new Sequelize(
+    process.env.DATABASE,
+    process.env.DATABASE_USER,
+    process.env.DATABASE_PASSWORD,
+    {
+        host: process.env.DATABASE_HOST,
+        dialect: 'mysql'
+    }
+)
 
-const Acadyear = sequelize.define('acadyears', {
-    acadyear: {
-        type: DataTypes.INTEGER
-    },
-}, {
-    paranoid: true, // Enable soft deletes
-    timestamps: true, // Include timestamps (createdAt, updatedAt)
-    underscored: true, // Use snake_case for column names
-    deletedAt: 'deleted_at' // Custom name for the deletedAt column
-});
 app.listen(port, async () => {
     try {
-        // await sequelize.sync({force:true})
         await sequelize.sync()
-        await initMySQL()
-        // await sequelize.sync()
     } catch (err) {
         console.error(err);
         console.log("!!!!WARNING!!!!");
@@ -97,6 +74,11 @@ const authRouter = require('./router/authRouter');
 const studentRouter = require('./router/studentRouter');
 const acadYearRouter = require('./router/acadYearRouter');
 const adminRouter = require('./router/adminRouter');
+const trackRouter = require('./router/trackRouter');
+const trackSelectionRouter = require('./router/trackSelectionRouter');
+const enrollmentRouter = require('./router/enrollmentRouter.js');
+
+// const studentDataRouter = require('./router/studentDataRouter');
 const adminMiddleware = require("./middleware/adminMiddleware")
 
 //--------------------
@@ -112,6 +94,15 @@ const subGroupRouter = require('./router/subGroupRouter');
 
 //--------------------
 // 
+//  program router
+//
+//--------------------
+
+const programRouter = require('./router/programRouter')
+const programCodeRouter = require('./router/programCodeRouter')
+
+//--------------------
+// 
 //  middleware router
 //
 //--------------------
@@ -122,12 +113,18 @@ app.use('/api/admin', adminRouter)
 app.use('/api/users', userRouter)
 app.use('/api/posts', postRouter)
 app.use('/api/auth', authRouter)
-app.use('/api/student', studentRouter)
+app.use('/api/students', studentRouter)
+app.use('/api/students/enrollments', enrollmentRouter)
 app.use('/api/acadyear', adminMiddleware, acadYearRouter)
+app.use('/api/tracks', trackRouter)
+app.use('/api/tracks/selects', trackSelectionRouter)
 app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/groups', groupRouter);
 app.use('/api/subgroups', subGroupRouter);
+
+app.use('/api/programs', programRouter);
+app.use('/api/programcodes', programCodeRouter);
 
 app.get("/api/test", async (req, res) => {
     try {

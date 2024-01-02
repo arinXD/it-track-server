@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken")
 const nodemailer = require("nodemailer")
 const { v4: uuidv4 } = require("uuid")
@@ -7,6 +7,8 @@ const User = models.User
 const Student = models.Student
 const Teacher = models.Teacher
 const EmailVerify = models.EmailVerify
+const StudentData = models.StudentData
+const { hostname } = require("../api/hostname")
 require("dotenv").config();
 
 var mailSender = nodemailer.createTransport({
@@ -18,13 +20,12 @@ var mailSender = nodemailer.createTransport({
 });
 
 const sendEmailVerification = async ({ id, email }) => {
-    const currentUrl = "http://localhost:3000"
     const uniqueString = uuidv4() + id
     const htmlTemplate = `
     <h1>Verify your email</h1>
     <p>Verify your email address to complete signup.</p>
     <p>This link will <strong>expire in 6 hours</strong>.</p>
-    <p>Press <a href="${currentUrl}/email-verify/${id}/${uniqueString}">here</a> to proceed.</p>`;
+    <p>Press <a href="${hostname}/email-verify/${id}/${uniqueString}">here</a> to proceed.</p>`;
     const mailOption = {
         from: process.env.SENDER_EMAIL,
         to: email,
@@ -40,8 +41,14 @@ const sendEmailVerification = async ({ id, email }) => {
         }
         verifyData.expired_at.setHours(verifyData.expired_at.getHours() + 6);
         // await conn.query("INSERT INTO email_verify SET ?", verifyData)
-        await EmailVerify.create(verifyData)
-        await mailSender.sendMail(mailOption);
+
+        // await EmailVerify.create(verifyData)
+        // await mailSender.sendMail(mailOption);
+
+        // bulk create has more protentail
+        await EmailVerify.bulkCreate([verifyData]);
+        // ลบ await to increase performance
+        mailSender.sendMail(mailOption);
 
         // return เพื่อนำไปเก็บไว้ใน cookie สำหรับ resend email
         return `${id}/${uniqueString}`
@@ -92,13 +99,11 @@ const signInCredentials = async (req, res, next) => {
         *   1st codezup: 88.434ms
         *   2nd codezup: 32.987ms
         */
-        console.time('codezup')
+        // console.time('codezup')
 
         /*
         *   2nd method
         */
-
-        // console.log('Received form data:', req.body)
         const { email, password } = req.body;
         const { role, model } = getRole(email)
         const user = await User.findOne({
@@ -108,7 +113,7 @@ const signInCredentials = async (req, res, next) => {
             }
         });
 
-        console.timeEnd('codezup')
+        // console.timeEnd('codezup')
         // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
 
         if (!user) {
@@ -131,6 +136,7 @@ const signInCredentials = async (req, res, next) => {
             if (model) {
                 const modelName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
                 child = user[modelName]
+                child = child.dataValues
             }
             const name = `${user.fname} ${user.lname}`;
 
@@ -145,11 +151,11 @@ const signInCredentials = async (req, res, next) => {
                 user: {
                     email,
                     name,
-                    image: userData.image,
+                    image: user.image,
                     role,
-                    fname: userData.fname,
-                    lname: userData.lname,
-                    verification: userData.verification,
+                    firstname: user.fname,
+                    lastname: user.lname,
+                    verification: user.verification,
                     ...child
                 },
                 // token
@@ -170,39 +176,52 @@ const signInCredentials = async (req, res, next) => {
 }
 
 const signInGoogle = async (req, res, next) => {
+    const { email } = req.body;
+    var dataEmail
     try {
-        const { email } = req.body;
-        const { role, model } = getRole(email)
+        const decode = jwt.verify(email, process.env.SECRET_KEY);
+        dataEmail = decode.data.email
+    } catch (err) {
+        return res.status(401).json({
+            ok: false,
+            message: "Authentication failed. Invalid token.",
+        });
+    }
+    try {
+        const { role, model } = getRole(dataEmail)
         let result
         if (model) {
             result = await User.findOne({
-                where: { email },
+                where: { email: dataEmail },
                 include: {
                     model
                 }
             });
         } else {
             result = await User.findOne({
-                where: { email },
+                where: { email: dataEmail },
             });
         }
-        // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
-
         // email doesn't match
         if (!result) {
             const useData = {
-                email,
+                email: dataEmail,
                 sign_in_type: "google",
                 verification: 1,
                 role
             }
-            // await conn.query("INSERT INTO students SET ?", useData)
+
             const user = await User.create(useData)
             let child = {}
             if (model) {
-                child = await model.create({ user_id: user.id })
-                child = {
-                    ...child.dataValues
+                if (user.role === "student") {
+                    await model.update({ user_id: user.id }, { where: { email: dataEmail } })
+                    child = await model.findOne({ where: { email: dataEmail } })
+                    if (child) {
+                        child = { ...child.dataValues }
+                    }
+                } else {
+                    child = await model.create({ user_id: user.id })
                 }
                 if (user.role === "student") {
                     child.stu_id = child.stu_id || null
@@ -213,7 +232,7 @@ const signInGoogle = async (req, res, next) => {
                 data: {
                     role,
                     ...child
-                }
+                },
             })
         } else {
             const { sign_in_type } = result
@@ -282,8 +301,8 @@ const signInVerify = async (req, res) => {
                 name,
                 image: userData.image,
                 role: userData.role,
-                fname: userData.fname,
-                lname: userData.lname,
+                firstname: userData.fname,
+                lastname: userData.lname,
                 verification: userData.verification
             },
         });
@@ -323,7 +342,11 @@ const signUp = async (req, res, next) => {
 
         const user = await User.create(useData)
         if (model) {
-            await model.create({ user_id: user.id })
+            if (role == "student") {
+                await model.update({ user_id: user.id }, { where: { email: email } })
+            } else {
+                await model.create({ user_id: user.id })
+            }
         }
 
         // const insertData = await conn.query("INSERT INTO students SET ?", useData)
@@ -333,15 +356,20 @@ const signUp = async (req, res, next) => {
                 email,
                 uniqueString: sendEmailStatus,
             }, process.env.SECRET_KEY, { expiresIn: "6h" });
-            res.cookie("token", token, {
-                maxAge: 21600000, // milli sec
-                secure: true,
-                httpOnly: true,
-                sameSite: "none"
-            })
+
+            // ****** Dont work on production. ******
+            /*
+             res.cookie("token", token, {
+                 maxAge: 21600000,  //milli sec
+                 secure: true,
+                 httpOnly: true,
+                 sameSite: "none"
+             })
+            */
+
             return res.status(201).json({
                 ok: true,
-                message: "Sign up success",
+                token: token,
             })
         }
         else {

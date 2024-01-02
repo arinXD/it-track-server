@@ -6,7 +6,10 @@ module.exports = (sequelize, DataTypes) => {
     class Acadyears extends Model {
 
         static associate(models) {
-            // define association here
+            this.hasMany(models.TrackSelection, {
+                foreignKey: 'acadyear',
+                sourceKey: 'acadyear',
+            });
         }
     }
     Acadyears.init({

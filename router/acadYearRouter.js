@@ -3,23 +3,6 @@ var router = express.Router();
 const models = require('../models');
 const Acadyears = models.Acadyears
 
-const formatDateTime = (date) => {
-    const originalDateTime = new Date(date);
-
-    const thailandOptions = {
-        timeZone: "Asia/Bangkok",
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric",
-        hour12: false,
-    };
-
-    const formattedDateTime = originalDateTime.toLocaleString("en-US", thailandOptions);
-    return formattedDateTime
-}
 
 router.get("/", async (req, res) => {
     try {
@@ -29,13 +12,6 @@ router.get("/", async (req, res) => {
                 ['acadyear', 'DESC'],
             ]
         })
-        for (let e of acadyears) {
-            e.dataValues.createdAt = formatDateTime(e.dataValues.createdAt)
-            e.dataValues.updatedAt = formatDateTime(e.dataValues.updatedAt)
-            if (e.dataValues.daletedAt) {
-                e.dataValues.daletedAt = formatDateTime(e.dataValues.daletedAt)
-            }
-        }
         return res.status(200).json({
             ok: true,
             data: acadyears
@@ -79,27 +55,35 @@ router.get("/:id", async (req, res) => {
 })
 
 router.post("/", async (req, res) => {
-    const data = req.body
+    const { acadyear } = req.body
+    let result = []
     try {
-        const insertData = await Acadyears.create(data)
+        if(acadyear.length===0){
+            return res.status(400).json({
+                ok: false,
+                message: `กรุณากรอกข้อมูล`
+            })
+        }
+        for(let element of acadyear) {
+            const acad = await Acadyears.findOne({ where: { acadyear: element } })
+            if(acad){
+                result.push({ok:false, message: `ปีการศึกษา ${element} ถูกเพิ่มแล้ว`})
+            }else{
+                await Acadyears.create({ acadyear: element })
+                result.push({ok:true, message: `เพิ่มปีการศึกษา ${element} เรียบร้อย`})
+            }
+        };
+        console.log(result);
         return res.status(200).json({
             ok: true,
-            data: insertData
+            message: `เพิ่มปีการศึกษาเรียบร้อย`,
+            data: result
         })
     } catch (error) {
-        const { value, type } = error.errors.map(e => {
-            if (e.value && e.type) {
-                return {
-                    value: e.value,
-                    type: e.type,
-                };
-            }
-            return null;
-        }).filter(Boolean)[0];
-
+        console.error(error);
         return res.status(500).json({
             ok: false,
-            message: `type: ${type} (${value})`
+            message: "Data error",
         })
     }
 })
@@ -107,15 +91,49 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
     const id = req.params.id
     const data = req.body
+    if (id === data.acadyear) {
+        return res.status(200).json({
+            ok: true,
+            message: null
+        })
+    }
     try {
-        const result = await Acadyears.update(data, {
+        const acadData = await Acadyears.findOne({ where: { acadyear: id } })
+        if (!acadData) {
+            return res.status(404).json({
+                ok: true,
+                message: `หาปีการศึกษาไม่พบ (${id})`
+            })
+        }
+        await Acadyears.update(data, {
             where: {
                 acadyear: id,
             },
         });
         return res.status(200).json({
             ok: true,
-            data: result
+            message: `ปีการศึกษา ${id} ถูกแก้ไขเป็น ${data.acadyear}`
+        })
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: `ปีการศึกษา ${data.acadyear} ถูกเพิ่มแล้ว`
+        })
+    }
+})
+
+router.delete("/:id", async (req, res) => {
+    const id = req.params.id
+    try {
+        await Acadyears.destroy({
+            where: {
+                acadyear: id
+            },
+            force: true
+        });
+        return res.status(200).json({
+            ok: true,
+            message: `ลบปีการศึกษา ${id} เรียบร้อย`
         })
     } catch (error) {
         console.log(error);
@@ -125,18 +143,23 @@ router.put("/:id", async (req, res) => {
         })
     }
 })
-
-router.delete("/:id", async (req, res) => {
-    const id = req.params.id
+router.delete("/", async (req, res) => {
+    const { acadyears } = req.body
     try {
-        const result = await Acadyears.destroy({
-            where: {
-                acadyear: id
-            },
+        const delAcad = []
+        acadyears.forEach(async acadyear => {
+            delAcad.push(acadyear)
+            await Acadyears.destroy({
+                where: {
+                    acadyear
+                },
+                force: true
+            });
+
         });
         return res.status(200).json({
             ok: true,
-            data: result
+            message: `ลบปีการศึกษา ${delAcad.join(", ")} เรียบร้อย`
         })
     } catch (error) {
         console.log(error);
