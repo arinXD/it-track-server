@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const models = require('../models');
+const { getThaiDateTime } = require('../lib/date');
 const Student = models.Student
 const Selection = models.Selection
 const SelectionDetail = models.SelectionDetail
@@ -82,7 +83,7 @@ router.post("/track/select", async (req, res) => {
         subjectsData
     } = req.body
 
-    let selectData = {
+    let insertData = {
         track_selection_id,
         stu_id,
         track_order_1,
@@ -91,7 +92,7 @@ router.post("/track/select", async (req, res) => {
     }
     const selectionDetailId = []
     try {
-        let selectId = await Selection.findOne({
+        let findSelection = await Selection.findOne({
             where: {
                 stu_id
             },
@@ -99,31 +100,34 @@ router.post("/track/select", async (req, res) => {
                 model: SelectionDetail,
             }, ],
         })
-        if (selectId) {
-            selectData.id = selectId.id
-            const subjects = selectId.SelectionDetails
+        if (findSelection) {
+            // add id to selection for update
+            insertData.id = findSelection.id
+
+            const subjects = findSelection.SelectionDetails
             for (const subject of subjects) {
                 selectionDetailId.push(subject.dataValues.id)
             }
         }
-        let userSelection = await Selection.upsert(selectData)
+        let userSelection = await Selection.upsert(insertData)
         for (const index in subjectsData) {
             let selectDetail = subjectsData[index]
-            if (selectId) {
+            if (findSelection) {
                 selectDetail.id = selectionDetailId[index]
-                selectDetail.selection_id = selectId.id
+                selectDetail.selection_id = findSelection.id
             } else {
                 selectDetail.selection_id = userSelection[0].dataValues.id
             }
             await SelectionDetail.upsert(selectDetail)
         }
         let resultData
-        if (selectId) {
-            resultData = selectId
+        if (findSelection) {
+            resultData = findSelection
         } else {
             resultData = userSelection[0].dataValues
+            resultData.updatedAt = getThaiDateTime()
         }
-        console.log(resultData.dataValues.updatedAt);
+        console.log(resultData?.updatedAt);
         return res.status(201).json({
             ok: true,
             data: resultData,

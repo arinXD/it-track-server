@@ -50,11 +50,6 @@ const sequelize = new Sequelize(
         dialect: 'mysql',
         logging: false,
         timezone: '+07:00',
-        dialectOptions: {
-            dateStrings: true,
-            typeCast: true,
-            timezone: "+07:00"
-        },
     },
 )
 
