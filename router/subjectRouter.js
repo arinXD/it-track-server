@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const models = require('../models');
 const Subject = models.Subject
+const { Op } = require('sequelize');
 
 router.get("/", async (req, res) => {
     try {
@@ -50,16 +51,26 @@ router.post("/insertSubject", async (req, res) => {
 router.post("/insertSubjectsFromExcel", async (req, res) => {
     try {
         const subjects = req.body;
+        const insertedSubjects = [];
+        const duplicateSubjects = [];
 
-        // Insert subjects into the database
-        const insertedSubjects = await Subject.bulkCreate(subjects);
+        for (const subject of subjects) {
+            const existingSubject = await Subject.findOne({ where: { subject_code: subject.subject_code } });
 
-        return res.status(201).json({ data: insertedSubjects, message: 'Subjects inserted successfully' });
+            if (existingSubject) {
+                duplicateSubjects.push(subject);
+            } else {
+                const newSubject = await Subject.create(subject);
+                insertedSubjects.push(newSubject);
+            }
+        }
+        return res.status(201).json({ data: insertedSubjects, duplicates: duplicateSubjects, message: 'Subjects processed successfully' });
     } catch (error) {
-        console.error('Error inserting subjects:', error);
+        console.error('Error processing subjects:', error);
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 
 router.get("/:id", async (req, res) => {
     try {
@@ -123,6 +134,8 @@ router.post("/updateSubject/:id", async (req, res) => {
         });
     }
 });
+
+
 
 router.delete("/deleteSubject/:subject_id", async (req, res) => {
     try {

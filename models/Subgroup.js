@@ -20,11 +20,14 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   SubGroup.init({
-    sub_group_title: DataTypes.STRING
+    sub_group_title: DataTypes.STRING,
+    deletedAt: DataTypes.DATE,
     
   }, {
     sequelize,
     modelName: 'SubGroup',
+    paranoid: true,
+    deletedAt: 'deletedAt',
   });
   return SubGroup;
 };

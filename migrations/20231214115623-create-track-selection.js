@@ -10,14 +10,8 @@ module.exports = {
                 type: Sequelize.INTEGER
             },
             acadyear: {
-                allowNull: true,
-                defaultValue: null,
+                allowNull: false,
                 type: Sequelize.INTEGER,
-                references: {
-                    model: 'Acadyears',
-                    key: 'acadyear',
-                },
-                onDelete: 'SET NULL',
             },
             title: {
                 type: Sequelize.STRING

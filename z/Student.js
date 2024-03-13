@@ -1,8 +1,3 @@
-const {
-    insertToDB
-} = require("./queryFunction")
-const students = "./csv/studentdata.csv";
-
 class Student {
     constructor(source) {
         this.studentCode = source["STUDENTCODE"];
@@ -50,21 +45,11 @@ class Student {
         return statusCode
     }
     getData() {
-        const studentData = {
-            studentCode: this.studentCode,
-            email: this.email,
-            firstName: this.firstName,
-            lastName: this.lastName,
-            stuStatus: this.stuStatus,
-            program: this.program,
-            coursesType: this.coursesType,
-            acadyear: this.acadyear,
-        }
-        return Object.values(studentData)
+        return [this.studentCode, this.email, this.firstName, this.lastName, this.coursesType, this.program, this.acadyear, this.stuStatus];
     }
     getInsertStatement() {
         const data = this.getData()
-        const insertStatement = `INSERT INTO Students (stu_id, email, first_name, last_name, stu_status, program, courses_type, acadyear, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const insertStatement = `INSERT INTO Students (stu_id, email, first_name, last_name, courses_type, program, acadyear, status_code, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
         const items = [...data, new Date(), new Date()]
         return {
             insertStatement,
@@ -73,8 +58,4 @@ class Student {
     }
 }
 
-try {
-    insertToDB(students, Student)
-} catch (err) {
-    console.error(err);
-}
+module.exports = { Student }

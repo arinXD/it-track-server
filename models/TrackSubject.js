@@ -16,10 +16,13 @@ module.exports = (sequelize, DataTypes) => {
     }
     TrackSubject.init({
         track_selection_id: DataTypes.INTEGER,
-        subject_code: DataTypes.STRING
+        subject_code: DataTypes.STRING,
+        daletedAt: DataTypes.DATE,
     }, {
         sequelize,
         modelName: 'TrackSubject',
+        paranoid: true,
+        deletedAt: 'daletedAt',
     });
     return TrackSubject;
 };

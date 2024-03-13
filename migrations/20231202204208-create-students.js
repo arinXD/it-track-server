@@ -47,11 +47,6 @@ module.exports = {
                 defaultValue: null,
                 type: Sequelize.STRING,
             },
-            stu_status: {
-                allowNull: true,
-                defaultValue: null,
-                type: Sequelize.STRING,
-            },
             program: {
                 allowNull: true,
                 defaultValue: null,
@@ -63,24 +58,19 @@ module.exports = {
                 onDelete: 'SET NULL',
             },
             acadyear: {
-                allowNull: true,
-                defaultValue: null,
+                allowNull: false,
+                type: Sequelize.INTEGER,
+            },
+            status_code: {
+                allowNull: false,
+                defaultValue: 10,
+                unique: false,
                 type: Sequelize.INTEGER,
                 references: {
-                    model: 'Acadyears',
-                    key: 'acadyear',
+                    model: 'StudentStatuses',
+                    key: 'id',
                 },
-                onDelete: 'SET NULL',
-            },
-            track: {
-                allowNull: true,
-                defaultValue: null,
-                type: Sequelize.STRING,
-                references: {
-                    model: 'Tracks',
-                    key: 'track',
-                },
-                onDelete: 'SET NULL',
+                onDelete: 'RESTRICT',
             },
             createdAt: {
                 type: Sequelize.DATE,
@@ -88,6 +78,11 @@ module.exports = {
             updatedAt: {
                 type: Sequelize.DATE,
             },
+            daletedAt: {
+                type: Sequelize.DATE,
+                allowNull: true,
+                validate: {}
+            }
         });
     },
     async down(queryInterface, Sequelize) {

@@ -65,6 +65,11 @@ module.exports = {
             updatedAt: {
                 allowNull: false,
                 type: Sequelize.DATE
+            },
+            daletedAt: {
+                type: Sequelize.DATE,
+                allowNull: true,
+                validate: {}
             }
         });
     },

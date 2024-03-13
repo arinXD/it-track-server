@@ -1,6 +1,3 @@
-const { insertToDB } = require("./queryFunction")
-const subject = "./csv/subjects.csv";
-
 class Subject {
     constructor(source) {
         this.courseCode = source["COURSECODE"];
@@ -9,24 +6,19 @@ class Subject {
         this.creditTotal = source["CREDITTOTAL"];
     }
     getData() {
-        const course = {
-            courseCode: this.courseCode,
-            courseName: this.courseName,
-            courseNameEng: this.courseNameEng,
-            creditTotal: this.creditTotal,
-        }
-        return Object.values(course)
+        return [this.courseCode, this.courseName, this.courseNameEng, this.creditTotal];
     }
     getInsertStatement() {
         const data = this.getData()
         const insertStatement = `INSERT INTO Subjects (subject_code, title_th, title_en, credit, createdAt, updatedAt) values(?, ?, ?, ?, ?, ?)`;
         const items = [...data, new Date(), new Date()]
-        return { insertStatement, items }
+        return {
+            insertStatement,
+            items
+        }
     }
 }
 
-try {
-    insertToDB(subject, Subject)
-} catch (err) {
-    console.error(err);
+module.exports = {
+    Subject
 }

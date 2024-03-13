@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // Define association here
       this.belongsTo(models.Categorie, {
-        foreignKey: 'catagory_id',
+        foreignKey: 'category_id',
         targetKey: 'id', // Specify the correct foreign key 
       });
       this.hasOne(models.SubGroup, {
@@ -24,10 +24,13 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Group.init({
-    group_title: DataTypes.STRING
+    group_title: DataTypes.STRING,
+    deletedAt: DataTypes.DATE,
   }, {
     sequelize,
     modelName: 'Group',
+    paranoid: true,
+    deletedAt: 'deletedAt',
   });
   return Group;
 };

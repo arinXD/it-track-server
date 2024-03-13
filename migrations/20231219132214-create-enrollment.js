@@ -17,7 +17,8 @@ module.exports = {
                     model: 'Students',
                     key: 'stu_id'
                 },
-                defaultValue: null
+                defaultValue: null,
+                onDelete:"CASCADE"
             },
             subject_code: {
                 allowNull: true,
@@ -32,6 +33,10 @@ module.exports = {
             grade: {
                 type: Sequelize.STRING
             },
+            enroll_year: {
+                allowNull: false,
+                type: Sequelize.INTEGER,
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE
@@ -39,6 +44,11 @@ module.exports = {
             updatedAt: {
                 allowNull: false,
                 type: Sequelize.DATE
+            },
+            daletedAt: {
+                type: Sequelize.DATE,
+                allowNull: true,
+                validate: {}
             }
         });
     },

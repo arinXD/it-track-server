@@ -18,10 +18,13 @@ module.exports = (sequelize, DataTypes) => {
     SelectionDetail.init({
         selection_id: DataTypes.INTEGER,
         subject_code: DataTypes.STRING,
-        grade: DataTypes.STRING
+        grade: DataTypes.STRING,
+        daletedAt: DataTypes.DATE,
     }, {
         sequelize,
         modelName: 'SelectionDetail',
+        paranoid: true,
+        deletedAt: 'daletedAt',
     });
     return SelectionDetail;
 };

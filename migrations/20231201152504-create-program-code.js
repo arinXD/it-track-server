@@ -3,11 +3,17 @@
 module.exports = {
     async up(queryInterface, Sequelize) {
         await queryInterface.createTable('ProgramCodes', {
+            id:{
+                allowNull: false,
+                autoIncrement: true,
+                primaryKey: true,
+                unique: true,
+                type: Sequelize.INTEGER
+            },
             program_code: {
                 allowNull: false,
-                autoIncrement: false,
-                primaryKey: true,
-                type: Sequelize.INTEGER
+                unique: true,
+                type: Sequelize.STRING
             },
             desc: {
                 type: Sequelize.STRING
@@ -31,6 +37,11 @@ module.exports = {
             },
             updatedAt: {
                 allowNull: false,
+                type: Sequelize.DATE
+            },
+            deletedAt:{
+                allowNull: true,
+                defaultValue: null,
                 type: Sequelize.DATE
             }
         });

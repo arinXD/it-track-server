@@ -10,6 +10,8 @@ module.exports = {
                 type: Sequelize.INTEGER
             },
             sub_group_title: {
+                allowNull: false,
+                unique:true,
                 type: Sequelize.STRING
             },
             group_id: {
@@ -28,6 +30,11 @@ module.exports = {
             },
             updatedAt: {
                 allowNull: false,
+                type: Sequelize.DATE
+            },
+            deletedAt:{
+                allowNull: true,
+                defaultValue: null,
                 type: Sequelize.DATE
             }
         });

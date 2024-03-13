@@ -33,6 +33,10 @@ module.exports = {
             },
             credit: {
                 type: Sequelize.INTEGER,
+                defaultValue: null,
+            },
+            acadyear: {
+                type: Sequelize.INTEGER,
                 defaultValue: 0,
             },
             sub_group_id: {
@@ -53,24 +57,6 @@ module.exports = {
                 },
                 defaultValue: null
             },
-            acadyear: {
-                allowNull: true,
-                defaultValue: null,
-                type: Sequelize.INTEGER,
-                references: {
-                    model: 'Acadyears',
-                    key: 'acadyear'
-                },
-            },
-            // program_code_id: {
-            //     allowNull: true,
-            //     type: Sequelize.INTEGER,
-            //     references: {
-            //         model: 'ProgramCodes',
-            //         key: 'id'
-            //     },
-            //     defaultValue: null
-            // },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE
@@ -78,7 +64,11 @@ module.exports = {
             updatedAt: {
                 allowNull: false,
                 type: Sequelize.DATE
-            }
+            },
+            // deletedAt:{
+            //     allowNull: false,
+            //     type: Sequelize.DATE
+            // }
         });
     },
     async down(queryInterface, Sequelize) {

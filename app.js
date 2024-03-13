@@ -9,7 +9,6 @@ const {
 } = require('sequelize')
 require("dotenv").config();
 const app = express()
-// test awdwdwd
 
 //--------------------
 // 
@@ -78,7 +77,8 @@ const acadYearRouter = require('./router/acadYearRouter');
 const adminRouter = require('./router/adminRouter');
 const trackRouter = require('./router/trackRouter');
 const trackSelectionRouter = require('./router/trackSelectionRouter');
-const enrollmentRouter = require('./router/enrollmentRouter.js');
+const enrollmentRouter = require('./router/enrollmentRouter');
+const studentStatusRouter = require('./router/studentStatusRouter');
 
 // const studentDataRouter = require('./router/studentDataRouter');
 const adminMiddleware = require("./middleware/adminMiddleware")
@@ -126,9 +126,9 @@ app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/groups', groupRouter);
 app.use('/api/subgroups', subGroupRouter);
-
 app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
+app.use('/api/statuses', adminMiddleware, studentStatusRouter);
 
 app.get("/api/test", async (req, res) => {
     try {

@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const models = require('../models');
 const Categorie = models.Categorie
+const { Op } = require('sequelize');
 
 router.get("/", async (req, res) => {
     try {
@@ -12,6 +13,93 @@ router.get("/", async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching categories:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/getrestore", async (req, res) => {
+    try {
+        const deletedCategories = await Categorie.findAll({
+            paranoid:false,
+            where: {
+                deletedAt: { 
+                    [Op.not]: null 
+                }
+            }
+        });
+
+        return res.status(200).json({
+            ok: true,
+            data: deletedCategories
+        });
+    } catch (error) {
+        console.error('Error fetching deleted categories:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.post("/restoreCategorie/:id", async (req, res) => {
+    try {
+        const categorieCodeId = req.params.id;
+
+        const deletedCategorie= await Categorie.findOne({
+            where: {
+                id: categorieCodeId,
+                deletedAt: { [Op.not]: null }
+            },
+            paranoid: false
+        });
+
+        if (!deletedCategorie) {
+            return res.status(404).json({
+                success: false,
+                error: 'Deleted Categorie not found'
+            });
+        }
+
+        await deletedCategorie.restore();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Categorie restored successfully'
+        });
+    } catch (error) {
+        console.error('Error restoring Categorie:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+// Check if a category with the given title already exists
+router.get("/checkDuplicate/:title", async (req, res) => {
+    try {
+        const { title } = req.params;
+        const category = await Categorie.findOne({
+            where: {
+                category_title: title
+            }
+        });
+
+        // If category exists, return true
+        if (category) {
+            return res.status(200).json({
+                exists: true
+            });
+        } else {
+            return res.status(200).json({
+                exists: false
+            });
+        }
+    } catch (error) {
+        console.error('Error checking duplicate category:', error);
         return res.status(500).json({
             ok: false,
             error: 'Internal Server Error'
