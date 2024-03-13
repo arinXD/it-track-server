@@ -4,21 +4,47 @@ const models = require('../models');
 const TrackSelection = models.TrackSelection
 const TrackSubject = models.TrackSubject
 const Selection = models.Selection
+const SelectionDetail = models.SelectionDetail
 const Subject = models.Subject
 const Student = models.Student
-const SelectionDetail = models.SelectionDetail
-const Acadyears = models.Acadyears
+const Enrollment = models.Enrollment
 const adminMiddleware = require("../middleware/adminMiddleware")
 const {
-    QueryTypes,
-    Op
+    QueryTypes
 } = require('sequelize');
-const {
-    title
-} = require('process');
 
-const trackSelectAttr = []
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
+
+// atest
+const fs = require('fs');
+const csv = require('csv-parser');
+router.get("/test/selection", async (req, res) => {
+    fs.createReadStream('./csv/student_selection.csv')
+        .pipe(csv())
+        .on('data', async (data) => {
+            const select = await Selection.create({
+                track_selection_id: 2,
+                stu_id: data.stuid,
+                track_order_1: data.OR01,
+                track_order_2: data.OR02,
+                track_order_3: data.OR03
+            })
+            const sid = select.dataValues.id
+            const subjs = ["SC361002", "SC361003", "SC361004", "SC361005", ]
+            for (const subj of subjs) {
+                await SelectionDetail.create({
+                    selection_id: sid,
+                    subject_code: subj,
+                    grade: data[subj],
+                })
+            }
+        })
+        .on('end', () => console.log("end"))
+
+    return res.json({
+        message: "Test"
+    })
+})
 
 router.get("/", async (req, res) => {
     try {
@@ -229,7 +255,7 @@ router.put("/:id", adminMiddleware, async (req, res) => {
     }
 })
 
-// start event
+// เปิด, ปิด การคัดแทรค
 router.put('/selected/:id', adminMiddleware, async (req, res) => {
 
     async function calGrade(grades) {
@@ -264,13 +290,13 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
     }
 
     function getRandomTrack() {
-        const tracks = ["BIT", "Network", "WEB"];
+        const tracks = ["BIT", "Network", "Web and Mobile"];
         const randomNumber = Math.floor(Math.random() * tracks.length);
         return tracks[randomNumber];
     }
 
     function getRandomTrack(skipTrack) {
-        const tracks = ["BIT", "Network", "WEB"].filter(track => track !== skipTrack);
+        const tracks = ["BIT", "Network", "Web and Mobile"].filter(track => track !== skipTrack);
         const randomNumber = Math.floor(Math.random() * tracks.length);
         return tracks[randomNumber];
     }
@@ -295,7 +321,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                         const currentTrackCount = trackCount[courseType][randomTrack];
                         if (trackCount[courseType]["BIT"] === trackLimit &&
                             trackCount[courseType]["Network"] === trackLimit &&
-                            trackCount[courseType]["WEB"] === trackLimit
+                            trackCount[courseType]["Web and Mobile"] === trackLimit
                         ) {
                             trackCount[courseType][randomTrack] += 1;
 
@@ -378,6 +404,9 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                 },
             ],
         })
+        const subjects = trackSelection?.dataValues?.Subjects?.map(subj=>{
+            return subj?.dataValues?.subject_code
+        })
 
         // init limit 
         const totalNormalCount = await countStudents("IT", trackSelection.acadyear, "โครงการปกติ");
@@ -396,12 +425,12 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
             normal: {
                 "BIT": 0,
                 "Network": 0,
-                "WEB": 0
+                "Web and Mobile": 0
             },
             vip: {
                 "BIT": 0,
                 "Network": 0,
-                "WEB": 0
+                "Web and Mobile": 0
             }
         }
 
@@ -488,11 +517,10 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
             ON Students.stu_id = Selections.stu_id
             WHERE Selections.stu_id IS NULL
             AND Students.acadyear = ${trackSelection.acadyear}
-            AND Students.program = 'IT'`, {
+            AND Students.program = 'IT'
+            AND Students.status_code = 10`, {
                 type: QueryTypes.SELECT
             });
-
-            console.log(limit);
 
             if (studentsIT.length > 0) {
                 // sort student data by student id
@@ -509,15 +537,31 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                 })
 
                 async function createSelection(insertSelectionData) {
-                    await Selection.create(insertSelectionData)
+                    const stuid = insertSelectionData.stu_id
+                    const selection = await Selection.create(insertSelectionData)
+                    const sid = selection.dataValues.id
+                    for (const subj of subjects) {
+                        const enrollment = await Enrollment.findOne({
+                            where:{
+                                stu_id: stuid,
+                                subject_code:subj
+                            },
+                            attributes: ["grade"],
+                        }) 
+                        const grade = enrollment?.dataValues?.grade || null
+                        await SelectionDetail.create({
+                            selection_id: sid,
+                            subject_code: subj,
+                            grade: grade
+                        })
+                    }
                 }
 
                 // Process
                 for (const courseType of Object.keys(courseTypeStudents)) {
-                    const tracks = ["BIT", "Network", "WEB"]
+                    const tracks = ["BIT", "Network", "Web and Mobile"]
                     const studentIDArray = courseTypeStudents[courseType];
-                    // 103
-                    // console.log(courseType, studentIDArray.length);
+
                     while (studentIDArray.length > 0) {
                         // 3 loop
                         for (const track of tracks) {
@@ -582,6 +626,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                 }
 
             } // unsign length > 0
+            console.log(limit);
             console.log(trackCount);
         } else {
             message = `Set unfinish`
@@ -600,7 +645,6 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
         })
     }
 })
-
 
 // del
 router.delete("/:id", adminMiddleware, async (req, res) => {

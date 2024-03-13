@@ -28,11 +28,7 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "subject_code",
                 otherKey: "track_selection_id"
             });
-            
-            this.belongsTo(models.Acadyears, {
-                foreignKey: 'acadyear',
-                sourceKey: 'acadyear',
-            });
+
         }
     }
     Subject.init({
@@ -45,14 +41,17 @@ module.exports = (sequelize, DataTypes) => {
         title_th: DataTypes.STRING,
         title_en: DataTypes.STRING,
         information: DataTypes.STRING,
+        acadyear: DataTypes.INTEGER,
         credit: DataTypes.INTEGER,
         sub_group_id: DataTypes.INTEGER,
         group_id: DataTypes.INTEGER,
-        acadyear: DataTypes.INTEGER,
         // program_code: DataTypes.INTEGER
+        // deletedAt: DataTypes.DATE,
     }, {
         sequelize,
         modelName: 'Subject',
+        // paranoid: true,
+        // deletedAt: 'deletedAt',
     });
     return Subject;
 };

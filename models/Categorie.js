@@ -12,15 +12,18 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association (relation) here
       this.hasOne(models.Group, {
-        foreignKey: 'catagory_id'
+        foreignKey: 'category_id'
       });
     }
   }
   Categorie.init({
-    category_title: DataTypes.STRING
+    category_title: DataTypes.STRING,
+    deletedAt: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'Categorie',
+    paranoid: true,
+    deletedAt: 'deletedAt',
   });
   return Categorie;
 };

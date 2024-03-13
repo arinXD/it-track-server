@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const models = require('../models');
 const SubGroup = models.SubGroup
+const { Op } = require('sequelize');
 
 router.get("/", async (req, res) => {
     try {
@@ -14,6 +15,64 @@ router.get("/", async (req, res) => {
         console.error('Error fetching subgroups:', error);
         return res.status(500).json({
             ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/getrestore", async (req, res) => {
+    try {
+        const deletedSubGroup = await SubGroup.findAll({
+            paranoid:false,
+            where: {
+                deletedAt: { 
+                    [Op.not]: null 
+                }
+            }
+        });
+
+        return res.status(200).json({
+            ok: true,
+            data: deletedSubGroup
+        });
+    } catch (error) {
+        console.error('Error fetching deleted SubGroup:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.post("/restoreSubGroup/:id", async (req, res) => {
+    try {
+        const subgroupCodeId = req.params.id;
+
+        const subgroupCategorie= await SubGroup.findOne({
+            where: {
+                id: subgroupCodeId,
+                deletedAt: { [Op.not]: null }
+            },
+            paranoid: false
+        });
+
+        if (!subgroupCategorie) {
+            return res.status(404).json({
+                success: false,
+                error: 'Deleted SubGroup not found'
+            });
+        }
+
+        await subgroupCategorie.restore();
+
+        return res.status(200).json({
+            success: true,
+            message: 'SubGroup restored successfully'
+        });
+    } catch (error) {
+        console.error('Error restoring Group:', error);
+        return res.status(500).json({
+            success: false,
             error: 'Internal Server Error'
         });
     }

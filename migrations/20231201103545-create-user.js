@@ -17,12 +17,6 @@ module.exports = {
             password: {
                 type: Sequelize.STRING
             },
-            fname: {
-                type: Sequelize.STRING
-            },
-            lname: {
-                type: Sequelize.STRING
-            },
             image: {
                 type: Sequelize.STRING
             },
@@ -30,8 +24,7 @@ module.exports = {
                 type: Sequelize.STRING,
                 allowNull: false,
                 defaultValue: "user",
-            }
-            ,
+            },
             sign_in_type: {
                 type: Sequelize.STRING
             },
@@ -51,8 +44,7 @@ module.exports = {
             daletedAt: {
                 type: Sequelize.DATE,
                 allowNull: true,
-                validate: {
-                }
+                validate: {}
             }
         });
     },

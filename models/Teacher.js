@@ -14,9 +14,12 @@ module.exports = (sequelize, DataTypes) => {
     }
     Teacher.init({
         user_id: DataTypes.INTEGER,
+        daletedAt: DataTypes.DATE,
     }, {
         sequelize,
         modelName: 'Teacher',
+        paranoid: true,
+        deletedAt: 'daletedAt',
     });
     return Teacher;
 };

@@ -17,18 +17,20 @@ module.exports = (sequelize, DataTypes) => {
         }
     }
     ProgramCode.init({
-        program_code: {
+        id: {
             type: DataTypes.INTEGER,
-            primaryKey: true, // Add this line to specify acadyear as the primary key
+            primaryKey: true, 
         },
+        program_code: DataTypes.STRING,
         desc: DataTypes.STRING,
         version: DataTypes.INTEGER,
         program: DataTypes.STRING,
-        desc: DataTypes.STRING,
-        version: DataTypes.INTEGER
+        deletedAt: DataTypes.DATE,
     }, {
         sequelize,
         modelName: 'ProgramCode',
+        paranoid: true,
+        deletedAt: 'deletedAt',
     });
     return ProgramCode;
 };

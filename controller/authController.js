@@ -178,9 +178,11 @@ const signInCredentials = async (req, res, next) => {
 const signInGoogle = async (req, res, next) => {
     const { email } = req.body;
     var dataEmail
+    var image
     try {
         const decode = jwt.verify(email, process.env.SECRET_KEY);
         dataEmail = decode.data.email
+        image = decode.data.image
     } catch (err) {
         return res.status(401).json({
             ok: false,
@@ -206,6 +208,7 @@ const signInGoogle = async (req, res, next) => {
         if (!result) {
             const useData = {
                 email: dataEmail,
+                image,
                 sign_in_type: "google",
                 verification: 1,
                 role

@@ -40,7 +40,7 @@ module.exports = {
                 updatedAt: new Date()
             },
             {
-                email: "pubes.k@kkumail.com",
+                email: "kiok127523@gmail.com",
                 role: "admin",
                 sign_in_type: "google",
                 verification: 1,
@@ -96,7 +96,7 @@ module.exports = {
                 updatedAt: new Date()
             },
             {
-                track: "WEB",
+                track: "Web and Mobile",
                 title_en: "Mobile and Web Application Development",
                 title_th: "การพัฒนาโปรแกรมประยุกต์บนอุปกรณ์เคลื่อนที่และเว็บ",
                 createdAt: new Date(),

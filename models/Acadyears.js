@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     Acadyears.init({
         acadyear: {
             type: DataTypes.INTEGER,
-            primaryKey: true, // Add this line to specify acadyear as the primary key
+            primaryKey: true, 
         },
         daletedAt: DataTypes.DATE
     }, {

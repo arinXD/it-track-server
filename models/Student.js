@@ -5,19 +5,25 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class Student extends Model {
         static associate(models) {
-            this.belongsTo(models.User, {
-                foreignKey: 'user_id',
-                targetKey: 'id',
-            });
             this.hasMany(models.Enrollment, {
                 foreignKey: 'stu_id',
                 sourceKey: 'stu_id',
-                // as: 'StudentCourses',
             });
             this.hasOne(models.Selection, {
                 foreignKey: "stu_id"
             });
-
+            this.belongsTo(models.User, {
+                foreignKey: 'user_id',
+                targetKey: 'id',
+            });
+            this.belongsTo(models.Program, {
+                foreignKey: 'program',
+                targetKey: 'program',
+            });
+            this.belongsTo(models.StudentStatus, {
+                foreignKey: 'status_code',
+                targetKey: 'id',
+            });
         }
     }
     Student.init({
@@ -27,13 +33,15 @@ module.exports = (sequelize, DataTypes) => {
         first_name: DataTypes.STRING,
         last_name: DataTypes.STRING,
         courses_type: DataTypes.STRING,
-        stu_status: DataTypes.STRING,
         program: DataTypes.STRING,
         acadyear: DataTypes.INTEGER,
-        track: DataTypes.STRING,
+        status_code: DataTypes.INTEGER,
+        daletedAt: DataTypes.DATE,
     }, {
         sequelize,
         modelName: 'Student',
+        paranoid: true,
+        deletedAt: 'daletedAt',
     });
     return Student;
 };

@@ -10,9 +10,11 @@ module.exports = {
                 type: Sequelize.INTEGER
             },
             group_title: {
+                allowNull: false,
+                unique:true,
                 type: Sequelize.STRING
             },
-            catagory_id: {
+            category_id: {
                 allowNull: false,
                 autoIncrement: false,
                 primaryKey: true,
@@ -29,6 +31,11 @@ module.exports = {
             },
             updatedAt: {
                 allowNull: false,
+                type: Sequelize.DATE
+            },
+            deletedAt:{
+                allowNull: true,
+                defaultValue: null,
                 type: Sequelize.DATE
             }
         });

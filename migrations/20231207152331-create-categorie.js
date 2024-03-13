@@ -10,6 +10,8 @@ module.exports = {
                 type: Sequelize.INTEGER
             },
             category_title: {
+                allowNull: false,
+                unique:true,
                 type: Sequelize.STRING
             },
 
@@ -19,6 +21,11 @@ module.exports = {
             },
             updatedAt: {
                 allowNull: false,
+                type: Sequelize.DATE
+            },
+            deletedAt:{
+                allowNull: true,
+                defaultValue: null,
                 type: Sequelize.DATE
             }
         });

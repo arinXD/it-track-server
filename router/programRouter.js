@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const models = require('../models');
 const Program = models.Program
+const { Op } = require('sequelize');
 
 router.get("/", async (req, res) => {
     try {
@@ -14,6 +15,64 @@ router.get("/", async (req, res) => {
         console.error('Error fetching programs:', error);
         return res.status(500).json({
             ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/getrestore", async (req, res) => {
+    try {
+        const deletedProgram = await Program.findAll({
+            paranoid:false,
+            where: {
+                deletedAt: { 
+                    [Op.not]: null 
+                }
+            }
+        });
+
+        return res.status(200).json({
+            ok: true,
+            data: deletedProgram
+        });
+    } catch (error) {
+        console.error('Error fetching deleted program', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.post("/restorePrograms/:program", async (req, res) => {
+    try {
+        const programId = req.params.program;
+
+        const deletedProgram = await Program.findOne({
+            where: {
+                program: programId,
+                deletedAt: { [Op.not]: null }
+            },
+            paranoid: false
+        });
+
+        if (!deletedProgram) {
+            return res.status(404).json({
+                success: false,
+                error: 'Deleted program not found'
+            });
+        }
+
+        await deletedProgram.restore();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Program restored successfully'
+        });
+    } catch (error) {
+        console.error('Error restoring program', error);
+        return res.status(500).json({
+            success: false,
             error: 'Internal Server Error'
         });
     }

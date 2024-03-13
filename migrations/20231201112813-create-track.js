@@ -38,6 +38,7 @@ module.exports = {
             daletedAt: {
                 type: Sequelize.DATE,
                 allowNull: true,
+                validate: {}
             }
         });
     },

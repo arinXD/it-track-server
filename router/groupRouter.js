@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const models = require('../models');
 const Group = models.Group
+const { Op } = require('sequelize');
 
 router.get("/", async (req, res) => {
     try {
@@ -18,13 +19,72 @@ router.get("/", async (req, res) => {
         });
     }
 });
+
+router.get("/getrestore", async (req, res) => {
+    try {
+        const deletedGroup = await Group.findAll({
+            paranoid:false,
+            where: {
+                deletedAt: { 
+                    [Op.not]: null 
+                }
+            }
+        });
+
+        return res.status(200).json({
+            ok: true,
+            data: deletedGroup
+        });
+    } catch (error) {
+        console.error('Error fetching deleted Group:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.post("/restoreGroup/:id", async (req, res) => {
+    try {
+        const groupCodeId = req.params.id;
+
+        const groupCategorie= await Group.findOne({
+            where: {
+                id: groupCodeId,
+                deletedAt: { [Op.not]: null }
+            },
+            paranoid: false
+        });
+
+        if (!groupCategorie) {
+            return res.status(404).json({
+                success: false,
+                error: 'Deleted Group not found'
+            });
+        }
+
+        await groupCategorie.restore();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Group restored successfully'
+        });
+    } catch (error) {
+        console.error('Error restoring Group:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
 router.post("/insertGroup", async (req, res) => {
     try {
-        const { group_title, catagory_id  } = req.body;
+        const { group_title, category_id  } = req.body;
 
         const newGroup = await Group.create({
             group_title: group_title,
-            catagory_id: catagory_id
+            category_id: category_id
         });
 
         return res.status(201).json({
@@ -69,7 +129,7 @@ router.get("/:id", async (req, res) => {
 router.post("/updateGroup/:id", async (req, res) => {
     try {
         const groupId = req.params.id;
-        const { group_title, catagory_id } = req.body;
+        const { group_title, category_id } = req.body;
 
         if (!group_title) {
             return res.status(400).json({
@@ -89,7 +149,7 @@ router.post("/updateGroup/:id", async (req, res) => {
 
         await updateGroup.update({
             group_title: group_title,
-            catagory_id: catagory_id
+            category_id: category_id
             // Add other fields as needed
         });
 
