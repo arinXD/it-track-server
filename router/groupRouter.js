@@ -101,14 +101,15 @@ router.post("/insertGroup", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
+    console.log("test");
     try {
         const groupId = req.params.id;
         const group = await Group.findByPk(groupId);
 
         if (!group) {
-            return res.status(404).json({
-                ok: false,
-                error: 'Group not found'
+            return res.status(200).json({
+                ok: true,
+                data: []
             });
         }
 
