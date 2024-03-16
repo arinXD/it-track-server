@@ -23,10 +23,10 @@ router.get("/", async (req, res) => {
 router.get("/getrestore", async (req, res) => {
     try {
         const deletedProgramCodes = await ProgramCode.findAll({
-            paranoid:false,
+            paranoid: false,
             where: {
-                deletedAt: { 
-                    [Op.not]: null 
+                deletedAt: {
+                    [Op.not]: null
                 }
             }
         });
@@ -81,7 +81,7 @@ router.post("/restoreProgramCode/:id", async (req, res) => {
 
 router.post("/insertProgramCode", async (req, res) => {
     try {
-        const {program_code, desc, version, program } = req.body;
+        const { program_code, desc, version, program } = req.body;
 
         const newProgramCode = await ProgramCode.create({
             program_code: program_code,
@@ -127,16 +127,16 @@ router.post("/updateProgramCode/:id", async (req, res) => {
     try {
         const programcodeId = req.params.id;
         const { program_code, desc, version, program } = req.body;
-        
+
         const existingProgramCode = await ProgramCode.findByPk(programcodeId);
-        
+
         if (!existingProgramCode) {
             return res.status(404).json({
                 ok: false,
                 error: 'Program not found'
             });
         }
-        
+
         await existingProgramCode.update({
             program_code: program_code,
             desc: desc,
@@ -174,7 +174,7 @@ router.delete("/deleteProgramCode/:id", async (req, res) => {
                 error: 'ProgramCode not found'
             });
         }
-        
+
         return res.status(200).json({
             success: true,
             message: 'ProgramCode deleted successfully'
