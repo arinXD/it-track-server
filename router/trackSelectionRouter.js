@@ -8,6 +8,8 @@ const SelectionDetail = models.SelectionDetail
 const Subject = models.Subject
 const Student = models.Student
 const Enrollment = models.Enrollment
+const User = models.User
+
 const adminMiddleware = require("../middleware/adminMiddleware")
 const {
     QueryTypes
@@ -30,7 +32,7 @@ router.get("/test/selection", async (req, res) => {
                 track_order_3: data.OR03
             })
             const sid = select.dataValues.id
-            const subjs = ["SC361002", "SC361003", "SC361004", "SC361005", ]
+            const subjs = ["SC361002", "SC361003", "SC361004", "SC361005",]
             for (const subj of subjs) {
                 await SelectionDetail.create({
                     selection_id: sid,
@@ -52,7 +54,7 @@ router.get("/", async (req, res) => {
             include: [{
                 model: Subject,
                 attributes: subjectAttr,
-            }, ],
+            },],
             order: [
                 ['acadyear', 'DESC'],
             ],
@@ -80,7 +82,7 @@ router.get("/:id", async (req, res) => {
             include: [{
                 model: Subject,
                 attributes: subjectAttr,
-            }, ],
+            },],
         })
         return res.status(200).json({
             ok: true,
@@ -95,41 +97,119 @@ router.get("/:id", async (req, res) => {
     }
 })
 
-router.get("/:id/subjects/students", adminMiddleware, async (req, res) => {
-    const id = req.params.id
+function convertGrade(grade) {
+    const grades = {
+        "A": 4,
+        "B+": 3.5,
+        "B": 3,
+        "C+": 2.5,
+        "C": 2,
+        "D+": 1.5,
+        "D": 1,
+        "F": 0,
+    }
+    return grades[grade] || null
+}
+
+// Cal GPA
+const calculateGPA = (enrollments) => {
+    let totalCredits = 0;
+    let totalGradePoints = 0;
+
+    for (const enrollment of enrollments) {
+        const grade = enrollment?.dataValues?.grade
+        const gradePoint = convertGrade(grade)
+        if (gradePoint == null) {
+            continue
+        }
+        const credit = enrollment?.dataValues?.Subject?.dataValues?.credit
+        totalGradePoints += gradePoint * credit
+        totalCredits += credit
+    }
+
+    if (totalCredits === 0) return 0;
+
+    const gpa = totalGradePoints / totalCredits;
+    return gpa;
+};
+
+
+router.get("/:acadyear/students", async (req, res) => {
+    const acadyear = req.params.acadyear
+    let data = []
     try {
-        const data = await TrackSelection.findOne({
+        data = await TrackSelection.findOne({
             where: {
-                acadyear: id
+                acadyear,
             },
-            include: [{
-                    model: Subject,
-                    attributes: subjectAttr,
+            attributes: ["id", "acadyear", "title"],
+            include: [
+                {
+                    model: Selection,
+                    attributes: ["id", "track_order_1", "track_order_2", "track_order_3", "result"],
                 },
                 {
                     model: Selection,
-                    include: [{
-                            model: Student
+                    include: [
+                        {
+                            model: Student,
+                            include: [
+                                {
+                                    model: Enrollment,
+                                    attributes: ["subject_code", "grade"],
+                                    include: [
+                                        {
+                                            model: Subject,
+                                            attributes: ["credit"]
+                                        }
+                                    ]
+                                }
+                            ],
+                            attributes: ["id", "stu_id", "email", "first_name", "last_name", "courses_type", "acadyear"],
                         },
                         {
-                            model: SelectionDetail
+                            model: SelectionDetail,
+                            attributes: ["grade", "subject_code"],
+                            include: [
+                                {
+                                    model: Subject,
+                                    attributes: ["subject_code", "title_th", "title_en", "credit"]
+                                }
+                            ]
                         },
                     ]
                 },
             ],
         })
-        return res.status(200).json({
-            ok: true,
-            data
-        })
-    } catch (error) {
-        console.error(error);
+    }
+    catch (error) {
+        console.log(error);
         return res.status(500).json({
-            ok: false,
+            ok: true,
             message: "Server error."
         })
     }
+
+    const selections = data?.dataValues?.Selections
+    if(selections?.length>0){
+        for (const [index, selection] of selections.entries()) {
+            const enrollments = selection?.dataValues?.Student?.dataValues?.Enrollments
+            const selectionDetail = selection?.dataValues?.SelectionDetails
+            selections[index].dataValues.gpa = calculateGPA(enrollments)
+            selections[index].dataValues.score = calculateGPA(selectionDetail)
+
+        }
+    }
+    if(data){
+        data.dataValues.Selections = selections
+    }
+
+    return res.status(200).json({
+        ok: true,
+        data
+    })
 })
+
 router.get("/:id/subjects", async (req, res) => {
     const id = req.params.id
     try {
@@ -140,7 +220,7 @@ router.get("/:id/subjects", async (req, res) => {
             include: [{
                 model: Subject,
                 attributes: subjectAttr,
-            }, ],
+            },],
         })
         return res.status(200).json({
             ok: true,
@@ -161,9 +241,45 @@ router.get("/get/last", async (req, res) => {
             include: [{
                 model: Subject,
                 attributes: subjectAttr,
-            }, ],
+            },],
             order: [
                 ['acadyear', 'DESC'],
+            ],
+        })
+        return res.status(200).json({
+            ok: true,
+            data
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+
+router.get("/:id/subjects/students", async (req, res) => {
+    const id = req.params.id
+    try {
+        const data = await TrackSelection.findOne({
+            where: {
+                acadyear: id
+            },
+            include: [{
+                model: Subject,
+                attributes: subjectAttr,
+            },
+            {
+                model: Selection,
+                include: [{
+                    model: Student
+                },
+                {
+                    model: SelectionDetail
+                },
+                ]
+            },
             ],
         })
         return res.status(200).json({
@@ -389,22 +505,22 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                 id: trackSelectId
             },
             include: [{
-                    model: Subject,
-                    attributes: subjectAttr,
+                model: Subject,
+                attributes: subjectAttr,
+            },
+            {
+                model: Selection,
+                include: [{
+                    model: Student
                 },
                 {
-                    model: Selection,
-                    include: [{
-                            model: Student
-                        },
-                        {
-                            model: SelectionDetail
-                        },
-                    ]
+                    model: SelectionDetail
                 },
+                ]
+            },
             ],
         })
-        const subjects = trackSelection?.dataValues?.Subjects?.map(subj=>{
+        const subjects = trackSelection?.dataValues?.Subjects?.map(subj => {
             return subj?.dataValues?.subject_code
         })
 
@@ -446,7 +562,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
         await trackSelection.save()
 
         if (trackSelection.has_finished) {
-            message = `Set finished`
+            message = `ปิดการคัดเลือก`
 
             // get all student selection who sign the form
             const selections = trackSelection.dataValues.Selections
@@ -542,12 +658,12 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                     const sid = selection.dataValues.id
                     for (const subj of subjects) {
                         const enrollment = await Enrollment.findOne({
-                            where:{
+                            where: {
                                 stu_id: stuid,
-                                subject_code:subj
+                                subject_code: subj
                             },
                             attributes: ["grade"],
-                        }) 
+                        })
                         const grade = enrollment?.dataValues?.grade || null
                         await SelectionDetail.create({
                             selection_id: sid,
@@ -629,7 +745,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
             console.log(limit);
             console.log(trackCount);
         } else {
-            message = `Set unfinish`
+            message = `เปิดการคัดเลือก`
         }
 
         return res.status(200).json({
