@@ -23,10 +23,10 @@ router.get("/", async (req, res) => {
 router.get("/getrestore", async (req, res) => {
     try {
         const deletedCategories = await Categorie.findAll({
-            paranoid:false,
+            paranoid: false,
             where: {
-                deletedAt: { 
-                    [Op.not]: null 
+                deletedAt: {
+                    [Op.not]: null
                 }
             }
         });
@@ -48,7 +48,7 @@ router.post("/restoreCategorie/:id", async (req, res) => {
     try {
         const categorieCodeId = req.params.id;
 
-        const deletedCategorie= await Categorie.findOne({
+        const deletedCategorie = await Categorie.findOne({
             where: {
                 id: categorieCodeId,
                 deletedAt: { [Op.not]: null }
@@ -217,5 +217,38 @@ router.delete("/deleteCategory/:id", async (req, res) => {
     }
 });
 
+
+router.delete('/selected', async (req, res) => {
+    const { categoriesArr = [] } = req.body;
+    try {
+        let delCategorie = []
+        for (const categories of categoriesArr) {
+            delCategorie.push(categories)
+            await Categorie.destroy({
+                where: {
+                    id: categories
+                },
+                force: true
+            });
+        }
+        if (delCategorie.length == 0) {
+            return res.status(200).json({
+                ok: true,
+                message: "ไม่มีหมวดหมู่ที่ถูกลบ"
+            })
+        } else {
+            return res.status(200).json({
+                ok: true,
+                message: `ลบหมวดหมู่ ${delCategorie.join(", ")} เรียบร้อย`
+            })
+        }
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
 
 module.exports = router;

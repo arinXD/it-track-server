@@ -23,10 +23,10 @@ router.get("/", async (req, res) => {
 router.get("/getrestore", async (req, res) => {
     try {
         const deletedProgramCodes = await ProgramCode.findAll({
-            paranoid:false,
+            paranoid: false,
             where: {
-                deletedAt: { 
-                    [Op.not]: null 
+                deletedAt: {
+                    [Op.not]: null
                 }
             }
         });

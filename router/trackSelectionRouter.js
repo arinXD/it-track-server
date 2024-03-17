@@ -7,46 +7,14 @@ const Selection = models.Selection
 const SelectionDetail = models.SelectionDetail
 const Subject = models.Subject
 const Student = models.Student
-const Enrollment = models.Enrollment
-const User = models.User
-
+const SelectionDetail = models.SelectionDetail
+const Acadyears = models.Acadyears
 const adminMiddleware = require("../middleware/adminMiddleware")
 const {
     QueryTypes
 } = require('sequelize');
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
-
-// atest
-const fs = require('fs');
-const csv = require('csv-parser');
-router.get("/test/selection", async (req, res) => {
-    fs.createReadStream('./csv/student_selection.csv')
-        .pipe(csv())
-        .on('data', async (data) => {
-            const select = await Selection.create({
-                track_selection_id: 2,
-                stu_id: data.stuid,
-                track_order_1: data.OR01,
-                track_order_2: data.OR02,
-                track_order_3: data.OR03
-            })
-            const sid = select.dataValues.id
-            const subjs = ["SC361002", "SC361003", "SC361004", "SC361005",]
-            for (const subj of subjs) {
-                await SelectionDetail.create({
-                    selection_id: sid,
-                    subject_code: subj,
-                    grade: data[subj],
-                })
-            }
-        })
-        .on('end', () => console.log("end"))
-
-    return res.json({
-        message: "Test"
-    })
-})
 
 router.get("/", async (req, res) => {
     try {
@@ -520,9 +488,6 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
             },
             ],
         })
-        const subjects = trackSelection?.dataValues?.Subjects?.map(subj => {
-            return subj?.dataValues?.subject_code
-        })
 
         // init limit 
         const totalNormalCount = await countStudents("IT", trackSelection.acadyear, "โครงการปกติ");
@@ -653,24 +618,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                 })
 
                 async function createSelection(insertSelectionData) {
-                    const stuid = insertSelectionData.stu_id
-                    const selection = await Selection.create(insertSelectionData)
-                    const sid = selection.dataValues.id
-                    for (const subj of subjects) {
-                        const enrollment = await Enrollment.findOne({
-                            where: {
-                                stu_id: stuid,
-                                subject_code: subj
-                            },
-                            attributes: ["grade"],
-                        })
-                        const grade = enrollment?.dataValues?.grade || null
-                        await SelectionDetail.create({
-                            selection_id: sid,
-                            subject_code: subj,
-                            grade: grade
-                        })
-                    }
+                    await Selection.create(insertSelectionData)
                 }
 
                 // Process
