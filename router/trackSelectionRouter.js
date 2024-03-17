@@ -7,11 +7,12 @@ const Selection = models.Selection
 const SelectionDetail = models.SelectionDetail
 const Subject = models.Subject
 const Student = models.Student
-const SelectionDetail = models.SelectionDetail
-const Acadyears = models.Acadyears
+const Track = models.Track
+const Enrollment = models.Enrollment
+
 const adminMiddleware = require("../middleware/adminMiddleware")
 const {
-    QueryTypes
+    QueryTypes, Op
 } = require('sequelize');
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
@@ -101,7 +102,6 @@ const calculateGPA = (enrollments) => {
     return gpa;
 };
 
-
 router.get("/:acadyear/students", async (req, res) => {
     const acadyear = req.params.acadyear
     let data = []
@@ -114,10 +114,7 @@ router.get("/:acadyear/students", async (req, res) => {
             include: [
                 {
                     model: Selection,
-                    attributes: ["id", "track_order_1", "track_order_2", "track_order_3", "result"],
-                },
-                {
-                    model: Selection,
+                    attributes: ["track_order_1", "track_order_2", "track_order_3", "result"],
                     include: [
                         {
                             model: Student,
@@ -146,6 +143,7 @@ router.get("/:acadyear/students", async (req, res) => {
                             ]
                         },
                     ]
+
                 },
             ],
         })
@@ -159,17 +157,76 @@ router.get("/:acadyear/students", async (req, res) => {
     }
 
     const selections = data?.dataValues?.Selections
-    if(selections?.length>0){
+    let tracks = await Track.findAll()
+    tracks = [...tracks?.map(e => e.dataValues.track), null]
+    if (selections?.length > 0) {
         for (const [index, selection] of selections.entries()) {
             const enrollments = selection?.dataValues?.Student?.dataValues?.Enrollments
             const selectionDetail = selection?.dataValues?.SelectionDetails
             selections[index].dataValues.gpa = calculateGPA(enrollments)
             selections[index].dataValues.score = calculateGPA(selectionDetail)
+            delete selections[index].dataValues.Student
+            delete selections[index].dataValues.SelectionDetails
 
+            if (selection?.dataValues?.track_order_1 == null) {
+                let randomNum = Math.floor(Math.random() * 10) + 1; // Generate random number between 1 and 10
+                const trackIndex = randomNum === 10 ? tracks.length - 1 : Math.floor(Math.random() * (tracks.length - 1));
+                selections[index].dataValues.track_order_1 = tracks[trackIndex];
+            }
         }
     }
-    if(data){
+    if (data) {
         data.dataValues.Selections = selections
+    }
+
+    return res.status(200).json({
+        ok: true,
+        data
+    })
+})
+
+router.get("/:acadyear/popular", async (req, res) => {
+    const acadyear = req.params.acadyear
+    const pastFiveYears = acadyear - 4;
+    let tracks = await Track.findAll()
+    tracks = [...tracks?.map(e => e.dataValues.track), null]
+    let data = []
+    try {
+        data = await TrackSelection.findAll({
+            where: {
+                acadyear: {
+                    [Op.between]: [pastFiveYears, acadyear + 1]
+                }
+            },
+            limit: 5,
+            order: [
+                ['acadyear', 'asc'],
+            ],
+            attributes: ["acadyear"],
+            include: [
+                {
+                    model: Selection,
+                    attributes: ["track_order_1"],
+                },
+            ],
+        })
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: true,
+            message: "Server error."
+        })
+    }
+    for (const [i, ts] of data.entries()) {
+        const selections = ts?.dataValues?.Selections || []
+        for (const [index, select] of selections.entries()) {
+            if (select?.dataValues?.track_order_1 == null) {
+                const randomNum = Math.floor(Math.random() * tracks.length)
+                selections[index].dataValues.track_order_1 = tracks[randomNum]
+            }
+        }
+        data[i].dataValues.Selections = selections
     }
 
     return res.status(200).json({
