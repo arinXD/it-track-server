@@ -10,12 +10,30 @@ const Student = models.Student
 const Track = models.Track
 const Enrollment = models.Enrollment
 
+const { mailSender } = require('../controller/mailSender');
+const { hostname } = require('../api/hostname');
 const adminMiddleware = require("../middleware/adminMiddleware")
-const {
-    QueryTypes, Op
-} = require('sequelize');
+const { QueryTypes, Op } = require('sequelize');
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
+
+async function sendResultToEmail(stuid, result, acadyear) {
+    const student = await Student.findOne({ where: { stu_id: stuid }, attributes: ["email"], })
+    const track = await Track.findOne({ where: { track: result }, attributes: ["title_th", "title_en"], })
+    const trackResult = track.dataValues
+    const email = student.dataValues.email
+    const htmlTemplate = `
+    <h1>ประกาศผลการคัดเลือกแทรคของนักศึกษาปีการศึกษา ${acadyear}</h1>
+    <p>แทรคของคุณคือ ${trackResult.title_en} (${result}) ${trackResult.title_th}</p>
+    <p>ตรวจสอบข้อมูลได้ที่ <a href="${hostname}/student/tracks">${hostname}</a></p>`;
+    const mailOption = {
+        from: process.env.SENDER_EMAIL,
+        to: email,
+        subject: `ประกาศผลการคัดเลือกแทรคประจำปีการศึกษา ${acadyear}`,
+        html: htmlTemplate
+    }
+    mailSender.sendMail(mailOption);
+}
 
 router.get("/", async (req, res) => {
     try {
@@ -169,7 +187,7 @@ router.get("/:acadyear/students", async (req, res) => {
             delete selections[index].dataValues.SelectionDetails
 
             if (selection?.dataValues?.track_order_1 == null) {
-                let randomNum = Math.floor(Math.random() * 10) + 1; // Generate random number between 1 and 10
+                let randomNum = Math.floor(Math.random() * 10) + 1;
                 const trackIndex = randomNum === 10 ? tracks.length - 1 : Math.floor(Math.random() * (tracks.length - 1));
                 selections[index].dataValues.track_order_1 = tracks[trackIndex];
             }
@@ -603,6 +621,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
             },
             ],
         })
+        const acadyear = trackSelection?.dataValues?.acadyear
         const subjects = trackSelection?.dataValues?.Subjects?.map(subj => {
             return subj?.dataValues?.subject_code
         })
@@ -645,7 +664,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
         await trackSelection.save()
 
         if (trackSelection.has_finished) {
-            message = `Set finished`
+            message = `ปิดการคัดเลือก`
 
             // get all student selection who sign the form
             const selections = trackSelection.dataValues.Selections
@@ -692,6 +711,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                     selectDataAll[courseType].sort(sortStudentData)
                 })
 
+                const mockupEmail = ["643020423-0", "643020405-2"]
                 // Process
                 for (let courseType of Object.keys(selectDataAll)) {
                     for (const stuData of selectDataAll[courseType]) {
@@ -705,6 +725,10 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                                 id: selectionResult.id,
                             },
                         });
+
+                        if (mockupEmail.includes(selectionResult.stu_id)) {
+                            sendResultToEmail(selectionResult.stu_id, selectionResult.result, acadyear)
+                        }
                     }
                 }
             } // scope if selections.length > 0 
@@ -736,8 +760,12 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                 })
 
                 async function createSelection(insertSelectionData) {
+                    const mockupEmail = ["643020423-0", "643020405-2"]
                     const stuid = insertSelectionData.stu_id
                     const selection = await Selection.create(insertSelectionData)
+                    if (mockupEmail.includes(stuid)) {
+                        sendResultToEmail(stuid, insertSelectionData.result, acadyear)
+                    }
                     const sid = selection.dataValues.id
                     for (const subj of subjects) {
                         const enrollment = await Enrollment.findOne({
@@ -828,7 +856,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
             console.log(limit);
             console.log(trackCount);
         } else {
-            message = `Set unfinish`
+            message = `เปิดการคัดเลือก`
         }
 
         return res.status(200).json({

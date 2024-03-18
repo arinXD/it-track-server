@@ -1,6 +1,5 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken")
-const nodemailer = require("nodemailer")
 const { v4: uuidv4 } = require("uuid")
 const models = require('../models');
 const User = models.User
@@ -8,16 +7,9 @@ const Student = models.Student
 const Teacher = models.Teacher
 const EmailVerify = models.EmailVerify
 const StudentData = models.StudentData
-const { hostname } = require("../api/hostname")
+const { hostname } = require("../api/hostname");
+const { mailSender } = require("./mailSender");
 require("dotenv").config();
-
-var mailSender = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.SENDER_EMAIL,
-        pass: process.env.SENDER_PASSWORD
-    }
-});
 
 const sendEmailVerification = async ({ id, email }) => {
     const uniqueString = uuidv4() + id
