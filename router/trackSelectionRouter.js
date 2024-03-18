@@ -98,6 +98,7 @@ function convertGrade(grade) {
     return grades[grade] || null
 }
 
+
 // Cal GPA
 const calculateGPA = (enrollments) => {
     let totalCredits = 0;
@@ -121,6 +122,82 @@ const calculateGPA = (enrollments) => {
 };
 
 router.get("/:acadyear/students", async (req, res) => {
+    const acadyear = req.params.acadyear
+    let data = []
+    try {
+        data = await TrackSelection.findOne({
+            where: {
+                acadyear,
+            },
+            attributes: ["id", "acadyear", "title"],
+            include: [
+                {
+                    model: Selection,
+                    attributes: ["id", "track_order_1", "track_order_2", "track_order_3", "result"],
+                },
+                {
+                    model: Selection,
+                    include: [
+                        {
+                            model: Student,
+                            include: [
+                                {
+                                    model: Enrollment,
+                                    attributes: ["subject_code", "grade"],
+                                    include: [
+                                        {
+                                            model: Subject,
+                                            attributes: ["credit"]
+                                        }
+                                    ]
+                                }
+                            ],
+                            attributes: ["id", "stu_id", "email", "first_name", "last_name", "courses_type", "acadyear"],
+                        },
+                        {
+                            model: SelectionDetail,
+                            attributes: ["grade", "subject_code"],
+                            include: [
+                                {
+                                    model: Subject,
+                                    attributes: ["subject_code", "title_th", "title_en", "credit"]
+                                }
+                            ]
+                        },
+                    ]
+                },
+            ],
+        })
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: true,
+            message: "Server error."
+        })
+    }
+
+    const selections = data?.dataValues?.Selections
+    if (selections?.length > 0) {
+        for (const [index, selection] of selections.entries()) {
+            const enrollments = selection?.dataValues?.Student?.dataValues?.Enrollments
+            const selectionDetail = selection?.dataValues?.SelectionDetails
+            selections[index].dataValues.gpa = calculateGPA(enrollments)
+            selections[index].dataValues.score = calculateGPA(selectionDetail)
+
+        }
+    }
+    if (data) {
+        data.dataValues.Selections = selections
+    }
+
+    return res.status(200).json({
+        ok: true,
+        data
+    })
+})
+
+router.get("/:acadyear/students/dashboard", async (req, res) => {
     const acadyear = req.params.acadyear
     let data = []
     try {
@@ -183,8 +260,6 @@ router.get("/:acadyear/students", async (req, res) => {
             const selectionDetail = selection?.dataValues?.SelectionDetails
             selections[index].dataValues.gpa = calculateGPA(enrollments)
             selections[index].dataValues.score = calculateGPA(selectionDetail)
-            delete selections[index].dataValues.Student
-            delete selections[index].dataValues.SelectionDetails
 
             if (selection?.dataValues?.track_order_1 == null) {
                 let randomNum = Math.floor(Math.random() * 10) + 1;
