@@ -35,6 +35,38 @@ async function sendResultToEmail(stuid, result, acadyear) {
     mailSender.sendMail(mailOption);
 }
 
+// atest
+const fs = require('fs');
+const csv = require('csv-parser');
+router.get("/test/selection", async (req, res) => {
+    fs.createReadStream('./csv/student_selection.csv')
+        .pipe(csv())
+        .on('data', async (data) => {
+            const ts = await TrackSelection.findOne({ where: { acadyear: 2565 } })
+            const select = await Selection.create({
+                track_selection_id: ts.dataValues.id,
+                stu_id: data.stuid,
+                track_order_1: data.OR01,
+                track_order_2: data.OR02,
+                track_order_3: data.OR03
+            })
+            const sid = select.dataValues.id
+            const subjs = ["SC361002", "SC361003", "SC361004", "SC361005",]
+            for (const subj of subjs) {
+                await SelectionDetail.create({
+                    selection_id: sid,
+                    subject_code: subj,
+                    grade: data[subj],
+                })
+            }
+        })
+        .on('end', () => console.log("end"))
+
+    return res.json({
+        message: "Test"
+    })
+})
+
 router.get("/", async (req, res) => {
     try {
         const data = await TrackSelection.findAll({
