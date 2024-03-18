@@ -58,6 +58,17 @@ module.exports = {
                 },
                 onDelete: 'SET NULL',
             },
+            result:{
+                allowNull: true,
+                defaultValue: null,
+                unique: false,
+                type: Sequelize.STRING,
+                references: {
+                    model: 'Tracks',
+                    key: 'track'
+                },
+                onDelete: 'SET NULL',
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE

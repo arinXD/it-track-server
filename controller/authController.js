@@ -40,17 +40,10 @@ const sendEmailVerification = async ({ id, email }) => {
             expired_at: new Date()
         }
         verifyData.expired_at.setHours(verifyData.expired_at.getHours() + 6);
-        // await conn.query("INSERT INTO email_verify SET ?", verifyData)
 
-        // await EmailVerify.create(verifyData)
-        // await mailSender.sendMail(mailOption);
-
-        // bulk create has more protentail
         await EmailVerify.bulkCreate([verifyData]);
-        // ลบ await to increase performance
         mailSender.sendMail(mailOption);
 
-        // return เพื่อนำไปเก็บไว้ใน cookie สำหรับ resend email
         return `${id}/${uniqueString}`
 
     } catch (err) {
@@ -75,35 +68,8 @@ const getRole = (email) => {
     }
     return { role, model }
 }
-
-/*
-*   1st method
-    if (role === "student" || role === "user") {
-        result = await Student.findOne({
-            where: { email: email }
-        });
-    } else if (role === "teacher") {
-        result = await Teacher.findOne({
-            where: { email: email }
-        });
-    } else if (role === "admin") {
-        result = await Admin.findOne({
-            where: { email: email }
-        });
-    }
-*/
 const signInCredentials = async (req, res, next) => {
     try {
-        /*
-        *   check execution time
-        *   1st codezup: 88.434ms
-        *   2nd codezup: 32.987ms
-        */
-        // console.time('codezup')
-
-        /*
-        *   2nd method
-        */
         const { email, password } = req.body;
         const { role, model } = getRole(email)
         const user = await User.findOne({
@@ -112,9 +78,6 @@ const signInCredentials = async (req, res, next) => {
                 model
             }
         });
-
-        // console.timeEnd('codezup')
-        // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
 
         if (!user) {
             return res.status(401).json({

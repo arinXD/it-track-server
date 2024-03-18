@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'stu_id',
                 targetKey: 'stu_id',
             });
+            this.belongsTo(models.Track, {
+                foreignKey: 'result',
+                targetKey: 'track',
+            });
             this.hasMany(models.SelectionDetail, {
                 foreignKey: 'selection_id',
                 sourceKey: 'id',

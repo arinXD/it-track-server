@@ -61,10 +61,10 @@ async function insertToDB(file, className) {
 
 async function insertData() {
     try {
-        // await insertToDB(statusCodes, StatusCode);
-        // await insertToDB(subject, Subject);
-        await insertToDB(students, Student);
-        await insertToDB(enrollments, Enrollment);
+        await insertToDB(statusCodes, StatusCode);
+        await insertToDB(subject, Subject);
+        // await insertToDB(students, Student);
+        // await insertToDB(enrollments, Enrollment);
     } catch (err) {
         console.error(err);
     }

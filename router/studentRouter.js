@@ -9,6 +9,7 @@ const User = models.User
 const StudentStatus = models.StudentStatus
 const Enrollment = models.Enrollment
 const Subject = models.Subject
+const Track = models.Track
 const adminMiddleware = require("../middleware/adminMiddleware");
 const {
     Op
@@ -58,6 +59,9 @@ router.get("/:id/track/select", async (req, res) => {
             where: {
                 stu_id
             },
+            include: [{
+                model: Track,
+            }, ],
         })
         return res.status(200).json({
             ok: true,

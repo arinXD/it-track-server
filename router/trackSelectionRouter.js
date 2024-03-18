@@ -114,7 +114,7 @@ router.get("/:acadyear/students", async (req, res) => {
             include: [
                 {
                     model: Selection,
-                    attributes: ["track_order_1", "track_order_2", "track_order_3", "result"],
+                    attributes: ["track_order_1", "track_order_2", "track_order_3", "result", "updatedAt"],
                     include: [
                         {
                             model: Student,
@@ -188,8 +188,6 @@ router.get("/:acadyear/students", async (req, res) => {
 router.get("/:acadyear/popular", async (req, res) => {
     const acadyear = req.params.acadyear
     const pastFiveYears = acadyear - 4;
-    let tracks = await Track.findAll()
-    tracks = [...tracks?.map(e => e.dataValues.track), null]
     let data = []
     try {
         data = await TrackSelection.findAll({
@@ -218,6 +216,8 @@ router.get("/:acadyear/popular", async (req, res) => {
             message: "Server error."
         })
     }
+    let tracks = await Track.findAll()
+    tracks = [...tracks?.map(e => e.dataValues.track)]
     for (const [i, ts] of data.entries()) {
         const selections = ts?.dataValues?.Selections || []
         for (const [index, select] of selections.entries()) {
@@ -261,27 +261,85 @@ router.get("/:id/subjects", async (req, res) => {
 })
 
 router.get("/get/last", async (req, res) => {
+    let data = []
     try {
-        const data = await TrackSelection.findOne({
-            include: [{
-                model: Subject,
-                attributes: subjectAttr,
-            },],
+        data = await TrackSelection.findOne({
             order: [
                 ['acadyear', 'DESC'],
             ],
+            attributes: ["id", "acadyear", "title"],
+            include: [
+                {
+                    model: Selection,
+                    attributes: ["track_order_1", "track_order_2", "track_order_3", "result", "updatedAt"],
+                    include: [
+                        {
+                            model: Student,
+                            include: [
+                                {
+                                    model: Enrollment,
+                                    attributes: ["subject_code", "grade"],
+                                    include: [
+                                        {
+                                            model: Subject,
+                                            attributes: ["credit"]
+                                        }
+                                    ]
+                                }
+                            ],
+                            attributes: ["id", "stu_id", "email", "first_name", "last_name", "courses_type", "acadyear"],
+                        },
+                        {
+                            model: SelectionDetail,
+                            attributes: ["grade", "subject_code"],
+                            include: [
+                                {
+                                    model: Subject,
+                                    attributes: ["subject_code", "title_th", "title_en", "credit"]
+                                }
+                            ]
+                        },
+                    ]
+
+                },
+            ],
         })
-        return res.status(200).json({
-            ok: true,
-            data
-        })
-    } catch (error) {
-        console.error(error);
+    }
+    catch (error) {
+        console.log(error);
         return res.status(500).json({
-            ok: false,
+            ok: true,
             message: "Server error."
         })
     }
+
+    const selections = data?.dataValues?.Selections
+    let tracks = await Track.findAll()
+    tracks = [...tracks?.map(e => e.dataValues.track), null]
+    if (selections?.length > 0) {
+        for (const [index, selection] of selections.entries()) {
+            const enrollments = selection?.dataValues?.Student?.dataValues?.Enrollments
+            const selectionDetail = selection?.dataValues?.SelectionDetails
+            selections[index].dataValues.gpa = calculateGPA(enrollments)
+            selections[index].dataValues.score = calculateGPA(selectionDetail)
+            delete selections[index].dataValues.Student
+            delete selections[index].dataValues.SelectionDetails
+
+            if (selection?.dataValues?.track_order_1 == null) {
+                let randomNum = Math.floor(Math.random() * 10) + 1; // Generate random number between 1 and 10
+                const trackIndex = randomNum === 10 ? tracks.length - 1 : Math.floor(Math.random() * (tracks.length - 1));
+                selections[index].dataValues.track_order_1 = tracks[trackIndex];
+            }
+        }
+    }
+    if (data) {
+        data.dataValues.Selections = selections
+    }
+
+    return res.status(200).json({
+        ok: true,
+        data
+    })
 })
 
 router.get("/:id/subjects/students", async (req, res) => {
@@ -545,6 +603,9 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
             },
             ],
         })
+        const subjects = trackSelection?.dataValues?.Subjects?.map(subj => {
+            return subj?.dataValues?.subject_code
+        })
 
         // init limit 
         const totalNormalCount = await countStudents("IT", trackSelection.acadyear, "โครงการปกติ");
@@ -584,7 +645,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
         await trackSelection.save()
 
         if (trackSelection.has_finished) {
-            message = `ปิดการคัดเลือก`
+            message = `Set finished`
 
             // get all student selection who sign the form
             const selections = trackSelection.dataValues.Selections
@@ -675,7 +736,24 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                 })
 
                 async function createSelection(insertSelectionData) {
-                    await Selection.create(insertSelectionData)
+                    const stuid = insertSelectionData.stu_id
+                    const selection = await Selection.create(insertSelectionData)
+                    const sid = selection.dataValues.id
+                    for (const subj of subjects) {
+                        const enrollment = await Enrollment.findOne({
+                            where: {
+                                stu_id: stuid,
+                                subject_code: subj
+                            },
+                            attributes: ["grade"],
+                        })
+                        const grade = enrollment?.dataValues?.grade || null
+                        await SelectionDetail.create({
+                            selection_id: sid,
+                            subject_code: subj,
+                            grade: grade
+                        })
+                    }
                 }
 
                 // Process
@@ -750,7 +828,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
             console.log(limit);
             console.log(trackCount);
         } else {
-            message = `เปิดการคัดเลือก`
+            message = `Set unfinish`
         }
 
         return res.status(200).json({
