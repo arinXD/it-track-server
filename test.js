@@ -1,1 +1,1 @@
-
+console.log("IT SPEC".split(" ")[0]);

@@ -108,9 +108,11 @@ const programCodeRouter = require('./router/programCodeRouter')
 //  middleware router
 //
 //--------------------
+const a = [{sxd:10}]
 app.get('/', (req, res, next) => {
     return res.json({
-        message: 'IT Track by IT64'
+        message: 'IT Track by IT64',
+        data: a
     })
 })
 app.use('/api/admin', adminRouter)

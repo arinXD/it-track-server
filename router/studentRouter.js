@@ -14,6 +14,7 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 const {
     Op
 } = require('sequelize');
+const { getAcadYear, getCourse, getProgram } = require('../utils/student');
 
 router.get("/:stuid", async (req, res) => {
     const stuid = req.params.stuid
@@ -304,6 +305,60 @@ router.post("/", adminMiddleware, async (req, res) => {
     }
 })
 
+
+async function bulkUpsertStudents(studentsData) {
+    const existingStudents = await Student.findAll({
+        where: {
+            stu_id: studentsData.map(student => student.stu_id)
+        }
+    });
+
+    studentsData.forEach(async studentData => {
+        const existingStudent = existingStudents.find(s => s.stu_id === studentData.stu_id);
+        let upsertData = {}
+        if (existingStudent?.id) {
+            existingStudent.first_name = studentData.first_name;
+            existingStudent.last_name = studentData.last_name;
+            existingStudent.courses_type = studentData.courses_type;
+            existingStudent.program = studentData.program;
+            existingStudent.acadyear = studentData.acadyear;
+            existingStudent.status_code = studentData.status_code;
+
+            upsertData = existingStudent.dataValues
+        } else {
+            upsertData = studentData
+        }
+        await Student.upsert(upsertData);
+    });
+}
+
+router.post("/excel", adminMiddleware, async (req, res) => {
+    let students = req.body
+    students = students.filter(row => row.stu_id)
+    students = students.map(student => {
+        if (student.status_code == null) {
+            student.status_code = 10
+        }
+        student.acadyear = getAcadYear(student.stu_id)
+        student.courses_type = getCourse(student.program)
+        student.program = getProgram(student.program)
+        return student
+    })
+    try {
+        bulkUpsertStudents(students)
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+    return res.status(200).json({
+        ok: true,
+        message: "เพิ่มข้อมูลสำเร็จ"
+    })
+})
+
 router.delete("/:id", adminMiddleware, async (req, res) => {
     const stu_id = req.params.id
     try {
@@ -351,11 +406,11 @@ router.delete("/multiple/delete", adminMiddleware, async (req, res) => {
         students
     } = req.body
     try {
-        // console.log(students);
+        console.log(students);
         for (const id of students) {
             await Student.destroy({
                 where: {
-                    id
+                    stu_id: id
                 }
             })
         }
