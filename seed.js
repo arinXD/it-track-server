@@ -1,16 +1,25 @@
 const csvtojson = require('csvtojson');
 const mysql = require("mysql");
 require("dotenv").config();
-
+const { Subject } = require("./z/Subject")
+const { Student } = require("./z/Student")
+const { Enrollment } = require("./z/Enrollment")
+const { StatusCode } = require("./z/StatusCode")
 const subject = "./csv/subjects.csv";
 const students = "./csv/studentdata.csv";
 const enrollments = "./csv/student_course.csv";
 const statusCodes = "./csv/status_code.csv";
+const model = require("./models")
+const { admins, programs, tracks } = require("./data")
+
+const User = model.User
+const Program = model.Program
+const Track = model.Track
 
 const hostname = process.env.DATABASE_HOST,
-username = process.env.DATABASE_USER,
-password = process.env.DATABASE_PASSWORD,
-databsename = process.env.DATABASE
+    username = process.env.DATABASE_USER,
+    password = process.env.DATABASE_PASSWORD,
+    databsename = process.env.DATABASE
 
 let con = mysql.createConnection({
     host: hostname,
@@ -21,20 +30,18 @@ let con = mysql.createConnection({
 
 con.connect();
 
-const { Subject } = require("./z/Subject")
-const { Student } = require("./z/Student")
-const { Enrollment } = require("./z/Enrollment")
-const { StatusCode } = require("./z/StatusCode")
-
-async function insertToDB(file, className) {
+async function insertToDB(file, className, tableName) {
     try {
         const source = await csvtojson().fromFile(file);
-        console.log("Inserting...");
+        console.log("Inserting... " + tableName);
         let successfulInsertions = 0;
         for (let index = 0; index < source.length; index++) {
             const rowData = source[index];
             const obj = new className(rowData);
-            const { insertStatement, items } = obj.getInsertStatement();
+            const {
+                insertStatement,
+                items
+            } = await obj.getInsertStatement();
             try {
                 await new Promise((resolve, reject) => {
                     con.query(insertStatement, items, (err, results, fields) => {
@@ -50,7 +57,7 @@ async function insertToDB(file, className) {
                 continue
             }
             const percentage = ((index + 1) / source.length) * 100;
-            process.stdout.write(percentage.toFixed(4)+"%\r")
+            process.stdout.write(percentage.toFixed(4) + "%\r")
         }
         console.log("\nDone");
     } catch (error) {
@@ -59,12 +66,21 @@ async function insertToDB(file, className) {
     }
 }
 
+async function bulkCreate(model, data) {
+    await model.bulkCreate(data);
+}
+
 async function insertData() {
     try {
-        await insertToDB(statusCodes, StatusCode);
-        await insertToDB(subject, Subject);
-        // await insertToDB(students, Student);
-        // await insertToDB(enrollments, Enrollment);
+        await insertToDB(statusCodes, StatusCode, "StatusCode");
+        await insertToDB(subject, Subject, "Subject");
+
+        await bulkCreate(User, admins)
+        await bulkCreate(Program, programs)
+        await bulkCreate(Track, tracks)
+
+        await insertToDB(students, Student, "Student");
+        await insertToDB(enrollments, Enrollment, "Enrollment");
     } catch (err) {
         console.error(err);
     }

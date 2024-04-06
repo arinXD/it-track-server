@@ -14,6 +14,7 @@ const { mailSender } = require('../controller/mailSender');
 const { hostname } = require('../api/hostname');
 const adminMiddleware = require("../middleware/adminMiddleware")
 const { QueryTypes, Op } = require('sequelize');
+const { findSubjectByCode } = require('../utils/subject');
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
@@ -53,9 +54,10 @@ router.get("/test/selection", async (req, res) => {
             const sid = select.dataValues.id
             const subjs = ["SC361002", "SC361003", "SC361004", "SC361005",]
             for (const subj of subjs) {
+                const subjId = await findSubjectByCode(subj)
                 await SelectionDetail.create({
                     selection_id: sid,
-                    subject_code: subj,
+                    subject_id: subjId,
                     grade: data[subj],
                 })
             }
@@ -484,7 +486,10 @@ router.get("/:id/subjects/students", async (req, res) => {
                     model: Student
                 },
                 {
-                    model: SelectionDetail
+                    model: SelectionDetail,
+                    include: [{
+                        model: Subject
+                    },]
                 },
                 ]
             },
@@ -529,9 +534,10 @@ router.post("/", adminMiddleware, async (req, res) => {
             }
             const newTs = await TrackSelection.create(newTsData)
             for (const subj of trackSubj) {
+                const subjectId = await findSubjectByCode(subj)
                 await TrackSubject.create({
                     track_selection_id: newTs.id,
-                    subject_code: subj
+                    subject_id: subjectId
                 })
             }
             return res.status(201).json({
@@ -730,7 +736,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
         })
         const acadyear = trackSelection?.dataValues?.acadyear
         const subjects = trackSelection?.dataValues?.Subjects?.map(subj => {
-            return subj?.dataValues?.subject_code
+            return subj?.dataValues?.TrackSubject?.dataValues?.subject_id
         })
 
         // init limit 
@@ -834,7 +840,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                         });
 
                         if (mockupEmail.includes(selectionResult.stu_id)) {
-                            sendResultToEmail(selectionResult.stu_id, selectionResult.result, acadyear)
+                            // sendResultToEmail(selectionResult.stu_id, selectionResult.result, acadyear)
                         }
                     }
                 }
@@ -871,21 +877,21 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                     const stuid = insertSelectionData.stu_id
                     const selection = await Selection.create(insertSelectionData)
                     if (mockupEmail.includes(stuid)) {
-                        sendResultToEmail(stuid, insertSelectionData.result, acadyear)
+                        // sendResultToEmail(stuid, insertSelectionData.result, acadyear)
                     }
                     const sid = selection.dataValues.id
                     for (const subj of subjects) {
                         const enrollment = await Enrollment.findOne({
                             where: {
                                 stu_id: stuid,
-                                subject_code: subj
+                                subject_id: subj
                             },
                             attributes: ["grade"],
                         })
                         const grade = enrollment?.dataValues?.grade || null
                         await SelectionDetail.create({
                             selection_id: sid,
-                            subject_code: subj,
+                            subject_id: subj,
                             grade: grade
                         })
                     }

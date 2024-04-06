@@ -9,14 +9,14 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'track_selection_id',
             });
             this.belongsTo(models.Subject, {
-                foreignKey: 'subject_code',
+                foreignKey: 'subject_id',
             });
         }
 
     }
     TrackSubject.init({
         track_selection_id: DataTypes.INTEGER,
-        subject_code: DataTypes.STRING,
+        subject_id: DataTypes.STRING,
         daletedAt: DataTypes.DATE,
     }, {
         sequelize,

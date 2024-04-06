@@ -11,7 +11,7 @@ router.get("/", async (req, res) => {
         limit: 5,
         include: {
             model: Enrollment,
-            attributes: ["subject_code", "grade"],
+            attributes: ["id", "grade"],
             include: {
                 model: Subject,
                 attributes: ["subject_code", "title_th", "title_en", "credit"],
@@ -34,7 +34,7 @@ router.get("/:id", async (req, res) => {
             },
             include: {
                 model: Enrollment,
-                attributes: ["subject_code", "grade"],
+                attributes: ["subject_id", "grade"],
                 include: {
                     model: Subject,
                     attributes: ["subject_code", "title_th", "title_en", "credit"],

@@ -9,15 +9,9 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-            semester: {
-                type: Sequelize.STRING,
-                defaultValue: null
-            },
             subject_code: {
                 type: Sequelize.STRING,
-                unique: true,
-                primaryKey: true,
-                defaultValue: null
+                allowNull: false,
             },
             title_th: {
                 type: Sequelize.STRING,
@@ -35,27 +29,16 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 defaultValue: null,
             },
-            acadyear: {
-                type: Sequelize.INTEGER,
-                defaultValue: 0,
-            },
-            sub_group_id: {
+            track: {
                 allowNull: true,
-                type: Sequelize.INTEGER,
+                defaultValue: null,
+                unique: false,
+                type: Sequelize.STRING,
                 references: {
-                    model: 'SubGroups',
-                    key: 'id'
+                    model: 'Tracks',
+                    key: 'track'
                 },
-                defaultValue: null
-            },
-            group_id: {
-                allowNull: true,
-                type: Sequelize.INTEGER,
-                references: {
-                    model: 'Groups',
-                    key: 'id'
-                },
-                defaultValue: null
+                onDelete: 'SET NULL',
             },
             createdAt: {
                 allowNull: false,
@@ -65,10 +48,10 @@ module.exports = {
                 allowNull: false,
                 type: Sequelize.DATE
             },
-            // deletedAt:{
-            //     allowNull: false,
-            //     type: Sequelize.DATE
-            // }
+            deletedAt: {
+                allowNull: false,
+                type: Sequelize.DATE
+            }
         });
     },
     async down(queryInterface, Sequelize) {

@@ -5,46 +5,47 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class Subject extends Model {
         static associate(models) {
-            this.belongsTo(models.Group, {
-                foreignKey: 'group_id',
-                targetKey: 'id',
-                allowNull: true,
+            // this.belongsTo(models.Group, {
+            //     foreignKey: 'group_id',
+            //     targetKey: 'id',
+            //     allowNull: true,
+            // });
+            
+            this.hasMany(models.SubgroupSubject, {
+                foreignKey: 'subject_id',
+                sourceKey: 'subject_id',
             });
-            this.belongsTo(models.SubGroup, {
-                foreignKey: 'sub_group_id',
-                targetKey: 'id',
-                allowNull: true,
+            this.hasMany(models.SubjectDetail, {
+                foreignKey: 'subject_id',
+                sourceKey: 'subject_id',
             });
+
             this.hasMany(models.Enrollment, {
-                foreignKey: 'subject_code',
-                sourceKey: 'subject_code',
+                foreignKey: 'subject_id',
+                sourceKey: 'subject_id',
             });
             this.hasMany(models.SelectionDetail, {
-                foreignKey: 'subject_code',
-                sourceKey: 'subject_code',
+                foreignKey: 'subject_id',
+                sourceKey: 'subject_id',
             });
             this.belongsToMany(models.TrackSelection, {
                 through: models.TrackSubject,
-                foreignKey: "subject_code",
+                foreignKey: "subject_id",
                 otherKey: "track_selection_id"
             });
 
         }
     }
     Subject.init({
-        subject_id: DataTypes.INTEGER,
-        semester: DataTypes.STRING,
-        subject_code: {
-            type: DataTypes.STRING,
+        subject_id: {
+            type: DataTypes.INTEGER,
             primaryKey: true,
         },
+        subject_code: DataTypes.STRING,
         title_th: DataTypes.STRING,
         title_en: DataTypes.STRING,
         information: DataTypes.STRING,
-        acadyear: DataTypes.INTEGER,
         credit: DataTypes.INTEGER,
-        sub_group_id: DataTypes.INTEGER,
-        group_id: DataTypes.INTEGER,
         // program_code: DataTypes.INTEGER
         // deletedAt: DataTypes.DATE,
     }, {

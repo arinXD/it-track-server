@@ -2,41 +2,29 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('Enrollments', {
+        await queryInterface.createTable('SubjectDetails', {
             id: {
                 allowNull: false,
                 autoIncrement: true,
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-            stu_id: {
-                allowNull: true,
-                unique: false,
-                type: Sequelize.STRING,
-                references: {
-                    model: 'Students',
-                    key: 'stu_id'
-                },
-                defaultValue: null,
-                onDelete:"CASCADE"
-            },
             subject_id: {
                 allowNull: true,
-                unique: false,
                 type: Sequelize.INTEGER,
                 references: {
                     model: 'Subjects',
                     key: 'subject_id'
                 },
-                defaultValue: null,
-                onDelete:"SET NULL"
+                defaultValue: null
             },
-            enroll_year: {
-                allowNull: false,
+            acadyear: {
                 type: Sequelize.INTEGER,
+                defaultValue: 0,
             },
-            grade: {
-                type: Sequelize.STRING
+            semester: {
+                type: Sequelize.STRING,
+                defaultValue: null
             },
             createdAt: {
                 allowNull: false,
@@ -45,15 +33,10 @@ module.exports = {
             updatedAt: {
                 allowNull: false,
                 type: Sequelize.DATE
-            },
-            daletedAt: {
-                type: Sequelize.DATE,
-                allowNull: true,
-                validate: {}
             }
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('Enrollments');
+        await queryInterface.dropTable('SubjectDetails');
     }
 };

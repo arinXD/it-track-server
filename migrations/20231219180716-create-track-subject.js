@@ -19,13 +19,13 @@ module.exports = {
                 },
                 onDelete: 'CASCADE',
             },
-            subject_code: {
+            subject_id: {
                 allowNull: true,
                 defaultValue: null,
-                type: Sequelize.STRING,
+                type: Sequelize.INTEGER,
                 references: {
                     model: 'Subjects',
-                    key: 'subject_code'
+                    key: 'subject_id'
                 },
                 onDelete: 'SET NULL',
             },

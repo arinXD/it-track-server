@@ -10,14 +10,14 @@ module.exports = (sequelize, DataTypes) => {
                 targetKey: 'id',
             });
             this.belongsTo(models.Subject, {
-                foreignKey: 'subject_code',
-                targetKey: 'subject_code',
+                foreignKey: 'subject_id',
+                targetKey: 'subject_id',
             });
         }
     }
     SelectionDetail.init({
         selection_id: DataTypes.INTEGER,
-        subject_code: DataTypes.STRING,
+        subject_id: DataTypes.STRING,
         grade: DataTypes.STRING,
         daletedAt: DataTypes.DATE,
     }, {

@@ -14,7 +14,12 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 const {
     Op
 } = require('sequelize');
-const { getAcadYear, getCourse, getProgram } = require('../utils/student');
+const {
+    getAcadYear,
+    getCourse,
+    getProgram
+} = require('../utils/student');
+const { findSubjectByCode } = require('../utils/subject');
 
 router.get("/:stuid", async (req, res) => {
     const stuid = req.params.stuid
@@ -145,6 +150,7 @@ router.post("/track/select", async (req, res) => {
         let userSelection = await Selection.upsert(selectData)
         for (const index in subjectsData) {
             let selectDetail = subjectsData[index]
+            selectDetail.subject_id = await findSubjectByCode(selectDetail.subject_code)
             if (selectId) {
                 selectDetail.id = selectionDetailId[index]
                 selectDetail.selection_id = selectId.id
@@ -256,12 +262,37 @@ router.put("/:id/restore", adminMiddleware, async (req, res) => {
         })
     }
 })
+
+router.put("/restore/select", adminMiddleware, async (req, res) => {
+    const {
+        students
+    } = req.body
+    try {
+        for (const id of students) {
+            await Student.restore({
+                where: {
+                    id
+                }
+            });
+
+        }
+        return res.status(200).json({
+            ok: true,
+            message: "กู้คืนข้อมูลสำเร็จ"
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+
 router.put("/:id", adminMiddleware, async (req, res) => {
     const stuid = req.params.id
     const stuData = req.body
     try {
-        console.log(stuid);
-        console.log(stuData);
         await Student.update(stuData, {
             where: {
                 stu_id: stuid
@@ -305,34 +336,34 @@ router.post("/", adminMiddleware, async (req, res) => {
     }
 })
 
-
-async function bulkUpsertStudents(studentsData) {
-    const existingStudents = await Student.findAll({
-        where: {
-            stu_id: studentsData.map(student => student.stu_id)
-        }
-    });
-
-    studentsData.forEach(async studentData => {
-        const existingStudent = existingStudents.find(s => s.stu_id === studentData.stu_id);
-        let upsertData = {}
-        if (existingStudent?.id) {
-            existingStudent.first_name = studentData.first_name;
-            existingStudent.last_name = studentData.last_name;
-            existingStudent.courses_type = studentData.courses_type;
-            existingStudent.program = studentData.program;
-            existingStudent.acadyear = studentData.acadyear;
-            existingStudent.status_code = studentData.status_code;
-
-            upsertData = existingStudent.dataValues
-        } else {
-            upsertData = studentData
-        }
-        await Student.upsert(upsertData);
-    });
-}
-
 router.post("/excel", adminMiddleware, async (req, res) => {
+
+    async function bulkUpsertStudents(studentsData) {
+        const existingStudents = await Student.findAll({
+            where: {
+                stu_id: studentsData.map(student => student.stu_id)
+            }
+        });
+
+        studentsData.forEach(async studentData => {
+            const existingStudent = existingStudents.find(s => s.stu_id === studentData.stu_id);
+            let upsertData = {}
+            if (existingStudent?.id) {
+                existingStudent.first_name = studentData.first_name;
+                existingStudent.last_name = studentData.last_name;
+                existingStudent.courses_type = studentData.courses_type;
+                existingStudent.program = studentData.program;
+                existingStudent.acadyear = studentData.acadyear;
+                existingStudent.status_code = studentData.status_code;
+
+                upsertData = existingStudent.dataValues
+            } else {
+                upsertData = studentData
+            }
+            await Student.upsert(upsertData);
+        });
+    }
+
     let students = req.body
     students = students.filter(row => row.stu_id)
     students = students.map(student => {
@@ -347,7 +378,62 @@ router.post("/excel", adminMiddleware, async (req, res) => {
     try {
         bulkUpsertStudents(students)
     } catch (error) {
-        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+    return res.status(200).json({
+        ok: true,
+        message: "เพิ่มข้อมูลสำเร็จ"
+    })
+})
+
+router.post("/enrollments/excel", adminMiddleware, async (req, res) => {
+
+    async function bulkUpsertEnrollments(enrollments) {
+        enrollments.forEach(async enrollData => {
+            let existingEnroll
+            try {
+                const subjectId = await findSubjectByCode(enrollData.subject_code)
+                if(!subjectId) return
+                existingEnroll = await Enrollment.findOne({
+                    where: {
+                        stu_id: enrollData.stu_id,
+                        subject_id: subjectId,
+                        enroll_year: enrollData.enroll_year
+                    }
+                });
+            } catch (error) {
+                return
+            }
+
+            let upsertData = {}
+
+            if (existingEnroll?.id) {
+                existingEnroll.grade = enrollData.grade;
+                upsertData = existingEnroll.dataValues
+            } else {
+                upsertData = enrollData
+            }
+            try {
+                await Enrollment.upsert(upsertData);
+            } catch (error) {
+                return
+            }
+        });
+    }
+
+    let enrollments = req.body
+    enrollments = enrollments.filter(row => {
+        if (row.stu_id != null &&
+            row.subject_code != null &&
+            row.enroll_year != null
+        ) return row
+    })
+    try {
+        bulkUpsertEnrollments(enrollments)
+    } catch (error) {
         return res.status(500).json({
             ok: false,
             message: "Server error."
@@ -406,12 +492,37 @@ router.delete("/multiple/delete", adminMiddleware, async (req, res) => {
         students
     } = req.body
     try {
-        console.log(students);
         for (const id of students) {
             await Student.destroy({
                 where: {
-                    stu_id: id
+                    id
                 }
+            })
+        }
+        return res.status(200).json({
+            ok: true,
+            message: "ลบข้อมูลนักศึกษาสำเร็จ"
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+router.delete("/multiple/delete/force", adminMiddleware, async (req, res) => {
+    const {
+        students
+    } = req.body
+    console.log(students);
+    try {
+        for (const id of students) {
+            await Student.destroy({
+                where: {
+                    id
+                },
+                force: true
             })
         }
         return res.status(200).json({

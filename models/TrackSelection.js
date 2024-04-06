@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
             this.belongsToMany(models.Subject, {
                 through: models.TrackSubject,
                 foreignKey: "track_selection_id",
-                otherKey: "subject_code"
+                otherKey: "subject_id"
             });
             this.hasMany(models.Selection, {
                 foreignKey: 'track_selection_id',
