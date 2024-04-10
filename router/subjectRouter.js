@@ -2,7 +2,10 @@ var express = require('express');
 var router = express.Router();
 const models = require('../models');
 const Subject = models.Subject
-const { Op } = require('sequelize');
+const {
+    Op
+} = require('sequelize');
+const isAdmin = require('../middleware/adminMiddleware');
 
 router.get("/", async (req, res) => {
     try {
@@ -20,9 +23,56 @@ router.get("/", async (req, res) => {
     }
 });
 
+router.get("/find/:subject", isAdmin, async (req, res) => {
+    const subject = req.params.subject
+    try {
+        const subjects = await Subject.findAll({
+            where: {
+                [Op.or]: [
+                    {
+                        subject_code: {
+                            [Op.like]: `%${subject}%`
+                        }
+                    },
+                    {
+                        title_th: {
+                            [Op.like]: `%${subject}%`
+                        }
+                    },
+                    {
+                        title_en: {
+                            [Op.like]: `%${subject}%`
+                        }
+                    },
+                ]
+            },
+        })
+        return res.status(200).json({
+            ok: true,
+            data: subjects
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+
 router.post("/insertSubject", async (req, res) => {
     try {
-        const { semester, subject_code, title_th, title_en, information, credit, sub_group_id, group_id, acadyear } = req.body;
+        const {
+            semester,
+            subject_code,
+            title_th,
+            title_en,
+            information,
+            credit,
+            sub_group_id,
+            group_id,
+            acadyear
+        } = req.body;
 
         const newSubject = await Subject.create({
             semester: semester,
@@ -55,7 +105,11 @@ router.post("/insertSubjectsFromExcel", async (req, res) => {
         const duplicateSubjects = [];
 
         for (const subject of subjects) {
-            const existingSubject = await Subject.findOne({ where: { subject_code: subject.subject_code } });
+            const existingSubject = await Subject.findOne({
+                where: {
+                    subject_code: subject.subject_code
+                }
+            });
 
             if (existingSubject) {
                 duplicateSubjects.push(subject);
@@ -64,10 +118,16 @@ router.post("/insertSubjectsFromExcel", async (req, res) => {
                 insertedSubjects.push(newSubject);
             }
         }
-        return res.status(201).json({ data: insertedSubjects, duplicates: duplicateSubjects, message: 'Subjects processed successfully' });
+        return res.status(201).json({
+            data: insertedSubjects,
+            duplicates: duplicateSubjects,
+            message: 'Subjects processed successfully'
+        });
     } catch (error) {
         console.error('Error processing subjects:', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({
+            error: 'Internal Server Error'
+        });
     }
 });
 
@@ -75,7 +135,11 @@ router.post("/insertSubjectsFromExcel", async (req, res) => {
 router.get("/:id", async (req, res) => {
     try {
         const subjectId = req.params.id;
-        const subject = await Subject.findOne({ where: { subject_id: subjectId } });
+        const subject = await Subject.findOne({
+            where: {
+                subject_id: subjectId
+            }
+        });
 
         if (!subject) {
             return res.status(404).json({
@@ -100,8 +164,22 @@ router.get("/:id", async (req, res) => {
 router.post("/updateSubject/:id", async (req, res) => {
     try {
         const subjectId = req.params.id;
-        const { semester, subject_code, title_th, title_en, information, credit, sub_group_id, group_id, acadyear } = req.body;
-        const updateSubject = await Subject.findOne({ where: { subject_id: subjectId } });
+        const {
+            semester,
+            subject_code,
+            title_th,
+            title_en,
+            information,
+            credit,
+            sub_group_id,
+            group_id,
+            acadyear
+        } = req.body;
+        const updateSubject = await Subject.findOne({
+            where: {
+                subject_id: subjectId
+            }
+        });
 
         if (!updateSubject) {
             return res.status(404).json({

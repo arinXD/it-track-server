@@ -243,6 +243,35 @@ router.get("/get/restores", async (req, res) => {
     }
 })
 
+router.get("/find/:student", adminMiddleware, async (req, res) => {
+    const student = req.params.student
+    try {
+        const students = await Student.findAll({
+            where: {
+                [Op.or]: [
+                    { first_name: { [Op.like]: `%${student}%` } },
+                    { last_name: { [Op.like]: `%${student}%` } },
+                    { stu_id: { [Op.like]: `%${student}%` } ,}
+                ]
+            },
+            include: [{
+                    model: Program,
+                },
+            ],
+        })
+        return res.status(200).json({
+            ok: true,
+            data: students
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+
 router.put("/:id/restore", adminMiddleware, async (req, res) => {
     const stu_id = req.params.id
     try {

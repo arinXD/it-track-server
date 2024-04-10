@@ -4,7 +4,16 @@ const models = require('../models');
 const Student = models.Student
 const Enrollment = models.Enrollment
 const Subject = models.Subject
-const { Op } = require("sequelize");
+const {
+    Op
+} = require("sequelize");
+const isAdmin = require('../middleware/adminMiddleware');
+const {
+    convertGrade
+} = require('../utils/grade');
+const {
+    findSubjectByCode
+} = require('../utils/subject');
 
 router.get("/", async (req, res) => {
     const students = await Student.findAll({
@@ -52,6 +61,63 @@ router.get("/:id", async (req, res) => {
             message: "Server error.",
         })
     }
+})
+
+router.get("/:stu_id/:subject_id/:enrollyear", isAdmin, async (req, res) => {
+    const stu_id = req.params.stu_id
+    const subject_id = req.params.subject_id
+    const enrollyear = req.params.enrollyear
+    let existEnroll
+    try {
+        existEnroll = await Enrollment.findOne({
+            where: {
+                [Op.and]: [{
+                        stu_id: {
+                            [Op.like]: `%${stu_id}%`
+                        }
+                    },
+                    {
+                        subject_id: {
+                            [Op.like]: `%${subject_id}%`
+                        }
+                    },
+                    {
+                        enroll_year: {
+                            [Op.like]: `%${enrollyear}%`
+                        }
+                    },
+                ]
+            },
+        })
+    } catch (error) {
+        return res.status(400).json({
+            ok: false,
+            data: existEnroll,
+        })
+    }
+
+    return res.status(200).json({
+        ok: true,
+        data: existEnroll,
+    })
+
+})
+
+router.post('/', isAdmin, async (req, res) => {
+    const enroll = req.body
+    try {
+        await Enrollment.upsert(enroll)
+    } catch (error) {
+        console.log(error);
+        return res.status(401).json({
+            ok: true,
+            message: "เพิ่มข้อมูลไม่สำเร็จ",
+        })
+    }
+    return res.status(200).json({
+        ok: true,
+        message: "เพิ่มข้อมูลสำเร็จ",
+    })
 })
 
 module.exports = router
