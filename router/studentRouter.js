@@ -426,6 +426,8 @@ router.post("/enrollments/excel", adminMiddleware, async (req, res) => {
             try {
                 const subjectId = await findSubjectByCode(enrollData.subject_code)
                 if(!subjectId) return
+                const student = await Student.findOne({ where: { stu_id : enrollData.stu_id }})
+                if(student?.id == null) return
                 existingEnroll = await Enrollment.findOne({
                     where: {
                         stu_id: enrollData.stu_id,
@@ -443,10 +445,14 @@ router.post("/enrollments/excel", adminMiddleware, async (req, res) => {
                 existingEnroll.grade = enrollData.grade;
                 upsertData = existingEnroll.dataValues
             } else {
+                const subjectId = await findSubjectByCode(enrollData.subject_code)
                 upsertData = enrollData
+                upsertData.subject_id = subjectId
+                delete upsertData.subject_code
             }
             try {
-                await Enrollment.upsert(upsertData);
+                if(enrollData.stu_id=="643020423-0") console.log(upsertData);
+                Enrollment.upsert(upsertData);
             } catch (error) {
                 return
             }

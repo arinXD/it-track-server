@@ -120,4 +120,50 @@ router.post('/', isAdmin, async (req, res) => {
     })
 })
 
+router.delete("/single/:id", isAdmin, async (req, res) => {
+    const id = req.params.id
+    try {
+        await Enrollment.destroy({
+            where: {
+                id
+            },
+            force: true
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(401).json({
+            ok: true,
+            message: "ลบไม่สำเร็จ",
+        })
+    }
+    return res.status(200).json({
+        ok: true,
+        message: "ลบข้อมูลสำเร็จ",
+    })
+})
+
+router.delete("/multiple", isAdmin, async (req, res) => {
+    const enrolls = req.body
+    try {
+        for (const enroll of enrolls) {
+            await Enrollment.destroy({
+                where: {
+                    id: enroll
+                },
+                force: true
+            });
+        }
+    } catch (error) {
+        console.log(error);
+        return res.status(401).json({
+            ok: true,
+            message: "ลบไม่สำเร็จ",
+        })
+    }
+    return res.status(200).json({
+        ok: true,
+        message: "ลบข้อมูลสำเร็จ",
+    })
+})
+
 module.exports = router

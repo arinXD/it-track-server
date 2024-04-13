@@ -28,8 +28,7 @@ router.get("/find/:subject", isAdmin, async (req, res) => {
     try {
         const subjects = await Subject.findAll({
             where: {
-                [Op.or]: [
-                    {
+                [Op.or]: [{
                         subject_code: {
                             [Op.like]: `%${subject}%`
                         }
@@ -47,6 +46,45 @@ router.get("/find/:subject", isAdmin, async (req, res) => {
                 ]
             },
         })
+        return res.status(200).json({
+            ok: true,
+            data: subjects
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+
+router.get("/track/selection", isAdmin, async (req, res) => {
+    const defaultSubjects = req.query.subjects
+    try {
+        const subjects = await Subject.findAll({
+            where: {
+                [Op.and]: [{
+                        [Op.or]: [{
+                                subject_code: {
+                                    [Op.like]: 'SC%'
+                                }
+                            },
+                            {
+                                subject_code: {
+                                    [Op.like]: 'CP%'
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        subject_code: {
+                            [Op.notIn]: defaultSubjects
+                        }
+                    }
+                ]
+            },
+        });
         return res.status(200).json({
             ok: true,
             data: subjects

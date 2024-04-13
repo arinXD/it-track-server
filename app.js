@@ -79,6 +79,7 @@ const trackRouter = require('./router/trackRouter');
 const trackSelectionRouter = require('./router/trackSelectionRouter');
 const enrollmentRouter = require('./router/enrollmentRouter');
 const studentStatusRouter = require('./router/studentStatusRouter');
+const trackSubjectRouter = require('./router/trackSubjectRouter');
 
 // const studentDataRouter = require('./router/studentDataRouter');
 const adminMiddleware = require("./middleware/adminMiddleware")
@@ -108,11 +109,9 @@ const programCodeRouter = require('./router/programCodeRouter')
 //  middleware router
 //
 //--------------------
-const a = [{sxd:10}]
 app.get('/', (req, res, next) => {
     return res.json({
         message: 'IT Track by IT64',
-        data: a
     })
 })
 app.use('/api/admin', adminRouter)
@@ -123,6 +122,7 @@ app.use('/api/students', studentRouter)
 app.use('/api/students/enrollments', enrollmentRouter)
 app.use('/api/acadyear', adminMiddleware, acadYearRouter)
 app.use('/api/tracks', trackRouter)
+app.use('/api/tracks/subjects', trackSubjectRouter)
 app.use('/api/tracks/selects', trackSelectionRouter)
 app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
