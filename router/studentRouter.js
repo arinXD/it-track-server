@@ -468,6 +468,7 @@ router.post("/enrollments/excel", adminMiddleware, async (req, res) => {
     })
     try {
         bulkUpsertEnrollments(enrollments)
+        console.log(enrollments.length);
     } catch (error) {
         return res.status(500).json({
             ok: false,

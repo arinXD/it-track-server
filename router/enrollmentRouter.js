@@ -4,18 +4,12 @@ const models = require('../models');
 const Student = models.Student
 const Enrollment = models.Enrollment
 const Subject = models.Subject
-const {
-    Op
-} = require("sequelize");
+const { Op, QueryTypes } = require("sequelize");
 const isAdmin = require('../middleware/adminMiddleware');
-const {
-    convertGrade
-} = require('../utils/grade');
-const {
-    findSubjectByCode
-} = require('../utils/subject');
+const { convertGrade } = require('../utils/grade');
+const { findSubjectByCode } = require('../utils/subject');
 
-router.get("/", async (req, res) => {
+router.get("/", isAdmin, async (req, res) => {
     const students = await Student.findAll({
         limit: 5,
         include: {
@@ -32,7 +26,7 @@ router.get("/", async (req, res) => {
         data: students
     })
 })
-router.get("/:id", async (req, res) => {
+router.get("/:id", isAdmin, async (req, res) => {
     const id = req.params.id
     try {
         const students = await Student.findOne({
@@ -53,6 +47,59 @@ router.get("/:id", async (req, res) => {
         return res.status(200).json({
             ok: true,
             data: students,
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error.",
+        })
+    }
+})
+
+router.get("/:acadyear/gpa", async (req, res) => {
+    const acadyear = parseInt(req.params.acadyear)
+    if (typeof acadyear != "number") {
+        return res.status(400).json({
+            ok: false,
+            acadyear,
+            message: "acadyear must be number.",
+        })
+    }
+    try {
+        let allGpa = await models.sequelize.query(`
+        SELECT students.stu_id AS stuid,
+        SUM((CASE 
+                WHEN enrollments.grade IN ('A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F') THEN 
+                    CASE enrollments.grade
+                        WHEN 'A' THEN 4
+                        WHEN 'B+' THEN 3.5
+                        WHEN 'B' THEN 3
+                        WHEN 'C+' THEN 2.5
+                        WHEN 'C' THEN 2
+                        WHEN 'D+' THEN 1.5
+                        WHEN 'D' THEN 1
+                        WHEN 'F' THEN 0
+                    END
+                ELSE 0
+            END) * subjects.credit) / 
+            (SELECT SUM(subjects.credit)
+                FROM subjects, enrollments
+                WHERE subjects.subject_id = enrollments.subject_id
+                AND students.stu_id = enrollments.stu_id
+                AND enrollments.grade IN ('A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F')
+                GROUP BY enrollments.stu_id) as gpa
+        FROM enrollments
+        JOIN students ON enrollments.stu_id = students.stu_id
+        JOIN subjects ON enrollments.subject_id = subjects.subject_id
+        WHERE students.acadyear = ${acadyear}
+        GROUP BY stuid
+        ORDER BY stuid ASC`, {
+            type: QueryTypes.SELECT
+        });
+        return res.status(200).json({
+            ok: true,
+            data: allGpa,
         })
     } catch (error) {
         console.error(error);
