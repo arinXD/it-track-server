@@ -57,7 +57,7 @@ router.get("/:id", isAdmin, async (req, res) => {
     }
 })
 
-router.get("/:acadyear/gpa", async (req, res) => {
+router.get("/:acadyear/gpa", isAdmin,async (req, res) => {
     const acadyear = parseInt(req.params.acadyear)
     if (typeof acadyear != "number") {
         return res.status(400).json({
