@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'result',
                 sourceKey: 'track',
             });
+            this.hasMany(models.TeacherTrack, {
+                foreignKey: 'track',
+                sourceKey: 'track',
+            });
         }
     }
     Track.init({
