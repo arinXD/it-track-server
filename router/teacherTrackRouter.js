@@ -1,12 +1,11 @@
 var express = require('express');
 var router = express.Router();
 const models = require('../models');
-const Track = models.Track
-const isAdmin = require('../middleware/adminMiddleware');
+const TeacherTrack = models.TeacherTrack
 
 router.get("/", async (req, res) => {
     try {
-        const data = await Track.findAll()
+        const data = await TeacherTrack.findAll()
         return res.status(200).json({
             ok: true,
             data
@@ -18,10 +17,10 @@ router.get("/", async (req, res) => {
         })
     }
 })
-router.get("/:track", isAdmin,async (req, res) => {
+router.get("/:track", async (req, res) => {
     const track = req.params.track
     try {
-        const data = await Track.findOne({
+        const data = await TeacherTrack.findAll({
             where: {
                 track
             }

@@ -80,6 +80,7 @@ const trackSelectionRouter = require('./router/trackSelectionRouter');
 const enrollmentRouter = require('./router/enrollmentRouter');
 const studentStatusRouter = require('./router/studentStatusRouter');
 const trackSubjectRouter = require('./router/trackSubjectRouter');
+const teacherTrackRouter = require('./router/teacherTrackRouter');
 
 // const studentDataRouter = require('./router/studentDataRouter');
 const adminMiddleware = require("./middleware/adminMiddleware")
@@ -131,6 +132,7 @@ app.use('/api/subgroups', subGroupRouter);
 app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/statuses', adminMiddleware, studentStatusRouter);
+app.use('/api/teachers/tracks', adminMiddleware, teacherTrackRouter)
 
 app.get("/api/test", async (req, res) => {
     try {
