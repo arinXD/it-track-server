@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors')
 const session = require('express-session')
+const bodyParser = require('body-parser');
 const {
     Sequelize
 } = require('sequelize')
@@ -33,6 +34,10 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
 }))
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
 app.use(express.static(path.join(__dirname, 'public')))
 
 //--------------------
@@ -122,7 +127,7 @@ app.use('/api/auth', authRouter)
 app.use('/api/students', studentRouter)
 app.use('/api/students/enrollments', enrollmentRouter)
 app.use('/api/acadyear', adminMiddleware, acadYearRouter)
-app.use('/api/tracks', trackRouter)
+app.use('/api/tracks', adminMiddleware, trackRouter)
 app.use('/api/tracks/subjects', trackSubjectRouter)
 app.use('/api/tracks/selects', trackSelectionRouter)
 app.use('/api/subjects', subjectRouter);
@@ -132,7 +137,7 @@ app.use('/api/subgroups', subGroupRouter);
 app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/statuses', adminMiddleware, studentStatusRouter);
-app.use('/api/teachers/tracks', adminMiddleware, teacherTrackRouter)
+app.use('/api/teachers/tracks', teacherTrackRouter)
 
 app.get("/api/test", async (req, res) => {
     try {
