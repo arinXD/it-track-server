@@ -3,6 +3,7 @@ var router = express.Router();
 const multer = require('multer')
 const path = require('path');
 const models = require('../models');
+const { getHostname } = require('../api/hostname');
 const Track = models.Track
 
 var fileName
@@ -22,7 +23,6 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
     const allowedFileTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-
     if (allowedFileTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
@@ -33,6 +33,9 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
     storage,
+    limits: {
+        fileSize: 1024 * 1024 * 2
+    },
     fileFilter
 })
 
@@ -45,7 +48,7 @@ router.get("/", async (req, res) => {
         })
     } catch (error) {
         return res.status(500).json({
-            ok: true,
+            ok: false,
             message: "Server error."
         })
     }
@@ -64,7 +67,7 @@ router.get("/:track", async (req, res) => {
         })
     } catch (error) {
         return res.status(500).json({
-            ok: true,
+            ok: false,
             message: "Server error."
         })
     }
@@ -87,17 +90,17 @@ router.put("/:track", async (req, res) => {
         })
     } catch (error) {
         return res.status(500).json({
-            ok: true,
+            ok: false,
             message: "Server error."
         })
     }
 })
 
-router.post("/:track/image/:type", upload.single('image'), async (req, res) => {
+router.post("/:track/image/:type", upload.single('image'), async (req, res) => { 
     const track = req.params.track
     const fieldImage = req.params.type
     const updateData = req.body
-    const img = `http://localhost:4000/images/tracks/${fieldImage}/${fileName}`
+    const img = `${getHostname()}/images/tracks/${fieldImage}/${fileName}`
     updateData[fieldImage] = img
     try {
         const data = await Track.update(
@@ -112,8 +115,9 @@ router.post("/:track/image/:type", upload.single('image'), async (req, res) => {
             data
         })
     } catch (error) {
+        console.log(error);
         return res.status(500).json({
-            ok: true,
+            ok: false,
             message: "Server error."
         })
     }
