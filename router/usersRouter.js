@@ -1,12 +1,11 @@
 var express = require('express');
 var router = express.Router();
 const models = require('../models');
-const isAdmin = require('../middleware/adminMiddleware');
 
 const User = models.User
 const Student = models.Student
 
-router.get('/', isAdmin, async (req, res, next) => {
+router.get('/', async (req, res, next) => {
     try {
         const result = await User.findAll({
             include: {

@@ -6,7 +6,6 @@ const User = models.User
 const Student = models.Student
 const Teacher = models.Teacher
 const EmailVerify = models.EmailVerify
-const StudentData = models.StudentData
 const { hostname } = require("../api/hostname");
 const { mailSender } = require("./mailSender");
 require("dotenv").config();
@@ -65,7 +64,7 @@ const signInCredentials = async (req, res, next) => {
         const { email, password } = req.body;
         const { role, model } = getRole(email)
         const user = await User.findOne({
-            where: { email: email },
+            where: { email },
             include: {
                 model
             }
@@ -101,6 +100,9 @@ const signInCredentials = async (req, res, next) => {
             //     image: userData.image,
             //     role: "student"
             // }, process.env.SECRET_KEY, { expiresIn: "2h" });
+
+            req.session.user = email
+
             return res.status(200).json({
                 ok: true,
                 user: {
@@ -185,6 +187,9 @@ const signInGoogle = async (req, res, next) => {
                     child.stu_id = child.stu_id || null
                 }
             }
+
+            req.session.user = dataEmail
+            
             return res.status(201).json({
                 ok: true,
                 data: {
@@ -193,7 +198,7 @@ const signInGoogle = async (req, res, next) => {
                 },
             })
         } else {
-            const { sign_in_type } = result
+            const { sign_in_type, email } = result
             if (sign_in_type == "google") {
                 // email match
                 let child = {}
@@ -206,6 +211,9 @@ const signInGoogle = async (req, res, next) => {
                         }
                     }
                 }
+                req.session.user = email
+                console.log("login session:", req.sessionID);
+                // console.log("Login session:", req.session);
                 return res.status(200).json({
                     ok: true,
                     data: {
@@ -235,8 +243,6 @@ const signInGoogle = async (req, res, next) => {
 const signInVerify = async (req, res) => {
     const { email } = req.body;
     try {
-        // const [result] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
-
         const userData = await User.findOne({ where: { email } });
 
         if (!userData) {
@@ -252,6 +258,7 @@ const signInVerify = async (req, res) => {
             });
         }
         const name = `${userData.fname} ${userData.lname}`;
+        req.session.user = email
         return res.status(200).json({
             ok: true,
             userData: {
@@ -278,7 +285,7 @@ const signUp = async (req, res, next) => {
         const { email, password, fname, lname } = req.body
         const { role, model } = getRole(email)
         const findEmail = await User.findOne({ where: { email } })
-        // const [findEmail] = await conn.query(`SELECT * FROM students WHERE email='${email}'`);
+
         if (findEmail) {
             return res.status(401).json({
                 ok: false,
@@ -307,23 +314,12 @@ const signUp = async (req, res, next) => {
             }
         }
 
-        // const insertData = await conn.query("INSERT INTO students SET ?", useData)
         const sendEmailStatus = await sendEmailVerification({ id: user.id, email })
         if (sendEmailStatus) {
             const token = jwt.sign({
                 email,
                 uniqueString: sendEmailStatus,
             }, process.env.SECRET_KEY, { expiresIn: "6h" });
-
-            // ****** Dont work on production. ******
-            /*
-             res.cookie("token", token, {
-                 maxAge: 21600000,  //milli sec
-                 secure: true,
-                 httpOnly: true,
-                 sameSite: "none"
-             })
-            */
 
             return res.status(201).json({
                 ok: true,

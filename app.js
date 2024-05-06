@@ -30,9 +30,14 @@ app.use(express.urlencoded({
 }));
 app.use(logger('dev'));
 app.use(session({
+    name:"it-track",
     secret: "secret",
     resave: false,
     saveUninitialized: true,
+    cookie: {
+        maxAge: 6 * 60 * 60 * 1000,
+        secure: false
+    },
 }))
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -75,11 +80,9 @@ app.listen(port, async () => {
 //
 //--------------------
 const userRouter = require('./router/usersRouter');
-const postRouter = require('./router/postRouter');
 const authRouter = require('./router/authRouter');
 const studentRouter = require('./router/studentRouter');
 const acadYearRouter = require('./router/acadYearRouter');
-const adminRouter = require('./router/adminRouter');
 const trackRouter = require('./router/trackRouter');
 const trackSelectionRouter = require('./router/trackSelectionRouter');
 const enrollmentRouter = require('./router/enrollmentRouter');
@@ -88,6 +91,7 @@ const trackSubjectRouter = require('./router/trackSubjectRouter');
 const teacherTrackRouter = require('./router/teacherTrackRouter');
 
 const adminMiddleware = require("./middleware/adminMiddleware")
+const isAuth = require("./middleware/authMiddleware")
 
 //--------------------
 // 
@@ -119,15 +123,13 @@ app.get('/', (req, res, next) => {
         message: 'IT Track by IT64',
     })
 })
-app.use('/api/admin', adminRouter)
-app.use('/api/users', userRouter)
-app.use('/api/posts', postRouter)
+app.use('/api/users', adminMiddleware, userRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/students', studentRouter)
 app.use('/api/students/enrollments', enrollmentRouter)
 app.use('/api/acadyear', adminMiddleware, acadYearRouter)
-app.use('/api/tracks', adminMiddleware, trackRouter)
-app.use('/api/tracks/subjects', trackSubjectRouter)
+app.use('/api/tracks', trackRouter)
+app.use('/api/tracks/subjects', adminMiddleware, trackSubjectRouter)
 app.use('/api/tracks/selects', trackSelectionRouter)
 app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
@@ -136,9 +138,9 @@ app.use('/api/subgroups', subGroupRouter);
 app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/statuses', adminMiddleware, studentStatusRouter);
-app.use('/api/teachers/tracks', teacherTrackRouter)
+app.use('/api/teachers/tracks', adminMiddleware, teacherTrackRouter)
 
-app.get("/api/test", async (req, res) => {
+app.get("/api/test", isAuth, async (req, res) => {
     try {
         return res.status(200).json({
             ok: true,

@@ -1,5 +1,9 @@
 var express = require('express');
 var router = express.Router();
+const fs = require('fs');
+const csv = require('csv-parser');
+
+const { QueryTypes, Op } = require('sequelize');
 const models = require('../models');
 const TrackSelection = models.TrackSelection
 const TrackSubject = models.TrackSubject
@@ -12,8 +16,8 @@ const Enrollment = models.Enrollment
 
 const { mailSender } = require('../controller/mailSender');
 const { hostname } = require('../api/hostname');
+const isAuth = require('../middleware/authMiddleware');
 const adminMiddleware = require("../middleware/adminMiddleware")
-const { QueryTypes, Op } = require('sequelize');
 const { findSubjectByCode } = require('../utils/subject');
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
@@ -37,9 +41,7 @@ async function sendResultToEmail(stuid, result, acadyear) {
 }
 
 // atest
-const fs = require('fs');
-const csv = require('csv-parser');
-router.get("/test/selection", async (req, res) => {
+router.get("/test/selection", adminMiddleware, async (req, res) => {
     fs.createReadStream('./csv/student_selection.csv')
         .pipe(csv())
         .on('data', async (data) => {
@@ -69,7 +71,7 @@ router.get("/test/selection", async (req, res) => {
     })
 })
 
-router.get("/", async (req, res) => {
+router.get("/", adminMiddleware, async (req, res) => {
     try {
         const data = await TrackSelection.findAll({
             include: [{
@@ -93,7 +95,7 @@ router.get("/", async (req, res) => {
     }
 })
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", isAuth, async (req, res) => {
     const id = req.params.id
     try {
         const data = await TrackSelection.findOne({
@@ -132,7 +134,6 @@ function convertGrade(grade) {
     return grades[grade] || null
 }
 
-
 // Cal GPA
 const calculateGPA = (enrollments) => {
     let totalCredits = 0;
@@ -155,7 +156,7 @@ const calculateGPA = (enrollments) => {
     return gpa;
 };
 
-router.get("/:acadyear/students", async (req, res) => {
+router.get("/:acadyear/students", adminMiddleware, async (req, res) => {
     const acadyear = req.params.acadyear
     let data = []
     try {
@@ -231,7 +232,7 @@ router.get("/:acadyear/students", async (req, res) => {
     })
 })
 
-router.get("/:acadyear/students/dashboard", async (req, res) => {
+router.get("/:acadyear/students/dashboard", adminMiddleware ,async (req, res) => {
     const acadyear = req.params.acadyear
     let data = []
     try {
@@ -250,7 +251,7 @@ router.get("/:acadyear/students/dashboard", async (req, res) => {
                             include: [
                                 {
                                     model: Enrollment,
-                                    attributes: ["subject_code", "grade"],
+                                    attributes: ["subject_id", "grade"],
                                     include: [
                                         {
                                             model: Subject,
@@ -263,7 +264,7 @@ router.get("/:acadyear/students/dashboard", async (req, res) => {
                         },
                         {
                             model: SelectionDetail,
-                            attributes: ["grade", "subject_code"],
+                            attributes: ["grade", "subject_id"],
                             include: [
                                 {
                                     model: Subject,
@@ -312,7 +313,7 @@ router.get("/:acadyear/students/dashboard", async (req, res) => {
     })
 })
 
-router.get("/:acadyear/popular", async (req, res) => {
+router.get("/:acadyear/popular", adminMiddleware, async (req, res) => {
     const acadyear = req.params.acadyear
     const pastFiveYears = acadyear - 4;
     let data = []
@@ -362,7 +363,7 @@ router.get("/:acadyear/popular", async (req, res) => {
     })
 })
 
-router.get("/:id/subjects", async (req, res) => {
+router.get("/:id/subjects", adminMiddleware, async (req, res) => {
     const id = req.params.id
     try {
         const data = await TrackSelection.findOne({
@@ -387,7 +388,7 @@ router.get("/:id/subjects", async (req, res) => {
     }
 })
 
-router.get("/get/last", async (req, res) => {
+router.get("/get/last", adminMiddleware, async (req, res) => {
     let data = []
     try {
         data = await TrackSelection.findOne({
@@ -469,7 +470,7 @@ router.get("/get/last", async (req, res) => {
     })
 })
 
-router.get("/:id/subjects/students", async (req, res) => {
+router.get("/:id/subjects/students", adminMiddleware, async (req, res) => {
     const id = req.params.id
     try {
         const data = await TrackSelection.findOne({

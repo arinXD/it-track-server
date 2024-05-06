@@ -11,17 +11,12 @@ const Enrollment = models.Enrollment
 const Subject = models.Subject
 const Track = models.Track
 const adminMiddleware = require("../middleware/adminMiddleware");
-const {
-    Op
-} = require('sequelize');
-const {
-    getAcadYear,
-    getCourse,
-    getProgram
-} = require('../utils/student');
+const { Op } = require('sequelize');
+const { getAcadYear, getCourse, getProgram } = require('../utils/student');
 const { findSubjectByCode } = require('../utils/subject');
+const isAuth = require('../middleware/authMiddleware');
 
-router.get("/:stuid", async (req, res) => {
+router.get("/:stuid", isAuth, async (req, res) => {
     const stuid = req.params.stuid
     try {
         const students = await Student.findOne({
@@ -58,7 +53,7 @@ router.get("/:stuid", async (req, res) => {
     }
 })
 
-router.get("/:id/track/select", async (req, res) => {
+router.get("/:id/track/select", isAuth, async (req, res) => {
     const stu_id = req.params.id
     try {
         const select = await Selection.findOne({
@@ -82,7 +77,7 @@ router.get("/:id/track/select", async (req, res) => {
     }
 })
 
-router.get("/:id/track/select/detail", async (req, res) => {
+router.get("/:id/track/select/detail", isAuth, async (req, res) => {
     const stu_id = req.params.id
     try {
         const select = await Selection.findOne({
@@ -113,7 +108,7 @@ router.get("/:id/track/select/detail", async (req, res) => {
     }
 })
 
-router.post("/track/select", async (req, res) => {
+router.post("/track/select", isAuth, async (req, res) => {
     const {
         track_selection_id,
         stu_id,
@@ -210,7 +205,7 @@ router.get("/", adminMiddleware, async (req, res) => {
     }
 })
 
-router.get("/get/restores", async (req, res) => {
+router.get("/get/restores", adminMiddleware,async (req, res) => {
     try {
         const students = await Student.findAll({
             paranoid: false,

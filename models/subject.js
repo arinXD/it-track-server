@@ -46,6 +46,7 @@ module.exports = (sequelize, DataTypes) => {
         title_en: DataTypes.STRING,
         information: DataTypes.STRING,
         credit: DataTypes.INTEGER,
+        track: DataTypes.STRING,
         // program_code: DataTypes.INTEGER
         // deletedAt: DataTypes.DATE,
     }, {

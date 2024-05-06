@@ -4,10 +4,8 @@ const models = require('../models');
 const TeacherTrack = models.TeacherTrack
 const multer = require('multer')
 const path = require('path');
-const {
-    getHostname
-} = require('../api/hostname');
-const fs = require('fs')
+const { getHostname } = require('../api/hostname');
+const fs = require('fs');
 var fileName
 
 const storage = multer.diskStorage({
@@ -121,6 +119,93 @@ router.post("/", upload.single("image"), async (req, res) => {
     }
 })
 
+router.put("/:tid/form", upload.single("image"), async (req, res) => {
+    const tid = req.params.tid
+    const image = `${getHostname()}/images/teachers/${fileName}`
+    const { teacherName } = req.body
+    try {
+        const teacherData = await TeacherTrack.findOne({
+            where: {
+                id: tid
+            }
+        })
+        let oldFilePath 
+        if (teacherData && Object.keys(teacherData).length > 0) {
+            if (teacherData.dataValues.image) {
+                const oldFileName = teacherData.dataValues.image.split("/").pop()
+                oldFilePath = path.join(__dirname, `../public/images/teachers/${oldFileName}`)
+            }
+        }
+        teacherData.image = image
+        teacherData.teacherName = teacherName
+        await teacherData.save()
+        if (oldFilePath) {
+            if (fs.existsSync(oldFilePath)) {
+                fs.unlinkSync(oldFilePath)
+            }
+        }
+        return res.status(200).json({
+            ok: true,
+            message: "เพิ่มข้อมูลสำเร็จ"
+        })
+    } catch (error) {
+        console.log(fileName);
+        console.log(error);
+        const filePath = path.join(__dirname, `../public/images/teachers/${fileName}`)
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath)
+        }
+        return res.status(401).json({
+            ok: false,
+            message: "เพิ่มข้อมูลไม่สำเร็จ"
+        })
+    } finally {
+        fileName = ""
+    }
+})
 
+router.put("/:tid/json", async (req, res) => {
+    const tid = req.params.tid
+    const updateData = req.body
+    try {
+        await TeacherTrack.update(updateData, {
+            where: {
+                id: tid
+            }
+        })
+        return res.status(200).json({
+            ok: true,
+            message: "เพิ่มข้อมูลสำเร็จ"
+        })
+    } catch (error) {
+        return res.status(401).json({
+            ok: false,
+            message: "เพิ่มข้อมูลไม่สำเร็จ"
+        })
+    }
+})
+
+router.delete("/", async (req, res) => {
+    const teacherId = req.body
+    try {
+        for (const tid of teacherId) {
+            await TeacherTrack.destroy({
+                where: {
+                    id: tid
+                },
+                force: true
+            })
+        }
+        return res.status(200).json({
+            ok: true,
+            message: "ลบข้อมูลสำเร็จ"
+        })
+    } catch (error) {
+        return res.status(401).json({
+            ok: false,
+            message: "ลบข้อมูลไม่สำเร็จ"
+        })
+    }
+})
 
 module.exports = router

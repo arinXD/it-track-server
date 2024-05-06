@@ -4,6 +4,8 @@ const multer = require('multer')
 const path = require('path');
 const models = require('../models');
 const { getHostname } = require('../api/hostname');
+const isAuth = require('../middleware/authMiddleware');
+const isAdmin = require('../middleware/adminMiddleware');
 const Track = models.Track
 
 var fileName
@@ -39,7 +41,7 @@ const upload = multer({
     fileFilter
 })
 
-router.get("/", async (req, res) => {
+router.get("/all", isAuth, async (req, res) => {
     try {
         const data = await Track.findAll()
         return res.status(200).json({
@@ -53,7 +55,7 @@ router.get("/", async (req, res) => {
         })
     }
 })
-router.get("/:track", async (req, res) => {
+router.get("/:track/get-track",  async (req, res) => {
     const track = req.params.track
     try {
         const data = await Track.findOne({
@@ -73,7 +75,7 @@ router.get("/:track", async (req, res) => {
     }
 })
 
-router.put("/:track", async (req, res) => {
+router.put("/:track", isAdmin, async (req, res) => {
     const track = req.params.track
     const updateData = req.body
     try {
@@ -96,7 +98,7 @@ router.put("/:track", async (req, res) => {
     }
 })
 
-router.post("/:track/image/:type", upload.single('image'), async (req, res) => { 
+router.post("/:track/image/:type", isAdmin, upload.single('image'), async (req, res) => { 
     const track = req.params.track
     const fieldImage = req.params.type
     const updateData = req.body

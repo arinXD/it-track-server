@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const models = require('../models');
-const isAdmin = require('../middleware/adminMiddleware');
 const { findSubjectByCode } = require('../utils/subject');
+const { Op } = require('sequelize');
 const TrackSubject = models.TrackSubject
 
-router.post("/:id", isAdmin, async (req, res) => {
+router.post("/:id", async (req, res) => {
     const track_selection_id = req.params.id
     const subjects = req.body
     try {
@@ -38,7 +38,7 @@ router.post("/:id", isAdmin, async (req, res) => {
     })
 })
 
-router.delete("/:id", isAdmin, async (req, res) => {
+router.delete("/:id", async (req, res) => {
     const track_selection_id = req.params.id
     const subjects = req.body
     try {

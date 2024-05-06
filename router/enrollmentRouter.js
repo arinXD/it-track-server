@@ -6,8 +6,7 @@ const Enrollment = models.Enrollment
 const Subject = models.Subject
 const { Op, QueryTypes } = require("sequelize");
 const isAdmin = require('../middleware/adminMiddleware');
-const { convertGrade } = require('../utils/grade');
-const { findSubjectByCode } = require('../utils/subject');
+const isAuth = require('../middleware/authMiddleware');
 
 router.get("/", isAdmin, async (req, res) => {
     const students = await Student.findAll({
@@ -26,7 +25,7 @@ router.get("/", isAdmin, async (req, res) => {
         data: students
     })
 })
-router.get("/:id", isAdmin, async (req, res) => {
+router.get("/:id", isAuth, async (req, res) => {
     const id = req.params.id
     try {
         const students = await Student.findOne({
@@ -57,7 +56,7 @@ router.get("/:id", isAdmin, async (req, res) => {
     }
 })
 
-router.get("/:acadyear/gpa", isAdmin,async (req, res) => {
+router.get("/:acadyear/gpa", isAdmin, async (req, res) => {
     const acadyear = parseInt(req.params.acadyear)
     if (typeof acadyear != "number") {
         return res.status(400).json({
