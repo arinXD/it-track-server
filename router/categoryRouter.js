@@ -3,16 +3,55 @@ var router = express.Router();
 const models = require('../models');
 const Categorie = models.Categorie
 const { Op } = require('sequelize');
+const SubGroup = models.SubGroup
+const Group = models.Group
 
 router.get("/", async (req, res) => {
     try {
-        const categories = await Categorie.findAll();
+        const categories = await Categorie.findAll({
+            include: [
+                {
+                    model: Group,
+                    include: [
+                        {
+                            model: SubGroup
+                        }
+                    ]
+                }
+            ]
+        });
         return res.status(200).json({
             ok: true,
             data: categories
         });
     } catch (error) {
         console.error('Error fetching categories:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/:categoryId/groups", async (req, res) => {
+    try {
+        const categoryId = req.params.categoryId;
+        const groups = await Group.findAll({
+            where: {
+                category_id: categoryId
+            },
+            include: [
+                {
+                    model: SubGroup
+                }
+            ]
+        });
+        return res.status(200).json({
+            ok: true,
+            data: groups
+        });
+    } catch (error) {
+        console.error('Error fetching groups by category ID:', error);
         return res.status(500).json({
             ok: false,
             error: 'Internal Server Error'
@@ -78,7 +117,6 @@ router.post("/restoreCategorie/:id", async (req, res) => {
     }
 });
 
-// Check if a category with the given title already exists
 router.get("/checkDuplicate/:title", async (req, res) => {
     try {
         const { title } = req.params;
@@ -250,5 +288,6 @@ router.delete('/selected', async (req, res) => {
         })
     }
 })
+
 
 module.exports = router;

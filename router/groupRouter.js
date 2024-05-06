@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const models = require('../models');
 const Group = models.Group
+const SubGroup = models.SubGroup
 const { Op } = require('sequelize');
 
 router.get("/", async (req, res) => {
@@ -13,6 +14,27 @@ router.get("/", async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching groups:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/:groupId/subgroups", async (req, res) => {
+    try {
+        const groupId = req.params.groupId;
+        const subgroups = await SubGroup.findAll({
+            where: {
+                group_id: groupId
+            }
+        });
+        return res.status(200).json({
+            ok: true,
+            data: subgroups
+        });
+    } catch (error) {
+        console.error('Error fetching subgroups by group ID:', error);
         return res.status(500).json({
             ok: false,
             error: 'Internal Server Error'

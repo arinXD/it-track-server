@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'subject_id',
                 sourceKey: 'subject_id',
             });
+            this.hasMany(models.GroupSubject, {
+                foreignKey: 'subject_id',
+                sourceKey: 'subject_id',
+            });
             this.hasMany(models.SubjectDetail, {
                 foreignKey: 'subject_id',
                 sourceKey: 'subject_id',
@@ -33,7 +37,26 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "subject_id",
                 otherKey: "track_selection_id"
             });
-
+            this.belongsTo(models.Track, {
+                foreignKey: 'track',
+                targetKey: 'track',
+                allowNull: true,
+            });
+            this.belongsToMany(models.Verify, {
+                through: models.SubjectVerify,
+                foreignKey: "subject_id",
+                otherKey: "verify_id"
+            });
+            this.belongsToMany(models.Group, {
+                through: models.GroupSubject,
+                foreignKey: "subject_id",
+                otherKey: "group_id"
+            });
+            this.belongsToMany(models.SubGroup, {
+                through: models.SubgroupSubject,
+                foreignKey: "subject_id",
+                otherKey: "sub_group_id"
+            });
         }
     }
     Subject.init({

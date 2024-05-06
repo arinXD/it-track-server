@@ -14,6 +14,9 @@ module.exports = (sequelize, DataTypes) => {
       this.hasOne(models.Group, {
         foreignKey: 'category_id'
       });
+      this.hasMany(models.Group, {
+        foreignKey: 'category_id'
+      });
     }
   }
   Categorie.init({

@@ -7,20 +7,14 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {
             // Define association here
             this.belongsTo(models.Categorie, {
-                foreignKey: 'category_id',
-                targetKey: 'id', // Specify the correct foreign key 
+                foreignKey: 'category_id'
             });
             this.hasMany(models.SubGroup, {
-                foreignKey: 'group_id',
-                sourceKey: 'id',
+                foreignKey: 'group_id'
             });
-
-            // this.hasOne(models.SubGroup, {
-            //     foreignKey: 'group_id'
-            // });
-            // this.hasOne(models.Subject, {
-            //     foreignKey: 'group_id'
-            // });
+            this.hasMany(models.GroupSubject, {
+                foreignKey: 'group_id',
+            });
         }
     }
     Group.init({

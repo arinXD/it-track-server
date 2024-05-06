@@ -101,27 +101,29 @@ router.get("/track/selection", isAdmin, async (req, res) => {
 router.post("/insertSubject", async (req, res) => {
     try {
         const {
-            semester,
+            // semester,
             subject_code,
             title_th,
             title_en,
             information,
             credit,
-            sub_group_id,
-            group_id,
-            acadyear
+            track,
+            // sub_group_id,
+            // group_id,
+            // acadyear
         } = req.body;
 
         const newSubject = await Subject.create({
-            semester: semester,
+            // semester: semester,
             subject_code: subject_code,
             title_th: title_th,
             title_en: title_en,
             information: information,
             credit: credit,
-            sub_group_id: sub_group_id,
-            group_id: group_id,
-            acadyear: acadyear,
+            track:track,
+            // sub_group_id: sub_group_id,
+            // group_id: group_id,
+            // acadyear: acadyear,
         });
 
         return res.status(201).json({
@@ -203,15 +205,12 @@ router.post("/updateSubject/:id", async (req, res) => {
     try {
         const subjectId = req.params.id;
         const {
-            semester,
             subject_code,
             title_th,
             title_en,
             information,
             credit,
-            sub_group_id,
-            group_id,
-            acadyear
+            track,
         } = req.body;
         const updateSubject = await Subject.findOne({
             where: {
@@ -227,15 +226,12 @@ router.post("/updateSubject/:id", async (req, res) => {
         }
 
         await updateSubject.update({
-            semester: semester,
             subject_code: subject_code,
             title_th: title_th,
             title_en: title_en,
             information: information,
             credit: credit,
-            sub_group_id: sub_group_id,
-            group_id: group_id,
-            acadyear: acadyear,
+            track: track,
         });
 
         return res.status(200).json({

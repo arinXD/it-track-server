@@ -6,8 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     class SubGroup extends Model {
         static associate(models) {
             this.belongsTo(models.Group, {
-                foreignKey: 'group_id',
-                targetKey: 'id', // Specify the correct foreign key 
+                foreignKey: 'group_id'
             });
             this.hasMany(models.SubgroupSubject, {
                 foreignKey: 'sub_group_id',

@@ -106,6 +106,14 @@ const programCodeRouter = require('./router/programCodeRouter')
 
 //--------------------
 // 
+//  verify router
+//
+//--------------------
+
+const verifyRouter = require('./router/verifyRouter')
+
+//--------------------
+// 
 //  middleware router
 //
 //--------------------
@@ -130,6 +138,7 @@ app.use('/api/groups', groupRouter);
 app.use('/api/subgroups', subGroupRouter);
 app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
+app.use('/api/verify', verifyRouter);
 app.use('/api/statuses', adminMiddleware, studentStatusRouter);
 
 app.get("/api/test", async (req, res) => {
