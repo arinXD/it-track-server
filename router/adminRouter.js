@@ -4,7 +4,6 @@ const models = require('../models');
 const bcrypt = require("bcryptjs");
 const Admin = models.Admin
 
-
 router.get("/", async (req, res) => {
     try {
         const admins = await Admin.findAll()

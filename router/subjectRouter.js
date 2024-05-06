@@ -2,17 +2,137 @@ var express = require('express');
 var router = express.Router();
 const models = require('../models');
 const Subject = models.Subject
-const {
-    Op
-} = require('sequelize');
+const { Op } = require('sequelize');
 const isAdmin = require('../middleware/adminMiddleware');
 
-router.get("/", async (req, res) => {
+function capitalize(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase(); 
+}
+
+router.get("/", isAdmin, async (req, res) => {
     try {
         const subjects = await Subject.findAll();
         return res.status(200).json({
             ok: true,
             data: subjects
+        });
+    } catch (error) {
+        console.error('Error fetching subjects:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/tracks/:track", isAdmin, async (req, res) => {
+    const track = (req.params.track).toLowerCase()
+    try {
+        const subjects = await Subject.findAll({
+            where: {
+                track
+            }
+        });
+        let uniqueSubjects = subjects.filter((subject, index, self) =>
+            index !== 0 && self.findIndex(s => s?.dataValues?.title_en === subject?.dataValues?.title_en) === index
+        );
+        uniqueSubjects = uniqueSubjects.map(subject=>{
+            if(subject?.dataValues?.title_en){
+                subject.title_en = subject.dataValues.title_en.split(" ").map(word=>capitalize(word)).join(" ")
+            }
+            return subject
+        })
+        return res.status(200).json({
+            ok: true,
+            data: uniqueSubjects
+        });
+    } catch (error) {
+        console.error('Error fetching subjects:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.post("/tracks/:track", isAdmin, async (req, res) => {
+    const track = (req.params.track).toLowerCase()
+    const subjects = req.body
+    try {
+        for (const subject_id of subjects) {
+            await Subject.update({
+                track
+            },{
+                where: {
+                    subject_id
+                }
+            });
+        }
+        return res.status(200).json({
+            ok: true,
+            message: "เพิ่มวิชาภายในแทรคเรียบร้อย"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: 'Internal Server Error'
+        });
+    }
+});
+
+router.delete("/tracks/:track", isAdmin, async (req, res) => {
+    const subjects = req.body
+    try {
+        for (const subject_id of subjects) {
+            await Subject.update({
+                track: null
+            },{
+                where: {
+                    subject_id
+                }
+            });
+        }
+        return res.status(200).json({
+            ok: true,
+            message: "เพิ่มวิชาภายในแทรคเรียบร้อย"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/tracks/:track/others", isAdmin, async (req, res) => {
+    const track = (req.params.track).toLowerCase()
+    const findnSubjects = await Subject.findAll({
+        where: {
+            track,
+        }
+    });
+    const defaultSubjects = findnSubjects.map(subject=>subject?.dataValues?.subject_code)
+    try {
+        const subjects = await Subject.findAll({
+            where: {
+                track: null,
+                subject_code: {
+                    [Op.notIn]: defaultSubjects
+                }
+            },
+        });
+        let uniqueSubjects = subjects.filter((subject, index, self) =>
+            index !== 0 && self.findIndex(s => s?.dataValues?.title_en === subject?.dataValues?.title_en) === index
+        );
+        uniqueSubjects = uniqueSubjects.map(subject=>{
+            if(subject?.dataValues?.title_en){
+                subject.title_en = subject.dataValues.title_en.split(" ").map(word=>capitalize(word)).join(" ")
+            }
+            return subject
+        })
+        return res.status(200).json({
+            ok: true,
+            data: uniqueSubjects
         });
     } catch (error) {
         console.error('Error fetching subjects:', error);
@@ -58,6 +178,7 @@ router.get("/find/:subject", isAdmin, async (req, res) => {
         })
     }
 })
+
 
 router.get("/track/selection", isAdmin, async (req, res) => {
     const defaultSubjects = req.query.subjects
@@ -138,6 +259,8 @@ router.post("/insertSubject", async (req, res) => {
         });
     }
 });
+
+
 router.post("/insertSubjectsFromExcel", async (req, res) => {
     try {
         const subjects = req.body;
@@ -201,6 +324,7 @@ router.get("/:id", async (req, res) => {
     }
 });
 
+
 router.post("/updateSubject/:id", async (req, res) => {
     try {
         const subjectId = req.params.id;
@@ -248,7 +372,6 @@ router.post("/updateSubject/:id", async (req, res) => {
 });
 
 
-
 router.delete("/deleteSubject/:subject_id", async (req, res) => {
     try {
         const subjectId = req.params.subject_id;
@@ -278,7 +401,6 @@ router.delete("/deleteSubject/:subject_id", async (req, res) => {
         });
     }
 });
-
 
 
 module.exports = router
