@@ -147,7 +147,7 @@ app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/verify', verifyRouter);
 app.use('/api/statuses', adminMiddleware, studentStatusRouter);
-app.use('/api/teachers/tracks', adminMiddleware, teacherTrackRouter)
+app.use('/api/teachers/tracks', teacherTrackRouter)
 
 app.get("/api/test", isAuth, async (req, res) => {
     try {
