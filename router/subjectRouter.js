@@ -4,6 +4,7 @@ const models = require('../models');
 const Subject = models.Subject
 const { Op } = require('sequelize');
 const isAdmin = require('../middleware/adminMiddleware');
+const isAuth = require('../middleware/authMiddleware');
 
 function capitalize(string) {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
@@ -25,7 +26,7 @@ router.get("/", isAdmin, async (req, res) => {
     }
 });
 
-router.get("/tracks/:track", isAdmin, async (req, res) => {
+router.get("/tracks/:track", isAuth, async (req, res) => {
     const track = (req.params.track).toLowerCase()
     try {
         const subjects = await Subject.findAll({
@@ -70,7 +71,7 @@ router.post("/tracks/:track", isAdmin, async (req, res) => {
         }
         return res.status(200).json({
             ok: true,
-            message: "เพิ่มวิชาภายในแทรคเรียบร้อย"
+            message: "เพิ่มวิชาภายในแทร็กเรียบร้อย"
         });
     } catch (error) {
         return res.status(500).json({
@@ -94,7 +95,7 @@ router.delete("/tracks/:track", isAdmin, async (req, res) => {
         }
         return res.status(200).json({
             ok: true,
-            message: "เพิ่มวิชาภายในแทรคเรียบร้อย"
+            message: "เพิ่มวิชาภายในแทร็กเรียบร้อย"
         });
     } catch (error) {
         return res.status(500).json({

@@ -6,6 +6,8 @@ const multer = require('multer')
 const path = require('path');
 const { getHostname } = require('../api/hostname');
 const fs = require('fs');
+const isAdmin = require('../middleware/adminMiddleware');
+const isAuth = require('../middleware/authMiddleware');
 var fileName
 
 const storage = multer.diskStorage({
@@ -37,7 +39,7 @@ const upload = multer({
     fileFilter
 })
 
-router.get("/", async (req, res) => {
+router.get("/", isAdmin, async (req, res) => {
     try {
         const data = await TeacherTrack.findAll()
         return res.status(200).json({
@@ -52,7 +54,7 @@ router.get("/", async (req, res) => {
     }
 })
 
-router.get("/:track", async (req, res) => {
+router.get("/:track", isAuth, async (req, res) => {
     const track = req.params.track
     try {
         const data = await TeacherTrack.findAll({
@@ -72,7 +74,7 @@ router.get("/:track", async (req, res) => {
     }
 })
 
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", isAdmin, upload.single("image"), async (req, res) => {
     const image = `${getHostname()}/images/teachers/${fileName}`
     const insertData = req.body
     const existProfessor = await TeacherTrack.findOne({
@@ -119,7 +121,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     }
 })
 
-router.put("/:tid/form", upload.single("image"), async (req, res) => {
+router.put("/:tid/form", isAdmin, upload.single("image"), async (req, res) => {
     const tid = req.params.tid
     const image = `${getHostname()}/images/teachers/${fileName}`
     const { teacherName } = req.body
@@ -164,7 +166,7 @@ router.put("/:tid/form", upload.single("image"), async (req, res) => {
     }
 })
 
-router.put("/:tid/json", async (req, res) => {
+router.put("/:tid/json", isAdmin, async (req, res) => {
     const tid = req.params.tid
     const updateData = req.body
     try {
@@ -185,7 +187,7 @@ router.put("/:tid/json", async (req, res) => {
     }
 })
 
-router.delete("/", async (req, res) => {
+router.delete("/", isAdmin, async (req, res) => {
     const teacherId = req.body
     try {
         for (const tid of teacherId) {
