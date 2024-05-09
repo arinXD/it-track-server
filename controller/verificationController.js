@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer")
 const models = require('../models');
+const { hostname } = require("../api/hostname");
 const EmailVerify = models.EmailVerify
 const User = models.User
 require("dotenv").config();
@@ -97,12 +98,11 @@ const verifyEmail = async (req, res) => {
 }
 const sendVerification = async (req, res) => {
     const { email, uniqueString } = req.body
-    const currentUrl = "http://localhost:3000"
     const htmlTemplate = `
     <h1>Verify your email</h1>
     <p>Verify your email address to complete signup.</p>
     <p>This link will <strong>expire in 6 hours</strong>.</p>
-    <p>Press <a href="${currentUrl}/email-verify/${uniqueString}">here</a> to proceed.</p>`;
+    <p>Press <a href="${hostname}/email-verify/${uniqueString}">here</a> to proceed.</p>`;
     const mailOption = {
         from: process.env.SENDER_EMAIL,
         to: email,

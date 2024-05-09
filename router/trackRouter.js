@@ -41,7 +41,7 @@ const upload = multer({
     fileFilter
 })
 
-router.get("/all", isAuth,async (req, res) => {
+router.get("/all", isAuth, async (req, res) => {
     try {
         const data = await Track.findAll()
         return res.status(200).json({

@@ -30,7 +30,7 @@ async function sendResultToEmail(stuid, result, acadyear) {
     const htmlTemplate = `
     <h1>ประกาศผลการคัดเลือกแทรคของนักศึกษาปีการศึกษา ${acadyear}</h1>
     <p>แทรคของคุณคือ ${trackResult.title_en} (${result}) ${trackResult.title_th}</p>
-    <p>ตรวจสอบข้อมูลได้ที่ <a href="${hostname}/student/tracks">${hostname}</a></p>`;
+    <p>ตรวจสอบข้อมูลได้ที่ <a href="${hostname}/tracks/${result}">${hostname}</a></p>`;
     const mailOption = {
         from: process.env.SENDER_EMAIL,
         to: email,
@@ -825,7 +825,15 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                     selectDataAll[courseType].sort(sortStudentData)
                 })
 
-                const mockupEmail = ["643020423-0", "643020405-2"]
+                const mockupEmail = [
+                    "643020423-0", 
+                    "643020405-2",
+                    // "643020395-9",
+                    // "643020398-3",
+                    // "643020396-7",
+                    // "643020388-6",
+                    // "643020419-1",
+                ]
                 // Process
                 for (let courseType of Object.keys(selectDataAll)) {
                     for (const stuData of selectDataAll[courseType]) {
@@ -841,7 +849,7 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                         });
 
                         if (mockupEmail.includes(selectionResult.stu_id)) {
-                            // sendResultToEmail(selectionResult.stu_id, selectionResult.result, acadyear)
+                            sendResultToEmail(selectionResult.stu_id, selectionResult.result, acadyear)
                         }
                     }
                 }
@@ -874,11 +882,19 @@ router.put('/selected/:id', adminMiddleware, async (req, res) => {
                 })
 
                 async function createSelection(insertSelectionData) {
-                    const mockupEmail = ["643020423-0", "643020405-2"]
+                    const mockupEmail = [
+                        "643020423-0", 
+                        "643020405-2",
+                        // "643020395-9",
+                        // "643020398-3",
+                        // "643020396-7",
+                        // "643020388-6",
+                        // "643020419-1",
+                    ]
                     const stuid = insertSelectionData.stu_id
                     const selection = await Selection.create(insertSelectionData)
                     if (mockupEmail.includes(stuid)) {
-                        // sendResultToEmail(stuid, insertSelectionData.result, acadyear)
+                        sendResultToEmail(stuid, insertSelectionData.result, acadyear)
                     }
                     const sid = selection.dataValues.id
                     for (const subj of subjects) {
