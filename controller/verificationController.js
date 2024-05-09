@@ -1,18 +1,10 @@
 const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer")
 const models = require('../models');
 const { hostname } = require("../api/hostname");
+const { mailSender } = require("./mailSender");
 const EmailVerify = models.EmailVerify
 const User = models.User
 require("dotenv").config();
-
-var mailSender = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.SENDER_EMAIL,
-        pass: process.env.SENDER_PASSWORD
-    }
-});
 
 const verifyEmail = async (req, res) => {
     try {
