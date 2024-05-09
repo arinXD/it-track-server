@@ -30,7 +30,7 @@ async function sendResultToEmail(stuid, result, acadyear) {
     const htmlTemplate = `
     <h1>ประกาศผลการคัดเลือกแทร็กของนักศึกษาปีการศึกษา ${acadyear}</h1>
     <p>แทร็กของคุณคือ ${trackResult.title_en} (${result}) ${trackResult.title_th}</p>
-    <p>ตรวจสอบข้อมูลได้ที่ <a href="${hostname}/tracks/${result}">${hostname}</a></p>`;
+    <p>ตรวจสอบข้อมูลได้ที่ <a href="${hostname}/student/tracks">${hostname}</a></p>`;
     const mailOption = {
         from: process.env.SENDER_EMAIL,
         to: email,
