@@ -37,7 +37,11 @@ async function sendResultToEmail(stuid, result, acadyear) {
         subject: `ประกาศผลการคัดเลือกแทร็กประจำปีการศึกษา ${acadyear}`,
         html: htmlTemplate
     }
-    mailSender.sendMail(mailOption);
+    try{
+        mailSender.sendMail(mailOption);
+    }catch(error){
+        console.log(error);
+    }
 }
 
 // atest
