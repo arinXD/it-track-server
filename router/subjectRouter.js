@@ -71,7 +71,7 @@ router.post("/tracks/:track", isAdmin, async (req, res) => {
         }
         return res.status(200).json({
             ok: true,
-            message: "เพิ่มวิชาภายในแทรคเรียบร้อย"
+            message: "เพิ่มวิชาภายในแทร็กเรียบร้อย"
         });
     } catch (error) {
         return res.status(500).json({
@@ -95,7 +95,7 @@ router.delete("/tracks/:track", isAdmin, async (req, res) => {
         }
         return res.status(200).json({
             ok: true,
-            message: "เพิ่มวิชาภายในแทรคเรียบร้อย"
+            message: "เพิ่มวิชาภายในแทร็กเรียบร้อย"
         });
     } catch (error) {
         return res.status(500).json({

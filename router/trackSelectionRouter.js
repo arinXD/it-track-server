@@ -28,13 +28,13 @@ async function sendResultToEmail(stuid, result, acadyear) {
     const trackResult = track.dataValues
     const email = student.dataValues.email
     const htmlTemplate = `
-    <h1>ประกาศผลการคัดเลือกแทรคของนักศึกษาปีการศึกษา ${acadyear}</h1>
-    <p>แทรคของคุณคือ ${trackResult.title_en} (${result}) ${trackResult.title_th}</p>
+    <h1>ประกาศผลการคัดเลือกแทร็กของนักศึกษาปีการศึกษา ${acadyear}</h1>
+    <p>แทร็กของคุณคือ ${trackResult.title_en} (${result}) ${trackResult.title_th}</p>
     <p>ตรวจสอบข้อมูลได้ที่ <a href="${hostname}/tracks/${result}">${hostname}</a></p>`;
     const mailOption = {
         from: process.env.SENDER_EMAIL,
         to: email,
-        subject: `ประกาศผลการคัดเลือกแทรคประจำปีการศึกษา ${acadyear}`,
+        subject: `ประกาศผลการคัดเลือกแทร็กประจำปีการศึกษา ${acadyear}`,
         html: htmlTemplate
     }
     mailSender.sendMail(mailOption);
@@ -543,12 +543,12 @@ router.post("/", adminMiddleware, async (req, res) => {
             }
             return res.status(201).json({
                 ok: true,
-                message: `เพิ่มการคัดแทรคปีการศึกษา ${acadyear} เรียบร้อย`
+                message: `เพิ่มการคัดแทร็กปีการศึกษา ${acadyear} เรียบร้อย`
             })
         } else {
             return res.status(401).json({
                 ok: false,
-                message: `การคัดแทรคปีการศึกษา ${acadyear} ถูกเพิ่มไปแล้ว`
+                message: `การคัดแทร็กปีการศึกษา ${acadyear} ถูกเพิ่มไปแล้ว`
             })
         }
     } catch (err) {
@@ -574,7 +574,7 @@ router.put("/:id", adminMiddleware, async (req, res) => {
 
         return res.status(200).json({
             ok: true,
-            message: `อัพเดตข้อมูลการคัดแทรคปีการศึกษา ${id} สำเร็จ`
+            message: `อัพเดตข้อมูลการคัดแทร็กปีการศึกษา ${id} สำเร็จ`
         })
 
     } catch (error) {
@@ -586,7 +586,7 @@ router.put("/:id", adminMiddleware, async (req, res) => {
     }
 })
 
-// เปิด, ปิด การคัดแทรค
+// เปิด, ปิด การคัดแทร็ก
 router.put('/selected/:id', adminMiddleware, async (req, res) => {
 
     async function calGrade(grades) {
@@ -1015,7 +1015,7 @@ router.delete("/:id", adminMiddleware, async (req, res) => {
         });
         return res.status(200).json({
             ok: true,
-            message: `ลบการคัดแทรคปีการศึกษา ${id} เรียบร้อย`
+            message: `ลบการคัดแทร็กปีการศึกษา ${id} เรียบร้อย`
         })
     } catch (err) {
         console.error(err);
@@ -1044,12 +1044,12 @@ router.delete('/del/selected', adminMiddleware, async (req, res) => {
         if (delAcad.length == 0) {
             return res.status(200).json({
                 ok: true,
-                message: "ไม่มีการคัดแทรคที่ถูกลบ"
+                message: "ไม่มีการคัดแทร็กที่ถูกลบ"
             })
         } else {
             return res.status(200).json({
                 ok: true,
-                message: `ลบการคัดแทรคปีการศึกษา ${delAcad.join(", ")} เรียบร้อย`
+                message: `ลบการคัดแทร็กปีการศึกษา ${delAcad.join(", ")} เรียบร้อย`
             })
         }
     } catch (err) {
