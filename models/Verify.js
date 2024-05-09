@@ -17,6 +17,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'program',
         targetKey: 'program'
       });
+      this.belongsToMany(models.Subject, {
+        through: models.SubjectVerify,
+        foreignKey: "verify_id",
+        otherKey: "subject_id"
+      });
     }
   }
   Verify.init({

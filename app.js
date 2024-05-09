@@ -120,6 +120,7 @@ const programCodeRouter = require('./router/programCodeRouter')
 //--------------------
 
 const verifyRouter = require('./router/verifyRouter')
+const verifySelectionRouter = require('./router/verifySelectionRouter')
 
 //--------------------
 // 
@@ -146,6 +147,7 @@ app.use('/api/subgroups', subGroupRouter);
 app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/verify', verifyRouter);
+app.use('/api/verify/selects', verifySelectionRouter);
 app.use('/api/statuses', adminMiddleware, studentStatusRouter);
 app.use('/api/teachers/tracks', adminMiddleware, teacherTrackRouter)
 

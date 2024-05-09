@@ -6,7 +6,7 @@ const { Op } = require('sequelize');
 const isAdmin = require('../middleware/adminMiddleware');
 
 function capitalize(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase(); 
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
 router.get("/", isAdmin, async (req, res) => {
@@ -36,9 +36,9 @@ router.get("/tracks/:track", isAdmin, async (req, res) => {
         let uniqueSubjects = subjects.filter((subject, index, self) =>
             index !== 0 && self.findIndex(s => s?.dataValues?.title_en === subject?.dataValues?.title_en) === index
         );
-        uniqueSubjects = uniqueSubjects.map(subject=>{
-            if(subject?.dataValues?.title_en){
-                subject.title_en = subject.dataValues.title_en.split(" ").map(word=>capitalize(word)).join(" ")
+        uniqueSubjects = uniqueSubjects.map(subject => {
+            if (subject?.dataValues?.title_en) {
+                subject.title_en = subject.dataValues.title_en.split(" ").map(word => capitalize(word)).join(" ")
             }
             return subject
         })
@@ -62,7 +62,7 @@ router.post("/tracks/:track", isAdmin, async (req, res) => {
         for (const subject_id of subjects) {
             await Subject.update({
                 track
-            },{
+            }, {
                 where: {
                     subject_id
                 }
@@ -86,7 +86,7 @@ router.delete("/tracks/:track", isAdmin, async (req, res) => {
         for (const subject_id of subjects) {
             await Subject.update({
                 track: null
-            },{
+            }, {
                 where: {
                     subject_id
                 }
@@ -111,7 +111,7 @@ router.get("/tracks/:track/others", isAdmin, async (req, res) => {
             track,
         }
     });
-    const defaultSubjects = findnSubjects.map(subject=>subject?.dataValues?.subject_code)
+    const defaultSubjects = findnSubjects.map(subject => subject?.dataValues?.subject_code)
     try {
         const subjects = await Subject.findAll({
             where: {
@@ -124,9 +124,9 @@ router.get("/tracks/:track/others", isAdmin, async (req, res) => {
         let uniqueSubjects = subjects.filter((subject, index, self) =>
             index !== 0 && self.findIndex(s => s?.dataValues?.title_en === subject?.dataValues?.title_en) === index
         );
-        uniqueSubjects = uniqueSubjects.map(subject=>{
-            if(subject?.dataValues?.title_en){
-                subject.title_en = subject.dataValues.title_en.split(" ").map(word=>capitalize(word)).join(" ")
+        uniqueSubjects = uniqueSubjects.map(subject => {
+            if (subject?.dataValues?.title_en) {
+                subject.title_en = subject.dataValues.title_en.split(" ").map(word => capitalize(word)).join(" ")
             }
             return subject
         })
@@ -149,20 +149,20 @@ router.get("/find/:subject", isAdmin, async (req, res) => {
         const subjects = await Subject.findAll({
             where: {
                 [Op.or]: [{
-                        subject_code: {
-                            [Op.like]: `%${subject}%`
-                        }
-                    },
-                    {
-                        title_th: {
-                            [Op.like]: `%${subject}%`
-                        }
-                    },
-                    {
-                        title_en: {
-                            [Op.like]: `%${subject}%`
-                        }
-                    },
+                    subject_code: {
+                        [Op.like]: `%${subject}%`
+                    }
+                },
+                {
+                    title_th: {
+                        [Op.like]: `%${subject}%`
+                    }
+                },
+                {
+                    title_en: {
+                        [Op.like]: `%${subject}%`
+                    }
+                },
                 ]
             },
         })
@@ -186,23 +186,23 @@ router.get("/track/selection", isAdmin, async (req, res) => {
         const subjects = await Subject.findAll({
             where: {
                 [Op.and]: [{
-                        [Op.or]: [{
-                                subject_code: {
-                                    [Op.like]: 'SC%'
-                                }
-                            },
-                            {
-                                subject_code: {
-                                    [Op.like]: 'CP%'
-                                }
-                            }
-                        ]
+                    [Op.or]: [{
+                        subject_code: {
+                            [Op.like]: 'SC%'
+                        }
                     },
                     {
                         subject_code: {
-                            [Op.notIn]: defaultSubjects
+                            [Op.like]: 'CP%'
                         }
                     }
+                    ]
+                },
+                {
+                    subject_code: {
+                        [Op.notIn]: defaultSubjects
+                    }
+                }
                 ]
             },
         });
@@ -241,7 +241,7 @@ router.post("/insertSubject", async (req, res) => {
             title_en: title_en,
             information: information,
             credit: credit,
-            track:track,
+            track: track,
             // sub_group_id: sub_group_id,
             // group_id: group_id,
             // acadyear: acadyear,
@@ -370,6 +370,40 @@ router.post("/updateSubject/:id", async (req, res) => {
         });
     }
 });
+
+router.get("/getSubjectByCode/:subject_code", async (req, res) => {
+    try {
+        const { subject_code } = req.params;
+
+        const existingSubject = await Subject.findOne({
+            where: {
+                subject_code: subject_code
+            }
+        });
+
+        if (existingSubject) {
+            return res.status(200).json({
+                ok: true,
+                exists: true, 
+                data: existingSubject
+            });
+        } else {
+            return res.status(200).json({
+                ok: true,
+                exists: false, 
+                message: 'Subject not found'
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching subject by code:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+
 
 
 router.delete("/deleteSubject/:subject_id", async (req, res) => {
