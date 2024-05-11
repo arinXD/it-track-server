@@ -12,7 +12,7 @@ const Group = models.Group
 const GroupSubject = models.GroupSubject
 const SubjectVerify = models.SubjectVerify
 const SubgroupSubject = models.SubgroupSubject
-
+const Track = models.Track
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
 router.get("/", async (req, res) => {
@@ -124,6 +124,9 @@ router.get("/:id", async (req, res) => {
                                             ]
                                         }
                                     ]
+                                },
+                                {
+                                    model: Track,
                                 }
                             ]
                         }
@@ -176,7 +179,7 @@ router.post("/group", adminMiddleware, async (req, res) => {
         const existingSubjectVerify = await SubjectVerify.findOne({
             where: { subject_id, verify_id }
         });
-        
+
         if (existingSubjectVerify) {
             return res.status(200).json({
                 ok: true,
@@ -236,7 +239,7 @@ router.post("/subgroup", adminMiddleware, async (req, res) => {
         const existingSubjectVerify = await SubjectVerify.findOne({
             where: { subject_id, verify_id }
         });
-        
+
         if (existingSubjectVerify) {
             return res.status(200).json({
                 ok: true,
