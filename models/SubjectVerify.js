@@ -18,6 +18,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       primaryKey: true,
     },
+    subject_id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+    },
+    verify_id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+    },
   }, {
     sequelize,
     modelName: 'SubjectVerify',
