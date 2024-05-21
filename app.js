@@ -5,9 +5,7 @@ const logger = require('morgan');
 const cors = require('cors')
 const session = require('express-session')
 const bodyParser = require('body-parser');
-const {
-    Sequelize
-} = require('sequelize')
+const { Sequelize } = require('sequelize')
 require("dotenv").config();
 const app = express()
 
@@ -56,8 +54,8 @@ const sequelize = new Sequelize(
     process.env.DATABASE_USER,
     process.env.DATABASE_PASSWORD, {
         host: process.env.DATABASE_HOST,
-        dialect: 'mysql',
         logging: false,
+        dialect: 'mysql',
         timezone: '+07:00',
     },
 )
@@ -70,7 +68,7 @@ app.listen(port, async () => {
         console.log("!!!!WARNING!!!!");
         console.log(` - Check database connection`);
     } finally {
-        console.log(`Server listening on port ${port}`)
+        console.log(`Server is listening on port ${port}`)
     }
 })
 
@@ -89,6 +87,7 @@ const enrollmentRouter = require('./router/enrollmentRouter');
 const studentStatusRouter = require('./router/studentStatusRouter');
 const trackSubjectRouter = require('./router/trackSubjectRouter');
 const teacherTrackRouter = require('./router/teacherTrackRouter');
+const careerRouter = require('./router/careerRouter');
 
 const adminMiddleware = require("./middleware/adminMiddleware")
 const isAuth = require("./middleware/authMiddleware")
@@ -150,6 +149,7 @@ app.use('/api/verify', verifyRouter);
 app.use('/api/verify/selects', verifySelectionRouter);
 app.use('/api/statuses', adminMiddleware, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)
+app.use('/api/careers', careerRouter)
 
 app.get("/api/test", isAuth, async (req, res) => {
     try {

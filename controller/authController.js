@@ -92,29 +92,18 @@ const signInCredentials = async (req, res, next) => {
                 child = user[modelName]
                 child = child.dataValues
             }
-            const name = `${user.fname} ${user.lname}`;
-
-            // const token = jwt.sign({
-            //     email,
-            //     name,
-            //     image: userData.image,
-            //     role: "student"
-            // }, process.env.SECRET_KEY, { expiresIn: "2h" });
-
-            req.session.user = email
-
+            const name = child?.first_name && child?.last_name ? `${child?.first_name} ${child?.last_name}` : undefined
+            const userData = {
+                email,
+                name,
+                image: user.image,
+                role,
+                verification: user.verification,
+                ...child
+            }
             return res.status(200).json({
                 ok: true,
-                user: {
-                    email,
-                    name,
-                    image: user.image,
-                    role,
-                    firstname: user.fname,
-                    lastname: user.lname,
-                    verification: user.verification,
-                    ...child
-                },
+                user: userData,
                 // token
             });
         } else {
@@ -240,6 +229,7 @@ const signInGoogle = async (req, res, next) => {
         });
     }
 }
+
 const signInVerify = async (req, res) => {
     const { email } = req.body;
     try {
@@ -282,7 +272,7 @@ const signInVerify = async (req, res) => {
 
 const signUp = async (req, res, next) => {
     try {
-        const { email, password, fname, lname } = req.body
+        const { email, password } = req.body
         const { role, model } = getRole(email)
         const findEmail = await User.findOne({ where: { email } })
 
@@ -300,8 +290,6 @@ const signUp = async (req, res, next) => {
             password: passwordHash,
             image: "/image/user.png",
             role,
-            fname,
-            lname,
             sign_in_type: "credentials",
         }
 

@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const postFix = file.originalname.split(".").pop()
-        const track = req.params.track.toLowerCase()
+        const track = req.params.track.toLowerCase().split(" ").join("_")
         const folderName = req.params.type || "img"
         fileName = `${folderName}_${track}.${postFix}`
         return cb(null, fileName)
