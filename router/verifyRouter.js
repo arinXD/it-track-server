@@ -12,7 +12,7 @@ const Group = models.Group
 const GroupSubject = models.GroupSubject
 const SubjectVerify = models.SubjectVerify
 const SubgroupSubject = models.SubgroupSubject
-
+const Track = models.Track
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
 router.get("/", async (req, res) => {
@@ -124,6 +124,9 @@ router.get("/:id", async (req, res) => {
                                             ]
                                         }
                                     ]
+                                },
+                                {
+                                    model: Track,
                                 }
                             ]
                         }
@@ -145,53 +148,62 @@ router.get("/:id", async (req, res) => {
 })
 
 router.post("/group", adminMiddleware, async (req, res) => {
-    const { verify_id, subject_id, group_id } = req.body;
-
+    const { verify_id, group_id, subjects } = req.body;
     try {
-        const subGroupSubjectExists = await SubgroupSubject.findOne({
-            where: { subject_id }
-        });
 
-        if (subGroupSubjectExists) {
+        if (!Array.isArray(subjects)) {
             return res.status(400).json({
                 ok: false,
-                message: `The subject ${subject_id} already exists in SubgroupSubject.`
+                message: "Subjects must be an array."
             });
         }
 
-        let groupSubject = await GroupSubject.findOne({
-            where: { subject_id }
-        });
+        for (const subject_id of subjects) {
+            const subGroupSubjectExists = await SubgroupSubject.findOne({
+                where: { subject_id }
+            });
 
-        if (groupSubject) {
-            groupSubject.group_id = group_id;
-            await groupSubject.save();
-        } else {
-            groupSubject = await GroupSubject.create({
-                subject_id,
-                group_id
-            });
-        }
+            if (subGroupSubjectExists) {
+                return res.status(400).json({
+                    ok: false,
+                    message: `The subject ${subject_id} already exists in SubgroupSubject.`
+                });
+            }
 
-        const existingSubjectVerify = await SubjectVerify.findOne({
-            where: { subject_id, verify_id }
-        });
-        
-        if (existingSubjectVerify) {
-            return res.status(200).json({
-                ok: true,
-                message: `Subject ${subject_id} already exists in SubjectVerify for verify_id ${verify_id}.`
+            let groupSubject = await GroupSubject.findOne({
+                where: { subject_id }
             });
-        } else {
-            const newSubjectVerify = await SubjectVerify.create({
-                verify_id,
-                subject_id
+
+            if (groupSubject) {
+                groupSubject.group_id = group_id;
+                await groupSubject.save();
+            } else {
+                groupSubject = await GroupSubject.create({
+                    subject_id,
+                    group_id
+                });
+            }
+
+            const existingSubjectVerify = await SubjectVerify.findOne({
+                where: { subject_id, verify_id }
             });
+
+            if (existingSubjectVerify) {
+                return res.status(200).json({
+                    ok: true,
+                    message: `Subject ${subject_id} already exists in SubjectVerify for verify_id ${verify_id}.`
+                });
+            } else {
+                const newSubjectVerify = await SubjectVerify.create({
+                    verify_id,
+                    subject_id
+                });
+            }
         }
 
         return res.status(201).json({
             ok: true,
-            message: `Subject ${subject_id} added successfully.`
+            message: `Subjects added successfully.`
         });
     } catch (err) {
         console.error(err);
@@ -205,53 +217,62 @@ router.post("/group", adminMiddleware, async (req, res) => {
 
 
 router.post("/subgroup", adminMiddleware, async (req, res) => {
-    const { verify_id, subject_id, sub_group_id } = req.body;
-
+    const { verify_id, sub_group_id, subjects } = req.body;
     try {
-        const groupSubjectExists = await GroupSubject.findOne({
-            where: { subject_id }
-        });
 
-        if (groupSubjectExists) {
+        if (!Array.isArray(subjects)) {
             return res.status(400).json({
                 ok: false,
-                message: `The subject ${subject_id} already exists in GroupSubject.`
+                message: "Subjects must be an array."
             });
         }
 
-        let subgroupSubject = await SubgroupSubject.findOne({
-            where: { subject_id }
-        });
+        for (const subject_id of subjects) {
+            const groupSubjectExists = await GroupSubject.findOne({
+                where: { subject_id }
+            });
 
-        if (subgroupSubject) {
-            subgroupSubject.sub_group_id = sub_group_id;
-            await subgroupSubject.save();
-        } else {
-            subgroupSubject = await SubgroupSubject.create({
-                subject_id,
-                sub_group_id
-            });
-        }
+            if (groupSubjectExists) {
+                return res.status(400).json({
+                    ok: false,
+                    message: `The subject ${subject_id} already exists in GroupSubject.`
+                });
+            }
 
-        const existingSubjectVerify = await SubjectVerify.findOne({
-            where: { subject_id, verify_id }
-        });
-        
-        if (existingSubjectVerify) {
-            return res.status(200).json({
-                ok: true,
-                message: `Subject ${subject_id} already exists in SubjectVerify for verify_id ${verify_id}.`
+            let subgroupSubject = await SubgroupSubject.findOne({
+                where: { subject_id }
             });
-        } else {
-            const newSubjectVerify = await SubjectVerify.create({
-                verify_id,
-                subject_id
+
+            if (subgroupSubject) {
+                subgroupSubject.sub_group_id = sub_group_id;
+                await subgroupSubject.save();
+            } else {
+                subgroupSubject = await SubgroupSubject.create({
+                    subject_id,
+                    sub_group_id
+                });
+            }
+
+            const existingSubjectVerify = await SubjectVerify.findOne({
+                where: { subject_id, verify_id }
             });
+
+            if (existingSubjectVerify) {
+                return res.status(200).json({
+                    ok: true,
+                    message: `Subject ${subject_id} already exists in SubjectVerify for verify_id ${verify_id}.`
+                });
+            } else {
+                const newSubjectVerify = await SubjectVerify.create({
+                    verify_id,
+                    subject_id
+                });
+            }
         }
 
         return res.status(201).json({
             ok: true,
-            message: `Subject ${subject_id} added successfully.`
+            message: `Subjects added successfully.`
         });
     } catch (err) {
         console.error(err);
@@ -261,6 +282,7 @@ router.post("/subgroup", adminMiddleware, async (req, res) => {
         });
     }
 });
+
 
 
 
