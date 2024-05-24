@@ -28,7 +28,7 @@ app.use(express.urlencoded({
 }));
 app.use(logger('dev'));
 app.use(session({
-    name:"it-track",
+    name: "it-track",
     secret: "secret",
     resave: false,
     saveUninitialized: true,

@@ -11,6 +11,7 @@ const Subject = models.Subject
 const Student = models.Student
 const Track = models.Track
 const Enrollment = models.Enrollment
+const StudentStatus = models.StudentStatus
 
 const { mailSender } = require('../controller/mailSender');
 const { hostname } = require('../api/hostname');
@@ -628,15 +629,15 @@ const selectTrack = async (req, res) => {
             'D': 1.0,
             'F': 0.0
         };
-        const numericalGrades = grades.map(grade => gradeValues[grade]);
+        const numericalGrades = grades.map(grade => gradeValues[grade] || 0);
         const validNumericalGrades = numericalGrades.filter(val => val !== undefined);
 
         if (validNumericalGrades.length === 0) {
             return 0;
         }
 
-        const sum = validNumericalGrades.reduce((acc, val) => acc + val, 0);
-        const average = sum / validNumericalGrades.length;
+        const sum = validNumericalGrades.reduce((acc, val) => acc + (val * 3), 0);
+        const average = sum / 12;
 
         return parseFloat(average.toFixed(6));
     }
@@ -669,8 +670,6 @@ const selectTrack = async (req, res) => {
         if (countTrackOrder < 3) {
             let trackResult = selectionResult.result
 
-            console.log(`${trackCount[courseType][trackResult]} >= ${limit[courseType]}: ${trackCount[courseType][trackResult] > limit[courseType]}`);
-
             if (trackCount[courseType][trackResult] >= limit[courseType]) {
                 const oldTrack = [trackResult]
                 while (true) {
@@ -683,15 +682,11 @@ const selectTrack = async (req, res) => {
                             trackCount[courseType]["Web and Mobile"] === trackLimit
                         ) {
                             trackCount[courseType][randomTrack] += 1;
-
-                            console.log("3 Equal: ", randomTrack, trackCount[courseType][randomTrack]);
                             selectionResult.result = randomTrack
                             return selectionResult;
                         }
                         if (currentTrackCount <= trackLimit) {
                             trackCount[courseType][randomTrack] += 1;
-
-                            console.log(randomTrack, trackCount[courseType][randomTrack]);
                             selectionResult.result = randomTrack
                             return selectionResult;
                         } else {
@@ -702,8 +697,6 @@ const selectTrack = async (req, res) => {
             }
 
             trackCount[courseType][trackResult] += 1
-
-            console.log(trackResult, trackCount[courseType][trackResult]);
             return selectionResult
         }
 
@@ -712,7 +705,6 @@ const selectTrack = async (req, res) => {
             if (trackCount[courseType][track] < limit[courseType]) {
                 selectionResult.result = track
                 trackCount[courseType][track] += 1
-                console.log(track, trackCount[courseType][track]);
                 return selectionResult
             }
         }
@@ -736,7 +728,15 @@ const selectTrack = async (req, res) => {
                 courses_type: coursesType
             },
             distinct: true,
-            col: 'id'
+            col: 'id',
+            include:[
+                {
+                    model: StudentStatus,
+                    where:{
+                        id: 10
+                    }
+                },
+            ]
         });
     };
 
@@ -771,8 +771,8 @@ const selectTrack = async (req, res) => {
         // init limit 
         const totalNormalCount = await countStudents("IT", trackSelection.acadyear, "โครงการปกติ");
         const totalVipCount = await countStudents("IT", trackSelection.acadyear, "โครงการพิเศษ");
-        const normalLimit = Math.floor(totalNormalCount / 3) || 1
-        const vipLimit = Math.floor(totalVipCount / 3) || 1
+        const normalLimit = Math.ceil(totalNormalCount / 3) || 1
+        const vipLimit = Math.ceil(totalVipCount / 3) || 1
 
         // set limit
         const limit = {
@@ -803,6 +803,7 @@ const selectTrack = async (req, res) => {
         await trackSelection.update({
             has_finished: !(trackSelection.has_finished)
         })
+
         await trackSelection.save()
 
         if (trackSelection.has_finished) {
@@ -858,6 +859,7 @@ const selectTrack = async (req, res) => {
                         const selectionResult = await distributeTracks(stuData, courseType, trackCount, limit)
 
                         // update track selection result
+
                         await Selection.update({
                             result: selectionResult.result
                         }, {
@@ -895,6 +897,8 @@ const selectTrack = async (req, res) => {
                     courseTypeStudents[courseType].push(student.stu_id)
                 })
 
+                console.log("studentsIT:", courseTypeStudents);
+
                 async function createSelection(insertSelectionData) {
                     const stuid = insertSelectionData.stu_id
                     const selection = await Selection.create(insertSelectionData)
@@ -908,6 +912,7 @@ const selectTrack = async (req, res) => {
                             attributes: ["grade"],
                         })
                         const grade = enrollment?.dataValues?.grade || null
+
                         await SelectionDetail.create({
                             selection_id: sid,
                             subject_id: subj,
@@ -946,7 +951,6 @@ const selectTrack = async (req, res) => {
                             // create track selection
                             await createSelection(insertSelectionData);
                             trackCount[courseType][track] += 1
-                            console.log(track, trackCount[courseType][track]);
                             // decrease length of array 
                             studentIDArray.splice(randomIndex, 1);
                         }
@@ -966,7 +970,6 @@ const selectTrack = async (req, res) => {
                                     break
                                 }
                             }
-                            console.log("randomTrack: ", randomTrack);
                             const insertSelectionData = {
                                 track_selection_id: trackSelectId,
                                 stu_id: studentId,
@@ -979,9 +982,7 @@ const selectTrack = async (req, res) => {
                             // decrease length of array 
                             studentIDArray.splice(randomIndex, 1);
                         }
-
                     }
-                    console.log();
                 }
 
             } // unsign length > 0
@@ -1070,7 +1071,9 @@ const getStudentNonSelect = async (req, res)=>{
         LEFT JOIN Selections ON Students.stu_id = Selections.stu_id
         WHERE Selections.id IS NULL
         AND Students.acadyear = ${acadyear}
-        AND Students.program LIKE 'IT';
+        AND Students.program LIKE 'IT'
+        AND Students.status_code = 10
+        ORDER BY Students.courses_type;
         `, {
             type: QueryTypes.SELECT
         });
