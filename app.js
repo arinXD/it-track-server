@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -6,7 +7,9 @@ const cors = require('cors')
 const session = require('express-session')
 const bodyParser = require('body-parser');
 const { Sequelize } = require('sequelize')
-require("dotenv").config();
+const expressWinston = require('express-winston')
+const requestIp = require('request-ip');
+const winstonLogger = require("./utils/logger");
 const app = express()
 
 //--------------------
@@ -14,6 +17,20 @@ const app = express()
 //  setting
 //
 //--------------------
+
+app.use(requestIp.mw()); // extract ip 
+app.use(expressWinston.logger({
+    winstonInstance: winstonLogger,
+    statusLevels: true,
+    meta: true, // meta data about the request
+    expressFormat: false,
+    colorize: false,
+    dynamicMeta: (req, res) => {
+        return {
+            ip: req.clientIp
+        };
+    }
+}));
 app.use(express.json());
 app.use(cors({
     credentials: true,
@@ -53,11 +70,11 @@ const sequelize = new Sequelize(
     process.env.DATABASE,
     process.env.DATABASE_USER,
     process.env.DATABASE_PASSWORD, {
-        host: process.env.DATABASE_HOST,
-        logging: false,
-        dialect: 'mysql',
-        timezone: '+07:00',
-    },
+    host: process.env.DATABASE_HOST,
+    logging: false,
+    dialect: 'mysql',
+    timezone: '+07:00',
+},
 )
 
 app.listen(port, async () => {
@@ -89,8 +106,8 @@ const trackSubjectRouter = require('./router/trackSubjectRouter');
 const teacherTrackRouter = require('./router/teacherTrackRouter');
 const careerRouter = require('./router/careerRouter');
 
-const adminMiddleware = require("./middleware/adminMiddleware")
 const isAuth = require("./middleware/authMiddleware")
+const isAdmin = require("./middleware/adminMiddleware");
 
 //--------------------
 // 
@@ -119,7 +136,7 @@ const programCodeRouter = require('./router/programCodeRouter')
 //--------------------
 
 const verifyRouter = require('./router/verifyRouter')
-const verifySelectionRouter = require('./router/verifySelectionRouter')
+const verifySelectionRouter = require('./router/verifySelectionRouter');
 
 //--------------------
 // 
@@ -131,13 +148,13 @@ app.get('/', (req, res, next) => {
         message: 'IT Track by IT64',
     })
 })
-app.use('/api/users', adminMiddleware, userRouter)
+app.use('/api/users', isAdmin, userRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/students', studentRouter)
 app.use('/api/students/enrollments', enrollmentRouter)
-app.use('/api/acadyear', adminMiddleware, acadYearRouter)
+app.use('/api/acadyear', isAdmin, acadYearRouter)
 app.use('/api/tracks', trackRouter)
-app.use('/api/tracks/subjects', adminMiddleware, trackSubjectRouter)
+app.use('/api/tracks/subjects', isAdmin, trackSubjectRouter)
 app.use('/api/tracks/selects', trackSelectionRouter)
 app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
@@ -147,11 +164,11 @@ app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/verify', verifyRouter);
 app.use('/api/verify/selects', verifySelectionRouter);
-app.use('/api/statuses', adminMiddleware, studentStatusRouter);
+app.use('/api/statuses', isAdmin, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)
 app.use('/api/careers', careerRouter)
 
-app.get("/api/test", isAuth, async (req, res) => {
+app.get("/api/test", isAdmin, async (req, res) => {
     try {
         return res.status(200).json({
             ok: true,

@@ -1,26 +1,30 @@
 const model = require("../models");
 const User = model.User;
-const jwt = require("jsonwebtoken");
+const { decode } = require("next-auth/jwt")
 require("dotenv").config();
 
 const isAuth = async (req, res, next) => {
-    const authToken = req.headers["authorization"];
-    if (authToken) {
+    const sessionToken = req.cookies['next-auth.session-token']
+
+    if (sessionToken) {
         try {
-            const token = jwt.verify(authToken, process.env.SECRET_KEY);
-            const user = await User.findOne({
-                where: {
-                    email: token.data.email
-                },
+            const decoded = await decode({
+                token: sessionToken,
+                secret: process.env.NEXTAUTH_SECRET,
+            });
+
+            const userRole = await User.findOne({
+                where: { email: decoded.email },
                 attributes: ["role"],
             });
-            const role = user?.dataValues?.role;
+            const role = userRole?.dataValues?.role;
+
             if (role) {
                 next();
             } else {
                 return res.status(401).json({
                     ok: false,
-                    message: "Authentication failed. User does not have the required role.",
+                    message: "Authentication failed. User does not have permission to access.",
                 });
             }
         } catch (err) {
@@ -33,10 +37,9 @@ const isAuth = async (req, res, next) => {
     } else {
         return res.status(401).json({
             ok: false,
-            message: "Authentication failed. Token not provided.",
+            message: "Authentication failed. Token not provided. Please login.",
         });
     }
-
 };
 
 module.exports = isAuth;

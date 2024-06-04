@@ -6,7 +6,6 @@ module.exports = {
             track: {
                 allowNull: false,
                 primaryKey: true,
-                unique:true,
                 type: Sequelize.STRING
             },
             title_en: {

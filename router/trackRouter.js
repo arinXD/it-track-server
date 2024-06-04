@@ -1,11 +1,12 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 const multer = require('multer')
 const path = require('path');
-const models = require('../models');
-const { getHostname } = require('../api/hostname');
 const isAuth = require('../middleware/authMiddleware');
 const isAdmin = require('../middleware/adminMiddleware');
+const { getHostname } = require('../api/hostname');
+const { getAllTrack, getTrack, updateTrack, insertTrack, removeTracks, getDeletedTracks } = require('../controller/trackController');
+const models = require('../models');
 const Track = models.Track
 
 var fileName
@@ -41,64 +42,18 @@ const upload = multer({
     fileFilter
 })
 
-router.get("/all", isAuth, async (req, res) => {
-    try {
-        const data = await Track.findAll()
-        return res.status(200).json({
-            ok: true,
-            data
-        })
-    } catch (error) {
-        return res.status(500).json({
-            ok: false,
-            message: "Server error."
-        })
-    }
-})
-router.get("/:track/get-track",  async (req, res) => {
-    const track = req.params.track
-    try {
-        const data = await Track.findOne({
-            where: {
-                track
-            }
-        })
-        return res.status(200).json({
-            ok: true,
-            data
-        })
-    } catch (error) {
-        return res.status(500).json({
-            ok: false,
-            message: "Server error."
-        })
-    }
-})
+// GET
+router.get("/all", isAuth, getAllTrack)
+router.get("/deleted", isAdmin, getDeletedTracks)
+router.get("/:track/get-track", getTrack)
 
-router.put("/:track", isAdmin, async (req, res) => {
-    const track = req.params.track
-    const updateData = req.body
-    try {
-        const data = await Track.update(
-            updateData, {
-                where: {
-                    track
-                }
-            },
-        );
-        return res.status(200).json({
-            ok: true,
-            data
-        })
-    } catch (error) {
-        return res.status(500).json({
-            ok: false,
-            message: "Server error."
-        })
-    }
-})
 
-router.post("/:track/image/:type", isAdmin, upload.single('image'), async (req, res) => { 
+// PUT
+router.put("/:track", isAdmin, updateTrack)
+
+// POST
+router.post("/", isAdmin, insertTrack)
+router.post("/:track/image/:type", isAdmin, upload.single('image'), async (req, res) => {
     const track = req.params.track
     const fieldImage = req.params.type
     const updateData = req.body
@@ -107,10 +62,10 @@ router.post("/:track/image/:type", isAdmin, upload.single('image'), async (req, 
     try {
         const data = await Track.update(
             updateData, {
-                where: {
-                    track
-                }
-            },
+            where: {
+                track
+            }
+        },
         );
         return res.status(200).json({
             ok: true,
@@ -124,5 +79,8 @@ router.post("/:track/image/:type", isAdmin, upload.single('image'), async (req, 
         })
     }
 })
+
+// DELETE
+router.delete("/multiple", isAdmin, removeTracks)
 
 module.exports = router

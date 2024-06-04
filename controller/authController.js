@@ -121,40 +121,44 @@ const signInCredentials = async (req, res, next) => {
     }
 }
 
-const signInGoogle = async (req, res, next) => {
-    const { email } = req.body;
-    var dataEmail
-    var image
+const verifyEmail = (email) => {
     try {
         const decode = jwt.verify(email, process.env.SECRET_KEY);
-        dataEmail = decode.data.email
-        image = decode.data.image
+        return decode?.data?.email
     } catch (err) {
+        return null
+    }
+}
+
+const signInGoogle = async (req, res, next) => {
+    const { email } = req.body;
+    const userEmail = verifyEmail(email)
+
+    if (!userEmail) {
         return res.status(401).json({
             ok: false,
             message: "Authentication failed. Invalid token.",
         });
     }
+
+    const { role, model } = getRole(userEmail)
+    const findUser = model ?
+        await User.findOne({
+            where: { email: userEmail },
+            include: {
+                model
+            }
+        })
+        :
+        await User.findOne({
+            where: { email: userEmail },
+        })
+
     try {
-        const { role, model } = getRole(dataEmail)
-        let result
-        if (model) {
-            result = await User.findOne({
-                where: { email: dataEmail },
-                include: {
-                    model
-                }
-            });
-        } else {
-            result = await User.findOne({
-                where: { email: dataEmail },
-            });
-        }
         // email doesn't match
-        if (!result) {
+        if (!findUser) {
             const useData = {
-                email: dataEmail,
-                image,
+                email: userEmail,
                 sign_in_type: "google",
                 verification: 1,
                 role
@@ -164,21 +168,15 @@ const signInGoogle = async (req, res, next) => {
             let child = {}
             if (model) {
                 if (user.role === "student") {
-                    await model.update({ user_id: user.id }, { where: { email: dataEmail } })
-                    child = await model.findOne({ where: { email: dataEmail } })
-                    if (child) {
-                        child = { ...child.dataValues }
-                    }
+                    await model.update({ user_id: user.id }, { where: { email: userEmail } })
+                    const childData = await model.findOne({ where: { email: userEmail } })
+                    child = { ...childData?.dataValues }
+                    child.stu_id = child.stu_id || null
                 } else {
                     child = await model.create({ user_id: user.id })
                 }
-                if (user.role === "student") {
-                    child.stu_id = child.stu_id || null
-                }
             }
 
-            req.session.user = dataEmail
-            
             return res.status(201).json({
                 ok: true,
                 data: {
@@ -187,26 +185,22 @@ const signInGoogle = async (req, res, next) => {
                 },
             })
         } else {
-            const { sign_in_type, email } = result
+            const { sign_in_type, email } = findUser
             if (sign_in_type == "google") {
                 // email match
                 let child = {}
                 if (model) {
-                    if (!(result.role === "user")) {
-                        const modelName = result.role.charAt(0).toUpperCase() + result.role.slice(1);
-                        child = result[modelName]
-                        if (child) {
-                            child = { ...child.dataValues }
-                        }
+                    if (!(findUser.role === "user")) {
+                        const modelName = findUser.role.charAt(0).toUpperCase() + findUser.role.slice(1);
+                        const childData = findUser[modelName]
+                        child = { ...childData?.dataValues }
                     }
                 }
-                req.session.user = email
-                console.log("login session:", req.sessionID);
-                // console.log("Login session:", req.session);
+
                 return res.status(200).json({
                     ok: true,
                     data: {
-                        role: result.role,
+                        role: findUser.role,
                         ...child
                     },
                 })
@@ -248,7 +242,6 @@ const signInVerify = async (req, res) => {
             });
         }
         const name = `${userData.fname} ${userData.lname}`;
-        req.session.user = email
         return res.status(200).json({
             ok: true,
             userData: {

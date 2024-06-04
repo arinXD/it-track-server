@@ -19,15 +19,8 @@ module.exports = {
                 type: Sequelize.STRING
             },
             track: {
-                allowNull: true,
-                defaultValue: null,
-                unique: false,
                 type: Sequelize.STRING,
-                references: {
-                    model: 'Tracks',
-                    key: 'track'
-                },
-                onDelete: 'SET NULL',
+                allowNull: true,
             },
             createdAt: {
                 allowNull: false,
