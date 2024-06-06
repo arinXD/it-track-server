@@ -5,7 +5,7 @@ const path = require('path');
 const isAuth = require('../middleware/authMiddleware');
 const isAdmin = require('../middleware/adminMiddleware');
 const { getHostname } = require('../api/hostname');
-const { getAllTrack, getTrack, updateTrack, insertTrack, removeTracks, getDeletedTracks } = require('../controller/trackController');
+const { getAllTrack, getTrack, updateTrack, insertTrack, removeTracks, getDeletedTracks, forceRemoveTracks, multipleRestoreTrack } = require('../controller/trackController');
 const models = require('../models');
 const Track = models.Track
 
@@ -50,6 +50,8 @@ router.get("/:track/get-track", getTrack)
 
 // PUT
 router.put("/:track", isAdmin, updateTrack)
+router.put("/multiple/restore", isAdmin, multipleRestoreTrack)
+
 
 // POST
 router.post("/", isAdmin, insertTrack)
@@ -82,5 +84,6 @@ router.post("/:track/image/:type", isAdmin, upload.single('image'), async (req, 
 
 // DELETE
 router.delete("/multiple", isAdmin, removeTracks)
+router.delete("/multiple/force", isAdmin, forceRemoveTracks)
 
 module.exports = router

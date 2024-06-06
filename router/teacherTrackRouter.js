@@ -83,7 +83,6 @@ router.post("/", isAdmin, upload.single("image"), async (req, res) => {
         }
     })
     let upsertData = {}
-    console.log(existProfessor);
     if (existProfessor && Object.keys(existProfessor).length > 0) {
         upsertData = insertData
         upsertData.id = existProfessor.dataValues.id

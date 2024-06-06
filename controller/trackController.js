@@ -1,6 +1,8 @@
 const { Op } = require('sequelize');
 const models = require('../models');
 const Track = models.Track
+const path = require('path');
+const fs = require('fs');
 
 const getAllTrack = async (req, res) => {
      try {
@@ -60,6 +62,28 @@ const updateTrack = async (req, res) => {
      }
 }
 
+const multipleRestoreTrack = async (req, res) => {
+     const tracks = req.body
+     try {
+          for (let index = 0; index < tracks.length; index++) {
+               const track = tracks[index];
+               await Track.restore(
+                    { where: { track } },
+               );
+          }
+          return res.status(200).json({
+               ok: true,
+               message: "กู้คืนแทร็กสำเร็จ"
+          })
+     } catch (error) {
+          console.log(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+
 const insertTrack = async (req, res) => {
      const data = req.body
      try {
@@ -109,6 +133,39 @@ const removeTracks = async (req, res) => {
      }
 }
 
+const forceRemoveTracks = async (req, res) => {
+     const tracks = req.body
+     try {
+          for (let index = 0; index < tracks.length; index++) {
+               const track = tracks[index];
+               await Track.destroy({
+                    where: {
+                         track
+                    },
+                    force: true
+               })
+               let filePath = path.join(__dirname, `../public/images/tracks/coverImg/coverImg_${track?.toLowerCase()}.png`)
+               if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath)
+               }
+               filePath = path.join(__dirname, `../public/images/tracks/img/img_${track?.toLowerCase()}.png`)
+               if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath)
+               }
+          }
+          return res.status(200).json({
+               ok: true,
+               message: "ลบข้อมูลแทร็กสำเร็จ"
+          })
+     } catch (error) {
+          console.log(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+
 const getDeletedTracks = async (req, res) => {
      try {
           const data = await Track.findAll({
@@ -137,5 +194,7 @@ module.exports = {
      updateTrack,
      insertTrack,
      removeTracks,
-     getDeletedTracks
+     getDeletedTracks,
+     forceRemoveTracks,
+     multipleRestoreTrack
 }

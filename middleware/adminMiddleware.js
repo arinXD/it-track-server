@@ -1,5 +1,6 @@
 const model = require("../models");
 const User = model.User;
+const jwt = require("jsonwebtoken");
 const { decode } = require("next-auth/jwt")
 require("dotenv").config();
 
