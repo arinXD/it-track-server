@@ -10,6 +10,9 @@ const { Sequelize } = require('sequelize')
 const expressWinston = require('express-winston')
 const requestIp = require('request-ip');
 const winstonLogger = require("./utils/logger");
+const expressRateLimit = require("express-rate-limit")
+const expressSlowDown = require("express-slow-down")
+
 const app = express()
 
 //--------------------
@@ -18,6 +21,25 @@ const app = express()
 //
 //--------------------
 
+const limiter = expressRateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 100,
+    message: "Too many requests, try again later."
+})
+
+const speedLimiter = expressSlowDown({
+    windowMs: 1 * 60 * 1000,
+    delayAfter: 50,
+    delayMs: () => 500,
+})
+
+app.use(cors({
+    credentials: true,
+    origin: [
+        "https://it-track-client.vercel.app",
+        "http://localhost:3000",
+    ]
+}))
 app.use(requestIp.mw()); // extract ip 
 app.use(expressWinston.logger({
     winstonInstance: winstonLogger,
@@ -32,13 +54,6 @@ app.use(expressWinston.logger({
     }
 }));
 app.use(express.json());
-app.use(cors({
-    credentials: true,
-    origin: [
-        "https://it-track-client.vercel.app",
-        "http://localhost:3000",
-    ]
-}))
 app.use(cookieParser());
 app.use(express.urlencoded({
     extended: false
@@ -59,6 +74,8 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(express.static(path.join(__dirname, 'public')))
+app.use(limiter)
+app.use(speedLimiter)
 
 //--------------------
 // 
@@ -168,14 +185,17 @@ app.use('/api/statuses', isAdmin, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)
 app.use('/api/careers', careerRouter)
 
-app.get("/api/test", isAdmin, async (req, res) => {
+const { randomBytes } = require("crypto");
+const validateStudent = require("./middleware/validateStudent");
+
+app.get("/api/ping", validateStudent, async (req, res) => {
+    const token = randomBytes(16).toString("hex")
+    res.cookie("XSRF-TOKEN", token)
+    res.locals.csrfToken = token
     try {
         return res.status(200).json({
             ok: true,
-            data: [{
-                id: 1,
-                ping: "pong"
-            }],
+            message: "ping"
         })
     } catch (err) {
         return res.status(500).json({
@@ -183,6 +203,26 @@ app.get("/api/test", isAdmin, async (req, res) => {
         })
     }
 })
+app.get("/api/pong", isAuth, async (req, res) => {
+    const token = req.cookies["XSRF-TOKEN"]
+    const header = req.headers["x-xsrf-token"]
+    if(token !== header){
+        return res.status(403).json({
+            message: "Invalid CSRF token"
+        })
+    }
+    try {
+        return res.status(200).json({
+            ok: true,
+            message: "pong"
+        })
+    } catch (err) {
+        return res.status(500).json({
+            message: "server error"
+        })
+    }
+})
+
 
 app.use((req, res, next) => {
     return res.status(400).json({

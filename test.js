@@ -1,8 +1,9 @@
-const { findSubjectByCode } = require("./utils/subject")
+var rand = function() {
+    return Math.random().toString(36).substr(2)
+};
 
-const init = async()=>{
-    const id = await findSubjectByCode("SC361002")
-    console.log("id: "+ id);
-}
+var token = function() {
+    console.log(rand() + rand()+ rand())
+};
 
-init()
+token();

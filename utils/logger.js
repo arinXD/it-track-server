@@ -21,6 +21,14 @@ const formatter = format((info, opts) => {
      return info;
 });
 
+const options = { timeZone: 'Asia/Bangkok' };
+const currentDate = new Date().toLocaleDateString('en-US', options);
+const dateParts = currentDate.split('/');
+const year = dateParts[2];
+const month = dateParts[0].padStart(2, '0');
+const day = dateParts[1].padStart(2, '0');
+const dateNow = `${year}_${month}_${day}`;
+
 const logger = createLogger({
      level: 'info', // skip logging debug
      format: format.combine(
@@ -28,7 +36,7 @@ const logger = createLogger({
           format.json()
      ),
      transports: [
-          new transports.File({ filename: 'logging.log' })
+          new transports.File({ filename: `logging/${dateNow}.log` })
      ],
 });
 module.exports = logger

@@ -15,8 +15,9 @@ const { Op } = require('sequelize');
 const { getAcadYear, getCourse, getProgram } = require('../utils/student');
 const { findSubjectByCode } = require('../utils/subject');
 const isAuth = require('../middleware/authMiddleware');
+const validateStudent = require('../middleware/validateStudent');
 
-router.get("/:stuid", isAuth, async (req, res) => {
+router.get("/:stuid", validateStudent , async (req, res) => {
     const stuid = req.params.stuid
     try {
         const students = await Student.findOne({
@@ -53,8 +54,8 @@ router.get("/:stuid", isAuth, async (req, res) => {
     }
 })
 
-router.get("/:id/track/select", isAuth, async (req, res) => {
-    const stu_id = req.params.id
+router.get("/:stuid/track/select", validateStudent, async (req, res) => {
+    const stu_id = req.params.stuid
     try {
         const select = await Selection.findOne({
             where: {
@@ -77,8 +78,8 @@ router.get("/:id/track/select", isAuth, async (req, res) => {
     }
 })
 
-router.get("/:id/track/select/detail", isAuth, async (req, res) => {
-    const stu_id = req.params.id
+router.get("/:stuid/track/select/detail", validateStudent, async (req, res) => {
+    const stu_id = req.params.stuid
     try {
         const select = await Selection.findOne({
             where: {

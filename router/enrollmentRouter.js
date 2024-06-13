@@ -7,6 +7,7 @@ const Subject = models.Subject
 const { Op, QueryTypes } = require("sequelize");
 const isAdmin = require('../middleware/adminMiddleware');
 const isAuth = require('../middleware/authMiddleware');
+const validateStudent = require('../middleware/validateStudent');
 
 router.get("/", isAdmin, async (req, res) => {
     const students = await Student.findAll({
@@ -25,8 +26,8 @@ router.get("/", isAdmin, async (req, res) => {
         data: students
     })
 })
-router.get("/:id", isAuth, async (req, res) => {
-    const id = req.params.id
+router.get("/:stuid", validateStudent, async (req, res) => {
+    const id = req.params.stuid
     try {
         const students = await Student.findOne({
             where: {
