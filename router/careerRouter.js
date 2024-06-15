@@ -1,27 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const models = require('../models');
-const Career = models.Career
 const isAuth = require("../middleware/authMiddleware")
+const isAdmin = require("../middleware/adminMiddleware");
+const { careerCreateUploader, careerUpdateUploader } = require('../utils/uploader');
+const { createCareer, getAllCareers, updateCareer, deleteMultipleCareer, getCareerByTrack } = require('../controller/careerController');
 
-router.get("/", isAuth, async (req, res) => {
-    try {
-        const careers = await Career.findAll()
-        return res.status(200).json({
-            ok: true,
-            data: careers
-        })
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            ok: false,
-            message: "Server error"
-        })
-    }
-})
+// GET
+router.get("/", getAllCareers)
+router.get("/:track", getCareerByTrack)
 
-router.post("/", async (req, res) => {
-    return null
-})
+// POST
+router.post("/", careerCreateUploader.single("image"), createCareer)
+
+// PUT
+router.put("/:id", careerUpdateUploader.single("image"), updateCareer)
+
+// DELETE
+router.delete("/multiple", deleteMultipleCareer)
 
 module.exports = router

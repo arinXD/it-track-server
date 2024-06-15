@@ -15,11 +15,11 @@ const expressSlowDown = require("express-slow-down")
 
 const app = express()
 
-//--------------------
+//-------------
 // 
-//  setting
-//
-//--------------------
+//  Initial
+// 
+//-------------
 
 const limiter = expressRateLimit({
     windowMs: 1 * 60 * 1000,
@@ -77,11 +77,6 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use(limiter)
 app.use(speedLimiter)
 
-//--------------------
-// 
-//  initial
-//
-//--------------------
 const port = 4000
 const sequelize = new Sequelize(
     process.env.DATABASE,
@@ -106,15 +101,14 @@ app.listen(port, async () => {
     }
 })
 
-//--------------------
+//-------------------------------
 // 
-//  import router && middleware
+//  Import router && middleware
 //
-//--------------------
+//-------------------------------
 const userRouter = require('./router/usersRouter');
 const authRouter = require('./router/authRouter');
 const studentRouter = require('./router/studentRouter');
-const acadYearRouter = require('./router/acadYearRouter');
 const trackRouter = require('./router/trackRouter');
 const trackSelectionRouter = require('./router/trackSelectionRouter');
 const enrollmentRouter = require('./router/enrollmentRouter');
@@ -123,37 +117,23 @@ const trackSubjectRouter = require('./router/trackSubjectRouter');
 const teacherTrackRouter = require('./router/teacherTrackRouter');
 const careerRouter = require('./router/careerRouter');
 
-const isAuth = require("./middleware/authMiddleware")
-const isAdmin = require("./middleware/adminMiddleware");
-
-//--------------------
-// 
 //  subject router
-//
-//--------------------
-
 const subjectRouter = require('./router/subjectRouter');
 const categoryRouter = require('./router/categoryRouter');
 const groupRouter = require('./router/groupRouter');
 const subGroupRouter = require('./router/subGroupRouter');
 
-//--------------------
-// 
 //  program router
-//
-//--------------------
-
 const programRouter = require('./router/programRouter')
 const programCodeRouter = require('./router/programCodeRouter')
 
-//--------------------
-// 
 //  verify router
-//
-//--------------------
-
 const verifyRouter = require('./router/verifyRouter')
 const verifySelectionRouter = require('./router/verifySelectionRouter');
+
+// middleware
+const isAuth = require("./middleware/authMiddleware")
+const isAdmin = require("./middleware/adminMiddleware");
 
 //--------------------
 // 
@@ -169,7 +149,6 @@ app.use('/api/users', isAdmin, userRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/students', studentRouter)
 app.use('/api/students/enrollments', enrollmentRouter)
-app.use('/api/acadyear', isAdmin, acadYearRouter)
 app.use('/api/tracks', trackRouter)
 app.use('/api/tracks/subjects', isAdmin, trackSubjectRouter)
 app.use('/api/tracks/selects', trackSelectionRouter)
@@ -186,16 +165,16 @@ app.use('/api/teachers/tracks', teacherTrackRouter)
 app.use('/api/careers', careerRouter)
 
 const { randomBytes } = require("crypto");
-const validateStudent = require("./middleware/validateStudent");
 
-app.get("/api/ping", validateStudent, async (req, res) => {
+app.get("/api/get-token", async (req, res) => {
     const token = randomBytes(16).toString("hex")
     res.cookie("XSRF-TOKEN", token)
     res.locals.csrfToken = token
     try {
         return res.status(200).json({
             ok: true,
-            message: "ping"
+            message: "ping",
+            "x-xsrf-token": token
         })
     } catch (err) {
         return res.status(500).json({
@@ -203,7 +182,7 @@ app.get("/api/ping", validateStudent, async (req, res) => {
         })
     }
 })
-app.get("/api/pong", isAuth, async (req, res) => {
+app.get("/api/validate", async (req, res) => {
     const token = req.cookies["XSRF-TOKEN"]
     const header = req.headers["x-xsrf-token"]
     if(token !== header){
@@ -222,7 +201,6 @@ app.get("/api/pong", isAuth, async (req, res) => {
         })
     }
 })
-
 
 app.use((req, res, next) => {
     return res.status(400).json({
