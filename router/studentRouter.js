@@ -1,5 +1,5 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 const models = require('../models');
 const Student = models.Student
 const Selection = models.Selection
@@ -15,8 +15,9 @@ const { Op } = require('sequelize');
 const { getAcadYear, getCourse, getProgram } = require('../utils/student');
 const { findSubjectByCode } = require('../utils/subject');
 const isAuth = require('../middleware/authMiddleware');
+const validateStudent = require('../middleware/validateStudent');
 
-router.get("/:stuid", isAuth, async (req, res) => {
+router.get("/:stuid", validateStudent, async (req, res) => {
     const stuid = req.params.stuid
     try {
         const students = await Student.findOne({
@@ -24,20 +25,20 @@ router.get("/:stuid", isAuth, async (req, res) => {
                 stu_id: stuid
             },
             include: [{
-                    model: Program,
-                },
-                {
-                    model: User,
-                },
-                {
-                    model: StudentStatus,
-                },
-                {
-                    model: Enrollment,
-                    include: [{
-                        model: Subject,
-                    }, ]
-                },
+                model: Program,
+            },
+            {
+                model: User,
+            },
+            {
+                model: StudentStatus,
+            },
+            {
+                model: Enrollment,
+                include: [{
+                    model: Subject,
+                },]
+            },
             ],
         })
         return res.status(200).json({
@@ -53,8 +54,8 @@ router.get("/:stuid", isAuth, async (req, res) => {
     }
 })
 
-router.get("/:id/track/select", isAuth, async (req, res) => {
-    const stu_id = req.params.id
+router.get("/:stuid/track/select", validateStudent, async (req, res) => {
+    const stu_id = req.params.stuid
     try {
         const select = await Selection.findOne({
             where: {
@@ -62,7 +63,7 @@ router.get("/:id/track/select", isAuth, async (req, res) => {
             },
             include: [{
                 model: Track,
-            }, ],
+            },],
         })
         return res.status(200).json({
             ok: true,
@@ -77,8 +78,8 @@ router.get("/:id/track/select", isAuth, async (req, res) => {
     }
 })
 
-router.get("/:id/track/select/detail", isAuth, async (req, res) => {
-    const stu_id = req.params.id
+router.get("/:stuid/track/select/detail", validateStudent, async (req, res) => {
+    const stu_id = req.params.stuid
     try {
         const select = await Selection.findOne({
             where: {
@@ -86,7 +87,7 @@ router.get("/:id/track/select/detail", isAuth, async (req, res) => {
             },
             include: [{
                 model: SelectionDetail,
-            }, ],
+            },],
         })
         const selectionDetailId = []
         if (select) {
@@ -133,7 +134,7 @@ router.post("/track/select", isAuth, async (req, res) => {
             },
             include: [{
                 model: SelectionDetail,
-            }, ],
+            },],
         })
         if (selectId) {
             selectData.id = selectId.id
@@ -159,9 +160,10 @@ router.post("/track/select", isAuth, async (req, res) => {
             resultData = selectId.dataValues
         } else {
             resultData = userSelection[0].dataValues
+            resultData.createdAt = new Date()
+            resultData.updatedAt = new Date()
         }
-        resultData.createdAt = thaiDate()
-        resultData.updatedAt = thaiDate()
+
         return res.status(201).json({
             ok: true,
             data: resultData,
@@ -174,14 +176,6 @@ router.post("/track/select", isAuth, async (req, res) => {
         })
     }
 })
-
-function thaiDate() {
-    const currentDateUTC = new Date();
-    const thailandOffset = 7 * 60 * 60 * 1000;
-
-    const currentDateThailand = new Date(currentDateUTC.getTime() + thailandOffset);
-    return currentDateThailand
-}
 
 // ----------------------------------
 // Admin 
@@ -205,7 +199,7 @@ router.get("/", adminMiddleware, async (req, res) => {
     }
 })
 
-router.get("/get/restores", adminMiddleware,async (req, res) => {
+router.get("/get/restores", adminMiddleware, async (req, res) => {
     try {
         const students = await Student.findAll({
             paranoid: false,
@@ -215,14 +209,14 @@ router.get("/get/restores", adminMiddleware,async (req, res) => {
                 }
             },
             include: [{
-                    model: Program,
-                },
-                {
-                    model: StudentStatus,
-                },
-                {
-                    model: User,
-                },
+                model: Program,
+            },
+            {
+                model: StudentStatus,
+            },
+            {
+                model: User,
+            },
             ],
         })
         return res.status(200).json({
@@ -246,12 +240,12 @@ router.get("/find/:student", adminMiddleware, async (req, res) => {
                 [Op.or]: [
                     { first_name: { [Op.like]: `%${student}%` } },
                     { last_name: { [Op.like]: `%${student}%` } },
-                    { stu_id: { [Op.like]: `%${student}%` } ,}
+                    { stu_id: { [Op.like]: `%${student}%` }, }
                 ]
             },
             include: [{
-                    model: Program,
-                },
+                model: Program,
+            },
             ],
         })
         return res.status(200).json({
@@ -420,9 +414,9 @@ router.post("/enrollments/excel", adminMiddleware, async (req, res) => {
             let existingEnroll
             try {
                 const subjectId = await findSubjectByCode(enrollData.subject_code)
-                if(!subjectId) return
-                const student = await Student.findOne({ where: { stu_id : enrollData.stu_id }})
-                if(student?.id == null) return
+                if (!subjectId) return
+                const student = await Student.findOne({ where: { stu_id: enrollData.stu_id } })
+                if (student?.id == null) return
                 existingEnroll = await Enrollment.findOne({
                     where: {
                         stu_id: enrollData.stu_id,
@@ -446,7 +440,7 @@ router.post("/enrollments/excel", adminMiddleware, async (req, res) => {
                 delete upsertData.subject_code
             }
             try {
-                if(enrollData.stu_id=="643020423-0") console.log(upsertData);
+                if (enrollData.stu_id == "643020423-0") console.log(upsertData);
                 Enrollment.upsert(upsertData);
             } catch (error) {
                 return
@@ -592,17 +586,17 @@ router.get("/programs/:pid/acadyear/:acad", adminMiddleware, async (req, res) =>
                 acadyear: acad
             },
             include: [{
-                    model: Program,
-                    where: {
-                        program: pid
-                    }
-                },
-                {
-                    model: StudentStatus,
-                },
-                {
-                    model: User,
-                },
+                model: Program,
+                where: {
+                    program: pid
+                }
+            },
+            {
+                model: StudentStatus,
+            },
+            {
+                model: User,
+            },
             ],
         })
         return res.status(200).json({

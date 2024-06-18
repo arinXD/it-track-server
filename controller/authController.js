@@ -92,29 +92,18 @@ const signInCredentials = async (req, res, next) => {
                 child = user[modelName]
                 child = child.dataValues
             }
-            const name = `${user.fname} ${user.lname}`;
-
-            // const token = jwt.sign({
-            //     email,
-            //     name,
-            //     image: userData.image,
-            //     role: "student"
-            // }, process.env.SECRET_KEY, { expiresIn: "2h" });
-
-            req.session.user = email
-
+            const name = child?.first_name && child?.last_name ? `${child?.first_name} ${child?.last_name}` : undefined
+            const userData = {
+                email,
+                name,
+                image: user.image,
+                role,
+                verification: user.verification,
+                ...child
+            }
             return res.status(200).json({
                 ok: true,
-                user: {
-                    email,
-                    name,
-                    image: user.image,
-                    role,
-                    firstname: user.fname,
-                    lastname: user.lname,
-                    verification: user.verification,
-                    ...child
-                },
+                user: userData,
                 // token
             });
         } else {
@@ -132,40 +121,44 @@ const signInCredentials = async (req, res, next) => {
     }
 }
 
-const signInGoogle = async (req, res, next) => {
-    const { email } = req.body;
-    var dataEmail
-    var image
+const verifyEmail = (email) => {
     try {
         const decode = jwt.verify(email, process.env.SECRET_KEY);
-        dataEmail = decode.data.email
-        image = decode.data.image
+        return decode?.data?.email
     } catch (err) {
+        return null
+    }
+}
+
+const signInGoogle = async (req, res, next) => {
+    const { email } = req.body;
+    const userEmail = verifyEmail(email)
+
+    if (!userEmail) {
         return res.status(401).json({
             ok: false,
             message: "Authentication failed. Invalid token.",
         });
     }
+
+    const { role, model } = getRole(userEmail)
+    const findUser = model ?
+        await User.findOne({
+            where: { email: userEmail },
+            include: {
+                model
+            }
+        })
+        :
+        await User.findOne({
+            where: { email: userEmail },
+        })
+
     try {
-        const { role, model } = getRole(dataEmail)
-        let result
-        if (model) {
-            result = await User.findOne({
-                where: { email: dataEmail },
-                include: {
-                    model
-                }
-            });
-        } else {
-            result = await User.findOne({
-                where: { email: dataEmail },
-            });
-        }
         // email doesn't match
-        if (!result) {
+        if (!findUser) {
             const useData = {
-                email: dataEmail,
-                image,
+                email: userEmail,
                 sign_in_type: "google",
                 verification: 1,
                 role
@@ -175,21 +168,15 @@ const signInGoogle = async (req, res, next) => {
             let child = {}
             if (model) {
                 if (user.role === "student") {
-                    await model.update({ user_id: user.id }, { where: { email: dataEmail } })
-                    child = await model.findOne({ where: { email: dataEmail } })
-                    if (child) {
-                        child = { ...child.dataValues }
-                    }
+                    await model.update({ user_id: user.id }, { where: { email: userEmail } })
+                    const childData = await model.findOne({ where: { email: userEmail } })
+                    child = { ...childData?.dataValues }
+                    child.stu_id = child.stu_id || null
                 } else {
                     child = await model.create({ user_id: user.id })
                 }
-                if (user.role === "student") {
-                    child.stu_id = child.stu_id || null
-                }
             }
 
-            req.session.user = dataEmail
-            
             return res.status(201).json({
                 ok: true,
                 data: {
@@ -198,26 +185,22 @@ const signInGoogle = async (req, res, next) => {
                 },
             })
         } else {
-            const { sign_in_type, email } = result
+            const { sign_in_type, email } = findUser
             if (sign_in_type == "google") {
                 // email match
                 let child = {}
                 if (model) {
-                    if (!(result.role === "user")) {
-                        const modelName = result.role.charAt(0).toUpperCase() + result.role.slice(1);
-                        child = result[modelName]
-                        if (child) {
-                            child = { ...child.dataValues }
-                        }
+                    if (!(findUser.role === "user")) {
+                        const modelName = findUser.role.charAt(0).toUpperCase() + findUser.role.slice(1);
+                        const childData = findUser[modelName]
+                        child = { ...childData?.dataValues }
                     }
                 }
-                req.session.user = email
-                console.log("login session:", req.sessionID);
-                // console.log("Login session:", req.session);
+
                 return res.status(200).json({
                     ok: true,
                     data: {
-                        role: result.role,
+                        role: findUser.role,
                         ...child
                     },
                 })
@@ -240,6 +223,7 @@ const signInGoogle = async (req, res, next) => {
         });
     }
 }
+
 const signInVerify = async (req, res) => {
     const { email } = req.body;
     try {
@@ -258,7 +242,6 @@ const signInVerify = async (req, res) => {
             });
         }
         const name = `${userData.fname} ${userData.lname}`;
-        req.session.user = email
         return res.status(200).json({
             ok: true,
             userData: {
@@ -282,7 +265,7 @@ const signInVerify = async (req, res) => {
 
 const signUp = async (req, res, next) => {
     try {
-        const { email, password, fname, lname } = req.body
+        const { email, password } = req.body
         const { role, model } = getRole(email)
         const findEmail = await User.findOne({ where: { email } })
 
@@ -300,8 +283,6 @@ const signUp = async (req, res, next) => {
             password: passwordHash,
             image: "/image/user.png",
             role,
-            fname,
-            lname,
             sign_in_type: "credentials",
         }
 

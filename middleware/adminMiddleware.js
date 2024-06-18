@@ -1,45 +1,94 @@
 const model = require("../models");
 const User = model.User;
 const jwt = require("jsonwebtoken");
+const { decode } = require("next-auth/jwt");
 require("dotenv").config();
 
-const accessRoll = ["admin", "teacher"];
+const accessRoles = ["admin", "teacher"];
 
-const isAdmin = async (req, res, next) => {
-    const authToken = req.headers["authorization"];
-    if (authToken) {
-        try {
-            const user = jwt.verify(authToken, process.env.SECRET_KEY);
-            const userRole = await User.findOne({
-                where: { email: user.data.email },
-                attributes: ["role"],
-            });
-            let role;
+const verifyUserRole = async (email, res, next) => {
+    try {
+        const userRole = await User.findOne({
+            where: { email },
+            attributes: ["role"],
+        });
 
-            if (userRole) {
-                role = userRole.dataValues.role;
-            }
+        const role = userRole?.dataValues?.role;
 
-            if (accessRoll.includes(role)) {
-                next();
-            } else {
-                return res.status(401).json({
-                    ok: false,
-                    message: "Authentication failed. User does not have the required role.",
-                });
-            }
-        } catch (err) {
-            // Handle wrong secret key
-            return res.status(401).json({
+        if (accessRoles.includes(role)) {
+            return next();
+        } else {
+            return res.status(403).json({
                 ok: false,
-                message: "Authentication failed. Invalid token.",
+                message: "Authorization failed. User does not have permission to access.",
             });
         }
-    } else {
+    } catch (error) {
+        return res.status(500).json({
+            ok: false,
+            message: "Internal server error. Please try again later.",
+        });
+    }
+};
+
+const isAdmin = async (req, res, next) => {
+    const sessionToken = req.cookies['next-auth.session-token'];
+    const headerToken = req.headers["authorization"];
+
+    if (!sessionToken && !headerToken) {
         return res.status(401).json({
             ok: false,
-            message: "Authentication failed. Token not provided.",
+            message: "Authentication failed. Token not provided. Please login.",
         });
+    }
+
+    if (sessionToken) {
+        try {
+            const decoded = await decode({
+                token: sessionToken,
+                secret: process.env.NEXTAUTH_SECRET,
+            });
+
+            if (!decoded || !decoded.email) {
+                return res.status(401).json({
+                    ok: false,
+                    message: "Authentication failed. Invalid session token structure.",
+                });
+            }
+
+            return verifyUserRole(decoded.email, res, next);
+        } catch (err) {
+            console.error("Session token decoding error:", err);
+            return res.status(401).json({
+                ok: false,
+                message: "Authentication failed. Invalid session token.",
+            });
+        }
+    } else if (headerToken) {
+        try {
+            const user = jwt.verify(headerToken, process.env.SECRET_KEY);
+
+            if (!user?.data?.email) {
+                return res.status(401).json({
+                    ok: false,
+                    message: "Authentication failed. Invalid header token structure.",
+                });
+            }
+
+            return verifyUserRole(user.data.email, res, next);
+        } catch (err) {
+            console.error("Header token verification error:", err);
+            let message = null
+            if (err.name === 'TokenExpiredError') {
+                message = "Authentication failed. Token expired."
+            } else {
+                message = "Authentication failed. Invalid token."
+            }
+            return res.status(401).json({
+                ok: false,
+                message,
+            });
+        }
     }
 };
 

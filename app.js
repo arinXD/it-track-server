@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -5,18 +6,33 @@ const logger = require('morgan');
 const cors = require('cors')
 const session = require('express-session')
 const bodyParser = require('body-parser');
-const {
-    Sequelize
-} = require('sequelize')
-require("dotenv").config();
+const { Sequelize } = require('sequelize')
+const expressWinston = require('express-winston')
+const requestIp = require('request-ip');
+const winstonLogger = require("./utils/logger");
+const expressRateLimit = require("express-rate-limit")
+const expressSlowDown = require("express-slow-down")
+
 const app = express()
 
-//--------------------
+//-------------
 // 
-//  setting
-//
-//--------------------
-app.use(express.json());
+//  Initial
+// 
+//-------------
+
+const limiter = expressRateLimit({
+    windowMs: 1 * 60 * 1000,
+    max: 100,
+    message: "Too many requests, try again later."
+})
+
+const speedLimiter = expressSlowDown({
+    windowMs: 1 * 60 * 1000,
+    delayAfter: 50,
+    delayMs: () => 500,
+})
+
 app.use(cors({
     credentials: true,
     origin: [
@@ -24,13 +40,27 @@ app.use(cors({
         "http://localhost:3000",
     ]
 }))
+app.use(requestIp.mw()); // extract ip 
+app.use(expressWinston.logger({
+    winstonInstance: winstonLogger,
+    statusLevels: true,
+    meta: true, // meta data about the request
+    expressFormat: false,
+    colorize: false,
+    dynamicMeta: (req, res) => {
+        return {
+            ip: req.clientIp
+        };
+    }
+}));
+app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({
     extended: false
 }));
 app.use(logger('dev'));
 app.use(session({
-    name:"it-track",
+    name: "it-track",
     secret: "secret",
     resave: false,
     saveUninitialized: true,
@@ -44,22 +74,19 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(express.static(path.join(__dirname, 'public')))
+app.use(limiter)
+app.use(speedLimiter)
 
-//--------------------
-// 
-//  initial
-//
-//--------------------
 const port = 4000
 const sequelize = new Sequelize(
     process.env.DATABASE,
     process.env.DATABASE_USER,
     process.env.DATABASE_PASSWORD, {
-        host: process.env.DATABASE_HOST,
-        dialect: 'mysql',
-        logging: false,
-        timezone: '+07:00',
-    },
+    host: process.env.DATABASE_HOST,
+    logging: false,
+    dialect: 'mysql',
+    timezone: '+07:00',
+},
 )
 
 app.listen(port, async () => {
@@ -70,57 +97,43 @@ app.listen(port, async () => {
         console.log("!!!!WARNING!!!!");
         console.log(` - Check database connection`);
     } finally {
-        console.log(`Server listening on port ${port}`)
+        console.log(`Server is listening on port ${port}`)
     }
 })
 
-//--------------------
+//-------------------------------
 // 
-//  import router && middleware
+//  Import router && middleware
 //
-//--------------------
+//-------------------------------
 const userRouter = require('./router/usersRouter');
 const authRouter = require('./router/authRouter');
 const studentRouter = require('./router/studentRouter');
-const acadYearRouter = require('./router/acadYearRouter');
 const trackRouter = require('./router/trackRouter');
 const trackSelectionRouter = require('./router/trackSelectionRouter');
 const enrollmentRouter = require('./router/enrollmentRouter');
 const studentStatusRouter = require('./router/studentStatusRouter');
 const trackSubjectRouter = require('./router/trackSubjectRouter');
 const teacherTrackRouter = require('./router/teacherTrackRouter');
+const careerRouter = require('./router/careerRouter');
 
-const adminMiddleware = require("./middleware/adminMiddleware")
-const isAuth = require("./middleware/authMiddleware")
-
-//--------------------
-// 
 //  subject router
-//
-//--------------------
-
 const subjectRouter = require('./router/subjectRouter');
 const categoryRouter = require('./router/categoryRouter');
 const groupRouter = require('./router/groupRouter');
 const subGroupRouter = require('./router/subGroupRouter');
 
-//--------------------
-// 
 //  program router
-//
-//--------------------
-
 const programRouter = require('./router/programRouter')
 const programCodeRouter = require('./router/programCodeRouter')
 
-//--------------------
-// 
 //  verify router
-//
-//--------------------
-
 const verifyRouter = require('./router/verifyRouter')
-const verifySelectionRouter = require('./router/verifySelectionRouter')
+const verifySelectionRouter = require('./router/verifySelectionRouter');
+
+// middleware
+const isAuth = require("./middleware/authMiddleware")
+const isAdmin = require("./middleware/adminMiddleware");
 
 //--------------------
 // 
@@ -132,13 +145,12 @@ app.get('/', (req, res, next) => {
         message: 'IT Track by IT64',
     })
 })
-app.use('/api/users', adminMiddleware, userRouter)
+app.use('/api/users', isAdmin, userRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/students', studentRouter)
 app.use('/api/students/enrollments', enrollmentRouter)
-app.use('/api/acadyear', adminMiddleware, acadYearRouter)
 app.use('/api/tracks', trackRouter)
-app.use('/api/tracks/subjects', adminMiddleware, trackSubjectRouter)
+app.use('/api/tracks/subjects', isAdmin, trackSubjectRouter)
 app.use('/api/tracks/selects', trackSelectionRouter)
 app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
@@ -148,17 +160,40 @@ app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/verify', verifyRouter);
 app.use('/api/verify/selects', verifySelectionRouter);
-app.use('/api/statuses', adminMiddleware, studentStatusRouter);
+app.use('/api/statuses', isAdmin, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)
+app.use('/api/careers', careerRouter)
 
-app.get("/api/test", isAuth, async (req, res) => {
+const { randomBytes } = require("crypto");
+
+app.get("/api/get-token", async (req, res) => {
+    const token = randomBytes(16).toString("hex")
+    res.cookie("XSRF-TOKEN", token)
+    res.locals.csrfToken = token
     try {
         return res.status(200).json({
             ok: true,
-            data: [{
-                id: 1,
-                ping: "pong"
-            }],
+            message: "ping",
+            "x-xsrf-token": token
+        })
+    } catch (err) {
+        return res.status(500).json({
+            message: "server error"
+        })
+    }
+})
+app.get("/api/validate", async (req, res) => {
+    const token = req.cookies["XSRF-TOKEN"]
+    const header = req.headers["x-xsrf-token"]
+    if(token !== header){
+        return res.status(403).json({
+            message: "Invalid CSRF token"
+        })
+    }
+    try {
+        return res.status(200).json({
+            ok: true,
+            message: "pong"
         })
     } catch (err) {
         return res.status(500).json({

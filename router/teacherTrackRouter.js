@@ -1,5 +1,5 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 const models = require('../models');
 const TeacherTrack = models.TeacherTrack
 const multer = require('multer')
@@ -83,7 +83,6 @@ router.post("/", isAdmin, upload.single("image"), async (req, res) => {
         }
     })
     let upsertData = {}
-    console.log(existProfessor);
     if (existProfessor && Object.keys(existProfessor).length > 0) {
         upsertData = insertData
         upsertData.id = existProfessor.dataValues.id

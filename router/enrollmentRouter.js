@@ -1,5 +1,5 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 const models = require('../models');
 const Student = models.Student
 const Enrollment = models.Enrollment
@@ -7,6 +7,7 @@ const Subject = models.Subject
 const { Op, QueryTypes } = require("sequelize");
 const isAdmin = require('../middleware/adminMiddleware');
 const isAuth = require('../middleware/authMiddleware');
+const validateStudent = require('../middleware/validateStudent');
 
 router.get("/", isAdmin, async (req, res) => {
     const students = await Student.findAll({
@@ -25,8 +26,8 @@ router.get("/", isAdmin, async (req, res) => {
         data: students
     })
 })
-router.get("/:id", isAuth, async (req, res) => {
-    const id = req.params.id
+router.get("/:stuid", validateStudent, async (req, res) => {
+    const id = req.params.stuid
     try {
         const students = await Student.findOne({
             where: {
@@ -56,7 +57,7 @@ router.get("/:id", isAuth, async (req, res) => {
     }
 })
 
-router.get("/:acadyear/gpa", isAdmin, async (req, res) => {
+router.get("/:acadyear/gpa", async (req, res) => {
     const acadyear = parseInt(req.params.acadyear)
     if (typeof acadyear != "number") {
         return res.status(400).json({
@@ -67,10 +68,10 @@ router.get("/:acadyear/gpa", isAdmin, async (req, res) => {
     }
     try {
         let allGpa = await models.sequelize.query(`
-        SELECT students.stu_id AS stuid,
+        SELECT Students.stu_id AS stuid,
         SUM((CASE 
-                WHEN enrollments.grade IN ('A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F') THEN 
-                    CASE enrollments.grade
+                WHEN Enrollments.grade IN ('A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F') THEN 
+                    CASE Enrollments.grade
                         WHEN 'A' THEN 4
                         WHEN 'B+' THEN 3.5
                         WHEN 'B' THEN 3
@@ -81,17 +82,17 @@ router.get("/:acadyear/gpa", isAdmin, async (req, res) => {
                         WHEN 'F' THEN 0
                     END
                 ELSE 0
-            END) * subjects.credit) / 
-            (SELECT SUM(subjects.credit)
-                FROM subjects, enrollments
-                WHERE subjects.subject_id = enrollments.subject_id
-                AND students.stu_id = enrollments.stu_id
-                AND enrollments.grade IN ('A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F')
-                GROUP BY enrollments.stu_id) as gpa
-        FROM enrollments
-        JOIN students ON enrollments.stu_id = students.stu_id
-        JOIN subjects ON enrollments.subject_id = subjects.subject_id
-        WHERE students.acadyear = ${acadyear}
+            END) * Subjects.credit) / 
+            (SELECT SUM(Subjects.credit)
+                FROM Subjects, Enrollments
+                WHERE Subjects.subject_id = Enrollments.subject_id
+                AND Students.stu_id = Enrollments.stu_id
+                AND Enrollments.grade IN ('A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F')
+                GROUP BY Enrollments.stu_id) as gpa
+        FROM Enrollments
+        JOIN Students ON Enrollments.stu_id = Students.stu_id
+        JOIN Subjects ON Enrollments.subject_id = Subjects.subject_id
+        WHERE Students.acadyear = ${acadyear}
         GROUP BY stuid
         ORDER BY stuid ASC`, {
             type: QueryTypes.SELECT
@@ -105,6 +106,7 @@ router.get("/:acadyear/gpa", isAdmin, async (req, res) => {
         return res.status(500).json({
             ok: false,
             message: "Server error.",
+            error
         })
     }
 })

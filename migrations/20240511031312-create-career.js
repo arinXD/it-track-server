@@ -2,13 +2,25 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('Acadyears', {
-            acadyear: {
+        await queryInterface.createTable('Careers', {
+            id: {
                 allowNull: false,
-                unique: true,
-                autoIncrement: false,
+                autoIncrement: true,
                 primaryKey: true,
                 type: Sequelize.INTEGER
+            },
+            name_th: {
+                type: Sequelize.STRING
+            },
+            name_en: {
+                type: Sequelize.STRING
+            },
+            image: {
+                type: Sequelize.STRING
+            },
+            track: {
+                type: Sequelize.STRING,
+                allowNull: true,
             },
             createdAt: {
                 allowNull: false,
@@ -17,14 +29,10 @@ module.exports = {
             updatedAt: {
                 allowNull: false,
                 type: Sequelize.DATE
-            },
-            daletedAt: {
-                type: Sequelize.DATE,
-                allowNull: true,
             }
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('Acadyears');
+        await queryInterface.dropTable('Careers');
     }
 };

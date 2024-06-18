@@ -6,10 +6,6 @@ module.exports = (sequelize, DataTypes) => {
     class TrackSelection extends Model {
 
         static associate(models) {
-            this.belongsTo(models.Acadyears, {
-                foreignKey: 'acadyear',
-                targetKey: 'acadyear',
-            });
             this.belongsToMany(models.Subject, {
                 through: models.TrackSubject,
                 foreignKey: "track_selection_id",
