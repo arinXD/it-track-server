@@ -29,6 +29,11 @@ module.exports = {
         },
         onDelete: 'SET NULL',
       },
+      status: {
+        allowNull: true,
+        type: Sequelize.INTEGER,
+        defaultValue: 0
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       primaryKey: true,
     },
+    status: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'SubjectVerify',
