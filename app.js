@@ -12,7 +12,8 @@ const requestIp = require('request-ip');
 const winstonLogger = require("./utils/logger");
 const expressRateLimit = require("express-rate-limit")
 const expressSlowDown = require("express-slow-down")
-
+const { randomBytes } = require("crypto");
+const getPublicIP = require("./utils/ip");
 const app = express()
 
 //-------------
@@ -40,6 +41,10 @@ app.use(cors({
         "http://localhost:3000",
     ]
 }))
+app.use(async (req, res, next) => {
+    req.publicIP = await getPublicIP();
+    next();
+});
 app.use(requestIp.mw()); // extract ip 
 app.use(expressWinston.logger({
     winstonInstance: winstonLogger,
@@ -49,7 +54,8 @@ app.use(expressWinston.logger({
     colorize: false,
     dynamicMeta: (req, res) => {
         return {
-            ip: req.clientIp
+            ip: req.clientIp,
+            publicIP: req.publicIP
         };
     }
 }));
@@ -82,11 +88,11 @@ const sequelize = new Sequelize(
     process.env.DATABASE,
     process.env.DATABASE_USER,
     process.env.DATABASE_PASSWORD, {
-    host: process.env.DATABASE_HOST,
-    logging: false,
-    dialect: 'mysql',
-    timezone: '+07:00',
-},
+        host: process.env.DATABASE_HOST,
+        logging: false,
+        dialect: 'mysql',
+        timezone: '+07:00',
+    },
 )
 
 app.listen(port, async () => {
@@ -140,9 +146,18 @@ const isAdmin = require("./middleware/adminMiddleware");
 //  middleware router
 //
 //--------------------
-app.get('/', (req, res, next) => {
+
+app.get('/', async (req, res, next) => {
+    const IPAddress =
+        req.headers['cf-connecting-ip'] ||
+        req.headers['x-real-ip'] ||
+        req.headers['x-forwarded-for'] ||
+        req.socket.remoteAddress || '';
+    const publicIP = req.publicIP
     return res.json({
         message: 'IT Track by IT64',
+        IPAddress,
+        publicIP
     })
 })
 app.use('/api/users', isAdmin, userRouter)
@@ -164,8 +179,6 @@ app.use('/api/statuses', isAdmin, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)
 app.use('/api/careers', careerRouter)
 
-const { randomBytes } = require("crypto");
-
 app.get("/api/get-token", async (req, res) => {
     const token = randomBytes(16).toString("hex")
     res.cookie("XSRF-TOKEN", token)
@@ -185,7 +198,7 @@ app.get("/api/get-token", async (req, res) => {
 app.get("/api/validate", async (req, res) => {
     const token = req.cookies["XSRF-TOKEN"]
     const header = req.headers["x-xsrf-token"]
-    if(token !== header){
+    if (token !== header) {
         return res.status(403).json({
             message: "Invalid CSRF token"
         })
