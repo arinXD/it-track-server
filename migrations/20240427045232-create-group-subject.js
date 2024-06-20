@@ -22,11 +22,11 @@ module.exports = {
         allowNull: true,
         type: Sequelize.INTEGER,
         references: {
-            model: 'Groups',
-            key: 'id'
+          model: 'Groups',
+          key: 'id'
         },
         defaultValue: null
-    },
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

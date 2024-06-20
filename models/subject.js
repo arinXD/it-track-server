@@ -57,6 +57,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "subject_id",
                 otherKey: "sub_group_id"
             });
+            
+            this.hasMany(models.StudentVerifyDetail, {
+                foreignKey: 'subject_id',
+                sourceKey: 'subject_id',
+            });
         }
     }
     Subject.init({
