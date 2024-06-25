@@ -8,17 +8,17 @@ const { createCareer, getAllCareers, updateCareer, deleteMultipleCareer, getCare
 } = require('../controller/careerController');
 
 // GET
-router.get("/", getAllCareers)
-router.get("/:id", getCareerByID)
-router.get("/tracks/:track", getCareerByTrack)
+router.get("/", isAuth, getAllCareers)
+router.get("/:id", isAdmin, getCareerByID)
+router.get("/tracks/:track", isAdmin, getCareerByTrack)
 
 // POST
-router.post("/",careerCreateUploader.single("image"), createCareer)
+router.post("/", isAdmin, careerCreateUploader.single("image"), createCareer)
 
 // PUT
-router.put("/:id",careerUpdateUploader.single("image"), updateCareer)
+router.put("/:id", isAdmin, careerUpdateUploader.single("image"), updateCareer)
 
 // DELETE
-router.delete("/multiple", deleteMultipleCareer)
+router.delete("/multiple", isAdmin, deleteMultipleCareer)
 
 module.exports = router

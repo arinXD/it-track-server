@@ -9,8 +9,15 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-            isPublished: {
-                type: Sequelize.BOOLEAN
+            title: {
+                type: Sequelize.STRING
+            },
+            desc: {
+                type: Sequelize.STRING
+            },
+            isAvailable: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
             },
             createdAt: {
                 allowNull: false,
@@ -19,6 +26,11 @@ module.exports = {
             updatedAt: {
                 allowNull: false,
                 type: Sequelize.DATE
+            },
+            deletedAt: {
+                type: Sequelize.DATE,
+                allowNull: true,
+                validate: {}
             }
         });
     },

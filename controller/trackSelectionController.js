@@ -34,21 +34,21 @@ async function sendResultToEmail(stuid, result, acadyear) {
         subject: `ประกาศผลการคัดเลือกแทร็กประจำปีการศึกษา ${acadyear}`,
         html: htmlTemplate
     }
-    try{
+    try {
         // mailSender.sendMail(mailOption);
-    }catch(error){
+    } catch (error) {
         console.log(error);
     }
 }
 
-const sendEmailToStudent = async (req, res)=>{
+const sendEmailToStudent = async (req, res) => {
     const acadyear = req.params.acadyear
-    try{
+    try {
         const selections = await Selection.findAll({
             include: [
                 {
                     model: Student,
-                    where:{
+                    where: {
                         acadyear
                     },
                 },
@@ -64,8 +64,8 @@ const sendEmailToStudent = async (req, res)=>{
             ok: true,
             message: "ส่งอีเมลสำเร็จ"
         })
-    }catch(error){
-         console.error(error);
+    } catch (error) {
+        console.error(error);
         return res.status(500).json({
             ok: false,
             message: "Server error.",
@@ -729,10 +729,10 @@ const selectTrack = async (req, res) => {
             },
             distinct: true,
             col: 'id',
-            include:[
+            include: [
                 {
                     model: StudentStatus,
-                    where:{
+                    where: {
                         id: 10
                     }
                 },
@@ -1026,7 +1026,7 @@ const deleteTraclSelect = async (req, res) => {
             message: "Server error."
         })
     }
-} 
+}
 
 const multipleDelete = async (req, res) => {
     const {
@@ -1062,9 +1062,9 @@ const multipleDelete = async (req, res) => {
         })
     }
 }
-const getStudentNonSelect = async (req, res)=>{
+const getStudentNonSelect = async (req, res) => {
     const acadyear = req.params.acadyear
-    try{
+    try {
         const students = await models.sequelize.query(`
         SELECT Students.stu_id , CONCAT(Students.first_name, ' ', Students.last_name) AS fullname, Students.courses_type
         FROM Students
@@ -1081,7 +1081,7 @@ const getStudentNonSelect = async (req, res)=>{
             ok: true,
             data: students
         })
-    }catch(error){
+    } catch (error) {
         console.error(err);
         return res.status(500).json({
             ok: false,

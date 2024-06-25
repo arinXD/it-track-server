@@ -1,23 +1,28 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class QuestionBank extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // define association here
+    class QuestionBank extends Model {
+        static associate(models) {
+            this.hasMany(models.FormQuestion, {
+                foreignKey: 'questionId',
+                sourceKey: 'id',
+            });
+            this.hasMany(models.Answer, {
+                foreignKey: 'questionId',
+                sourceKey: 'id',
+            });
+            this.belongsTo(models.Track, {
+                foreignKey: 'track',
+                targetKey: 'track',
+            });
+        }
     }
-  }
-  QuestionBank.init({
-    question: DataTypes.TEXT
-  }, {
-    sequelize,
-    modelName: 'QuestionBank',
-  });
-  return QuestionBank;
+    QuestionBank.init({
+        question: DataTypes.TEXT,
+        isMultipleChoice: DataTypes.BOOLEAN
+    }, {
+        sequelize,
+        modelName: 'QuestionBank',
+    });
+    return QuestionBank;
 };
