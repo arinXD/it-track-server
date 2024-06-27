@@ -39,6 +39,25 @@ const getCareerByTrack = async (req, res) => {
      }
 }
 
+const getCareerByID = async (req, res) => {
+     const id = req.params.id
+     try {
+          const careers = await Career.findOne({
+               where: { id }
+          })
+          return res.status(200).json({
+               ok: true,
+               data: careers
+          })
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error"
+          })
+     }
+}
+
 const createCareer = async (req, res) => {
      const careerData = req.body
      const image = `${getHostname()}/images/careers/${careerData.fileName}`
@@ -66,7 +85,8 @@ const createCareer = async (req, res) => {
 const updateCareer = async (req, res) => {
      const id = req.params.id
      const careerData = req.body
-     const image = careerData.fileName ? `${getHostname()}/images/careers/${careerData.fileName}` : careerData.filePath
+     console.log("controller data:", careerData);
+     const image = careerData.fileName ? `${getHostname()}/images/careers/${careerData.fileName}` : careerData.originalImage
      const updateData = {
           ...careerData,
           image
@@ -89,7 +109,7 @@ const updateCareer = async (req, res) => {
      }
 }
 const deleteMultipleCareer = async (req, res) => {
-     const careers = req.body.careers
+     const careers = req.body
      for (let index = 0; index < careers.length; index++) {
           const careerId = careers[index];
           try {
@@ -121,6 +141,7 @@ const deleteMultipleCareer = async (req, res) => {
 
 module.exports = {
      getCareerByTrack,
+     getCareerByID,
      getAllCareers,
      createCareer,
      updateCareer,

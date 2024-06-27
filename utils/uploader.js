@@ -11,11 +11,10 @@ const createCareerStorageConfig = (isUpdate = false) => multer.diskStorage({
           const postFix = path.extname(file.originalname);
           const fileName = `${Date.now()}${postFix}`;
 
-          req.body.fileName = fileName;
-
-          if (isUpdate) {
-
-               const oldFilePath = path.join(__dirname, `../public/images/careers/${req.body.filePath.split('/').pop()}`);
+          req.body.fileName = fileName
+          console.log("upload data:", req.body);
+          if (isUpdate && req?.body?.originalImage) {
+               const oldFilePath = path.join(__dirname, `../public/images/careers/${req.body.originalImage.split('/').pop()}`);
                if (fs.existsSync(oldFilePath)) {
                     fs.unlinkSync(oldFilePath);
                }

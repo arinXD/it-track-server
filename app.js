@@ -6,13 +6,13 @@ const logger = require('morgan');
 const cors = require('cors')
 const session = require('express-session')
 const bodyParser = require('body-parser');
-const { Sequelize } = require('sequelize')
 const expressWinston = require('express-winston')
 const requestIp = require('request-ip');
 const winstonLogger = require("./utils/logger");
 const expressRateLimit = require("express-rate-limit")
 const expressSlowDown = require("express-slow-down")
-
+const { randomBytes } = require("crypto");
+const getPublicIP = require("./utils/ip");
 const app = express()
 
 //-------------
@@ -40,6 +40,10 @@ app.use(cors({
         "http://localhost:3000",
     ]
 }))
+app.use(async (req, res, next) => {
+    req.publicIP = await getPublicIP();
+    next();
+});
 app.use(requestIp.mw()); // extract ip 
 app.use(expressWinston.logger({
     winstonInstance: winstonLogger,
@@ -49,7 +53,8 @@ app.use(expressWinston.logger({
     colorize: false,
     dynamicMeta: (req, res) => {
         return {
-            ip: req.clientIp
+            ip: req.clientIp,
+            publicIP: req.publicIP
         };
     }
 }));
@@ -77,30 +82,6 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use(limiter)
 app.use(speedLimiter)
 
-const port = 4000
-const sequelize = new Sequelize(
-    process.env.DATABASE,
-    process.env.DATABASE_USER,
-    process.env.DATABASE_PASSWORD, {
-    host: process.env.DATABASE_HOST,
-    logging: false,
-    dialect: 'mysql',
-    timezone: '+07:00',
-},
-)
-
-app.listen(port, async () => {
-    try {
-        await sequelize.sync()
-    } catch (err) {
-        console.error(err);
-        console.log("!!!!WARNING!!!!");
-        console.log(` - Check database connection`);
-    } finally {
-        console.log(`Server is listening on port ${port}`)
-    }
-})
-
 //-------------------------------
 // 
 //  Import router && middleware
@@ -116,6 +97,9 @@ const studentStatusRouter = require('./router/studentStatusRouter');
 const trackSubjectRouter = require('./router/trackSubjectRouter');
 const teacherTrackRouter = require('./router/teacherTrackRouter');
 const careerRouter = require('./router/careerRouter');
+const suggestionFormRouter = require('./router/suggestionFormRouter');
+const questionBankRouter = require('./router/questionBankRouter');
+const assessmentRouter = require('./router/assessmentRouter');
 
 //  subject router
 const subjectRouter = require('./router/subjectRouter');
@@ -140,9 +124,18 @@ const isAdmin = require("./middleware/adminMiddleware");
 //  middleware router
 //
 //--------------------
-app.get('/', (req, res, next) => {
+
+app.get('/', async (req, res, next) => {
+    const IPAddress =
+        req.headers['cf-connecting-ip'] ||
+        req.headers['x-real-ip'] ||
+        req.headers['x-forwarded-for'] ||
+        req.socket.remoteAddress || '';
+    const publicIP = req.publicIP
     return res.json({
         message: 'IT Track by IT64',
+        IPAddress,
+        publicIP
     })
 })
 app.use('/api/users', isAdmin, userRouter)
@@ -163,8 +156,9 @@ app.use('/api/verify/selects', verifySelectionRouter);
 app.use('/api/statuses', isAdmin, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)
 app.use('/api/careers', careerRouter)
-
-const { randomBytes } = require("crypto");
+app.use('/api/suggestion-forms', suggestionFormRouter)
+app.use('/api/questions', questionBankRouter)
+app.use('/api/assessments', assessmentRouter)
 
 app.get("/api/get-token", async (req, res) => {
     const token = randomBytes(16).toString("hex")
@@ -185,7 +179,7 @@ app.get("/api/get-token", async (req, res) => {
 app.get("/api/validate", async (req, res) => {
     const token = req.cookies["XSRF-TOKEN"]
     const header = req.headers["x-xsrf-token"]
-    if(token !== header){
+    if (token !== header) {
         return res.status(403).json({
             message: "Invalid CSRF token"
         })

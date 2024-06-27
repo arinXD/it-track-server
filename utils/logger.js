@@ -1,12 +1,6 @@
 const { format, createLogger, transports } = require('winston');
 
 const formatter = format((info, opts) => {
-     if (info.meta && info.meta.req) {
-          info.ip = info.meta.req.clientIp;
-     } else {
-          info.ip = 'unknown';
-     }
-
      const bangkokTimezone = new Intl.DateTimeFormat('en-US', {
           timeZone: 'Asia/Bangkok',
           year: 'numeric',
