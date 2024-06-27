@@ -1,7 +1,5 @@
 'use strict';
-const {
-    Model
-} = require('sequelize');
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class AssessmentQuestionBank extends Model {
         static associate(models) {
@@ -9,7 +7,8 @@ module.exports = (sequelize, DataTypes) => {
         }
     }
     AssessmentQuestionBank.init({
-        question: DataTypes.TEXT
+        question: DataTypes.TEXT,
+        track: DataTypes.STRING
     }, {
         sequelize,
         modelName: 'AssessmentQuestionBank',
