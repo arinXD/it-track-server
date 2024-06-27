@@ -3,7 +3,14 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class AssessmentQuestionBank extends Model {
         static associate(models) {
-            // define association here
+            this.hasMany(models.FormAssessmentQuestion, {
+                foreignKey: 'assessmentQuestionId',
+                sourceKey: 'id',
+            });
+            this.belongsTo(models.Track, {
+                foreignKey: 'track',
+                targetKey: 'track',
+            });
         }
     }
     AssessmentQuestionBank.init({

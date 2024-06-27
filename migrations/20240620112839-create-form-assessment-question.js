@@ -10,7 +10,8 @@ module.exports = {
                 type: Sequelize.INTEGER
             },
             isEnable: {
-                type: Sequelize.BOOLEAN
+                type: Sequelize.BOOLEAN,
+                defaultValue: true,
             },
             formId: {
                 allowNull: true,

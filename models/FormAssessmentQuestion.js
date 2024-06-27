@@ -1,20 +1,22 @@
 'use strict';
-const {
-    Model
-} = require('sequelize');
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class FormAssessmentQuestion extends Model {
-        /**
-         * Helper method for defining associations.
-         * This method is not a part of Sequelize lifecycle.
-         * The `models/index` file will call this method automatically.
-         */
         static associate(models) {
-            // define association here
+            this.belongsTo(models.SuggestionForm, {
+                foreignKey: 'formId',
+                targetKey: 'id',
+            });
+            this.belongsTo(models.AssessmentQuestionBank, {
+                foreignKey: 'assessmentQuestionId',
+                targetKey: 'id',
+            });
         }
     }
     FormAssessmentQuestion.init({
-        isEnable: DataTypes.BOOLEAN
+        isEnable: DataTypes.BOOLEAN,
+        formId: DataTypes.INTEGER,
+        assessmentQuestionId: DataTypes.INTEGER,
     }, {
         sequelize,
         modelName: 'FormAssessmentQuestion',

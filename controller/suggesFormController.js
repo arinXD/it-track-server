@@ -1,6 +1,25 @@
 const models = require('../models');
 const SuggestionForm = models.SuggestionForm
+const FormAssessmentQuestion = models.FormAssessmentQuestion
+const FormQuestion = models.FormQuestion
 const { Op } = require('sequelize');
+const Joi = require('joi');
+
+const createSuggestFormSchema = Joi.object({
+     title: Joi.string().required(),
+     desc: Joi.string().required(),
+});
+const createFormQuestionSchema = Joi.object({
+     formId: Joi.number().required(),
+     questionId: Joi.number().required(),
+     isEnable: Joi.boolean(),
+});
+const createFormAssessmentSchema = Joi.object({
+     formId: Joi.number().required(),
+     assessmentQuestionId: Joi.number().required(),
+     isEnable: Joi.boolean(),
+});
+
 
 const getForms = async (req, res) => {
      try {
@@ -21,7 +40,7 @@ const getFormByID = async (req, res) => {
      const id = req.params.id
      try {
           const suggestForms = await SuggestionForm.findOne({
-               where:{ id }
+               where: { id }
           })
           return res.status(200).json({
                ok: true,
@@ -79,9 +98,16 @@ const getDeletedForms = async (req, res) => {
 
 const createForm = async (req, res) => {
      const createData = req.body
-     console.log(createData);
+     const { error, value } = createSuggestFormSchema.validate(createData);
+
+     if (error) {
+          return res.status(400).json({
+               ok: false,
+               message: `Validation error: ${error.details[0].message}`
+          });
+     }
      try {
-          const form = await SuggestionForm.create(createData)
+          const form = await SuggestionForm.create(value)
           return res.status(200).json({
                ok: true,
                data: form
@@ -94,7 +120,56 @@ const createForm = async (req, res) => {
      }
 }
 
-const updateForm = async (req, res)=>{
+const insertQuestionsToForm = async (req, res) => {
+     const createData = req.body
+     const { error, value } = createFormQuestionSchema.validate(createData);
+
+     if (error) {
+          return res.status(400).json({
+               ok: false,
+               message: `Validation error: ${error.details[0].message}`
+          });
+     }
+
+     try {
+          const form = await FormQuestion.create(value)
+          return res.status(200).json({
+               ok: true,
+               data: form
+          })
+     } catch (error) {
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+const insertAssessmentsToForm = async (req, res) => {
+     const createData = req.body
+     const { error, value } = createFormAssessmentSchema.validate(createData);
+
+     if (error) {
+          return res.status(400).json({
+               ok: false,
+               message: `Validation error: ${error.details[0].message}`
+          });
+     }
+
+     try {
+          const form = await FormAssessmentQuestion.create(value)
+          return res.status(200).json({
+               ok: true,
+               data: form
+          })
+     } catch (error) {
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+
+const updateForm = async (req, res) => {
 
 }
 
@@ -191,6 +266,8 @@ module.exports = {
      getAvailableForm,
      getDeletedForms,
      createForm,
+     insertQuestionsToForm,
+     insertAssessmentsToForm,
      updateForm,
      availableForm,
      deleteMultiple,

@@ -1,7 +1,9 @@
 const models = require('../models');
 const AssessmentQuestionBank = models.AssessmentQuestionBank
+const FormAssessmentQuestion = models.FormAssessmentQuestion
 const { Op } = require('sequelize');
 const Joi = require('joi');
+const defaultAssAttr = ["id", "question", "track"]
 
 const createAssessmentSchema = Joi.object({
     question: Joi.string().required(),
@@ -20,6 +22,70 @@ const getAllAssessments = async (req, res) => {
         return res.status(500).json({
             ok: false,
             message: "Server error"
+        })
+    }
+}
+
+const getAssessmentsNotInForm = async (req, res) => {
+    const formId = req.params.id
+    try {
+        const formAssQuestions = await FormAssessmentQuestion.findAll({
+            attributes: ['assessmentQuestionId'],
+            where: { formId }
+        });
+        const assIdsInForm = formAssQuestions.map(fq => fq?.dataValues?.assessmentQuestionId);
+
+        const assessments = await AssessmentQuestionBank.findAll({
+            where: {
+                id: {
+                    [Op.notIn]: assIdsInForm
+                }
+            },
+            attributes: defaultAssAttr,
+        });
+        return res.status(200).json({
+            ok: true,
+            data: assessments
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+}
+
+const getAssessmentsInForm = async (req, res) => {
+    const formId = req.params.id
+    try {
+        let assessments = await FormAssessmentQuestion.findAll({
+            where: {
+                formId
+            },
+            include: [
+                {
+                    model: AssessmentQuestionBank,
+                    attributes: defaultAssAttr,
+                },
+            ]
+        });
+        assessments = assessments.map(q => {
+            const assQuestionBank = q?.dataValues?.AssessmentQuestionBank?.dataValues
+            return {
+                ...assQuestionBank,
+                isEnable: q?.dataValues?.isEnable
+            }
+        })
+        return res.status(200).json({
+            ok: true,
+            data: assessments
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
         })
     }
 }
@@ -52,5 +118,7 @@ const createAssessment = async (req, res) => {
 
 module.exports = {
     getAllAssessments,
-    createAssessment
+    createAssessment,
+    getAssessmentsNotInForm,
+    getAssessmentsInForm,
 }
