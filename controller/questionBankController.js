@@ -99,8 +99,9 @@ const getQuestionsInForm = async (req, res) => {
                ]
           });
           questions = questions.map(q => {
+               const QuestionBank = q?.dataValues?.QuestionBank?.dataValues
                return {
-                    QuestionBank: q?.dataValues?.QuestionBank,
+                    ...QuestionBank,
                     isEnable: q?.dataValues?.isEnable
                }
           }
