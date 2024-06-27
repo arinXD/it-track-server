@@ -4,6 +4,8 @@ const models = require('../models');
 const Student = models.Student
 const Enrollment = models.Enrollment
 const Subject = models.Subject
+const Selection = models.Selection
+const Track = models.Track
 const { Op, QueryTypes } = require("sequelize");
 const isAdmin = require('../middleware/adminMiddleware');
 const isAuth = require('../middleware/authMiddleware');
@@ -35,15 +37,26 @@ router.get("/:stuid", validateStudent, async (req, res) => {
                     [Op.like]: `%${id}%`,
                 },
             },
-            include: {
-                model: Enrollment,
-                attributes: ["subject_id", "grade"],
-                include: {
-                    model: Subject,
-                    attributes: ["subject_code", "title_th", "title_en", "credit"],
+            include: [
+                {
+                    model: Enrollment,
+                    attributes: ["subject_id", "grade"],
+                    include: {
+                        model: Subject,
+                        attributes: ["subject_code", "title_th", "title_en", "credit"],
+                    }
+                },
+                {
+                    model: Selection,
+                    attributes: ["result"],
+                    include: {
+                        model: Track
+                    }
                 }
-            },
+            ],
         });
+
+
         return res.status(200).json({
             ok: true,
             data: students,
@@ -120,20 +133,20 @@ router.get("/:stu_id/:subject_id/:enrollyear", isAdmin, async (req, res) => {
         existEnroll = await Enrollment.findOne({
             where: {
                 [Op.and]: [{
-                        stu_id: {
-                            [Op.like]: `%${stu_id}%`
-                        }
-                    },
-                    {
-                        subject_id: {
-                            [Op.like]: `%${subject_id}%`
-                        }
-                    },
-                    {
-                        enroll_year: {
-                            [Op.like]: `%${enrollyear}%`
-                        }
-                    },
+                    stu_id: {
+                        [Op.like]: `%${stu_id}%`
+                    }
+                },
+                {
+                    subject_id: {
+                        [Op.like]: `%${subject_id}%`
+                    }
+                },
+                {
+                    enroll_year: {
+                        [Op.like]: `%${enrollyear}%`
+                    }
+                },
                 ]
             },
         })

@@ -13,6 +13,8 @@ const GroupSubject = models.GroupSubject
 const SubjectVerify = models.SubjectVerify
 const SubgroupSubject = models.SubgroupSubject
 const Track = models.Track
+const CategoryVerify = models.CategoryVerify
+
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
 router.get("/", async (req, res) => {
@@ -89,6 +91,14 @@ router.get("/:id", async (req, res) => {
                     model: Program,
                 },
                 {
+                    model: CategoryVerify,
+                    include: [
+                        {
+                            model: Categorie,
+                        }
+                    ]
+                },
+                {
                     model: SubjectVerify,
                     include: [
                         {
@@ -104,7 +114,7 @@ router.get("/:id", async (req, res) => {
                                                     model: Group,
                                                     include: [
                                                         {
-                                                            model: Categorie
+                                                            model: Categorie,
                                                         }
                                                     ]
                                                 }
@@ -214,8 +224,6 @@ router.post("/group", adminMiddleware, async (req, res) => {
     }
 });
 
-
-
 router.post("/subgroup", adminMiddleware, async (req, res) => {
     const { verify_id, sub_group_id, subjects } = req.body;
     try {
@@ -283,8 +291,161 @@ router.post("/subgroup", adminMiddleware, async (req, res) => {
     }
 });
 
+router.post("/category", adminMiddleware, async (req, res) => {
+    const { verify_id, category_id } = req.body;
 
+    try {
+        if (!verify_id || !category_id) {
+            return res.status(400).json({ ok: false, message: 'verify_id and category_id are required' });
+        }
 
+        const existingPair = await CategoryVerify.findOne({ where: { verify_id, category_id } });
+        if (existingPair) {
+            return res.status(201).json({
+                ok: false,
+                message: `หมวดหมู่วิชามีอยู่แล้ว`
+            });
+        }
+
+        const newvfData = {
+            verify_id,
+            category_id
+        };
+        const newvf = await CategoryVerify.create(newvfData);
+
+        return res.status(201).json({
+            ok: true,
+            message: `CategoryVerify added successfully.`
+        });
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+router.delete("/group/:id", adminMiddleware, async (req, res) => {
+    const id = req.params.id;
+    try {
+        const groupSubject = await GroupSubject.findOne({
+            where: { id },
+            include: [
+                {
+                    model: Subject,
+                }
+            ]
+        });
+
+        if (!groupSubject) {
+            return res.status(404).json({
+                ok: false,
+                message: "GroupSubject not found."
+            });
+        }
+
+        const subject_id = groupSubject.subject_id;
+        const subject_code = groupSubject.Subject.subject_code;
+
+        await GroupSubject.destroy({
+            where: { id }
+        });
+
+        await SubjectVerify.destroy({
+            where: { subject_id }
+        });
+
+        return res.status(200).json({
+            ok: true,
+            message: `ลบวิชา ${subject_code} สำเร็จ`
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
+
+router.delete("/subgroup/:id", adminMiddleware, async (req, res) => {
+    const id = req.params.id;
+    try {
+        const subgroupSubject = await SubgroupSubject.findOne({
+            where: { subject_id: id },
+            include: [
+                {
+                    model: Subject,
+                }
+            ]
+        });
+
+        if (!subgroupSubject) {
+            return res.status(404).json({
+                ok: false,
+                message: "SubgroupSubject not found."
+            });
+        }
+
+        const subject_id = subgroupSubject.subject_id;
+        const subject_code = subgroupSubject.Subject.subject_code;
+
+        await SubgroupSubject.destroy({
+            where: { subject_id }
+        });
+
+        await SubjectVerify.destroy({
+            where: { subject_id }
+        });
+
+        return res.status(200).json({
+            ok: true,
+            message: `ลบวิชา ${subject_code} สำเร็จ`
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
+
+router.delete("/category/:id", adminMiddleware, async (req, res) => {
+    const id = req.params.id;
+    try {
+        const category = await CategoryVerify.findOne({
+            where: { category_id: id },
+            include: [
+                {
+                    model: Categorie,
+                }
+            ]
+        });
+
+        if (!category) {
+            return res.status(404).json({
+                ok: false,
+                message: "Category not found."
+            });
+        }
+
+        const category_id = category.id;
+        const category_title = category.Categorie.category_title;
+
+        await CategoryVerify.destroy({
+            where: { id: category_id }
+        });
+
+        return res.status(200).json({
+            ok: true,
+            message: `ลบหมวดหมู่วิชา ${category_title} สำเร็จ`
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
 
 
 

@@ -26,6 +26,22 @@ router.get("/", isAdmin, async (req, res) => {
     }
 });
 
+router.get("/student", isAuth, async (req, res) => {
+    try {
+        const subjects = await Subject.findAll();
+        return res.status(200).json({
+            ok: true,
+            data: subjects
+        });
+    } catch (error) {
+        console.error('Error fetching subjects:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
 router.get("/tracks/:track", isAuth, async (req, res) => {
     const track = (req.params.track).toLowerCase()
     try {
@@ -385,13 +401,13 @@ router.get("/getSubjectByCode/:subject_code", async (req, res) => {
         if (existingSubject) {
             return res.status(200).json({
                 ok: true,
-                exists: true, 
+                exists: true,
                 data: existingSubject
             });
         } else {
             return res.status(200).json({
                 ok: true,
-                exists: false, 
+                exists: false,
                 message: 'Subject not found'
             });
         }

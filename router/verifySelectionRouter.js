@@ -15,6 +15,8 @@ const GroupSubject = models.GroupSubject
 const SubjectVerify = models.SubjectVerify
 const SubgroupSubject = models.SubgroupSubject
 const Track = models.Track
+const CategoryVerify = models.CategoryVerify
+
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
@@ -33,6 +35,14 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                 },
                 {
                     model: Program,
+                },
+                {
+                    model: CategoryVerify,
+                    include: [
+                        {
+                            model: Categorie,
+                        }
+                    ]
                 },
                 {
                     model: SubjectVerify,

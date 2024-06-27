@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
                 sourceKey: 'stu_id',
             });
             this.hasOne(models.Selection, {
-                foreignKey: "stu_id"
+                foreignKey: "stu_id",
+                sourceKey: 'stu_id',
             });
             this.belongsTo(models.User, {
                 foreignKey: 'user_id',

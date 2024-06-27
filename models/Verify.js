@@ -13,6 +13,9 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(models.SubjectVerify, {
         foreignKey: 'verify_id',
       });
+      this.hasMany(models.CategoryVerify, {
+        foreignKey: 'verify_id',
+      });
       this.belongsTo(models.Program, {
         foreignKey: 'program',
         targetKey: 'program'
@@ -21,6 +24,11 @@ module.exports = (sequelize, DataTypes) => {
         through: models.SubjectVerify,
         foreignKey: "verify_id",
         otherKey: "subject_id"
+      });
+      this.belongsToMany(models.Categorie, {
+        through: models.CategoryVerify,
+        foreignKey: "verify_id",
+        otherKey: "category_id"
       });
     }
   }

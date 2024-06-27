@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('SubjectVerifies', {
+    await queryInterface.createTable('CategoryVerifies', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -10,8 +10,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       verify_id: {
-        allowNull: true,
-        defaultValue: null,
+        allowNull: false,
         type: Sequelize.INTEGER,
         references: {
           model: 'Verifies',
@@ -19,15 +18,14 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
-      subject_id: {
+      category_id: {
         allowNull: true,
-        defaultValue: null,
         type: Sequelize.INTEGER,
         references: {
-          model: 'Subjects',
-          key: 'subject_id'
+          model: 'Categories',
+          key: 'id'
         },
-        onDelete: 'SET NULL',
+        onDelete: 'CASCADE',
       },
       createdAt: {
         allowNull: false,
@@ -40,6 +38,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('SubjectVerifies');
+    await queryInterface.dropTable('CategoryVerifies');
   }
 };
