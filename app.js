@@ -6,7 +6,6 @@ const logger = require('morgan');
 const cors = require('cors')
 const session = require('express-session')
 const bodyParser = require('body-parser');
-const { Sequelize } = require('sequelize')
 const expressWinston = require('express-winston')
 const requestIp = require('request-ip');
 const winstonLogger = require("./utils/logger");
@@ -83,30 +82,6 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use(limiter)
 app.use(speedLimiter)
 
-// const port = 4000
-// const sequelize = new Sequelize(
-//     process.env.DATABASE,
-//     process.env.DATABASE_USER,
-//     process.env.DATABASE_PASSWORD, {
-//         host: process.env.DATABASE_HOST,
-//         logging: false,
-//         dialect: 'mysql',
-//         timezone: '+07:00',
-//     },
-// )
-
-// app.listen(port, async () => {
-//     try {
-//         await sequelize.sync()
-//     } catch (err) {
-//         console.error(err);
-//         console.log("!!!!WARNING!!!!");
-//         console.log(` - Check database connection`);
-//     } finally {
-//         console.log(`Server is listening on port ${port}`)
-//     }
-// })
-
 //-------------------------------
 // 
 //  Import router && middleware
@@ -124,6 +99,7 @@ const teacherTrackRouter = require('./router/teacherTrackRouter');
 const careerRouter = require('./router/careerRouter');
 const suggestionFormRouter = require('./router/suggestionFormRouter');
 const questionBankRouter = require('./router/questionBankRouter');
+const assessmentRouter = require('./router/assessmentRouter');
 
 //  subject router
 const subjectRouter = require('./router/subjectRouter');
@@ -182,6 +158,7 @@ app.use('/api/teachers/tracks', teacherTrackRouter)
 app.use('/api/careers', careerRouter)
 app.use('/api/suggestion-forms', suggestionFormRouter)
 app.use('/api/questions', questionBankRouter)
+app.use('/api/assessments', assessmentRouter)
 
 app.get("/api/get-token", async (req, res) => {
     const token = randomBytes(16).toString("hex")
