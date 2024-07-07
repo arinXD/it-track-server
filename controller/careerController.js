@@ -2,7 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const models = require('../models');
 const Career = models.Career
+const FormCareer = models.FormCareer
 const { getHostname } = require('../api/hostname');
+const { Op } = require('sequelize');
+
+const defaultCareerAttr = ["id", "name_th", "name_en", "image", "track",]
 
 const getAllCareers = async (req, res) => {
      try {
@@ -54,6 +58,67 @@ const getCareerByID = async (req, res) => {
           return res.status(500).json({
                ok: false,
                message: "Server error"
+          })
+     }
+}
+const getCareerInSuggestForm = async (req, res) => {
+     const formId = req.params.id
+     try {
+          let careers = await FormCareer.findAll({
+               where: {
+                    formId
+               },
+               include: [
+                    {
+                         model: Career,
+                         attributes: defaultCareerAttr,
+                    },
+               ]
+          });
+          careers = careers.map(career => {
+               return {
+                    ...career?.dataValues?.Career?.dataValues,
+               }
+          })
+          return res.status(200).json({
+               ok: true,
+               data: careers
+          })
+     } catch (error) {
+          console.log(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+
+const getCareerNotInForm = async (req, res) => {
+     const formId = req.params.id
+     try {
+          const formCareer = await FormCareer.findAll({
+               attributes: ['careerId'],
+               where: { formId }
+          });
+          const careerId = formCareer.map(fq => fq?.dataValues?.careerId);
+
+          const careers = await Career.findAll({
+               where: {
+                    id: {
+                         [Op.notIn]: careerId
+                    }
+               },
+               attributes: defaultCareerAttr,
+          });
+          return res.status(200).json({
+               ok: true,
+               data: careers
+          })
+     } catch (error) {
+          console.log(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
           })
      }
 }
@@ -146,4 +211,6 @@ module.exports = {
      createCareer,
      updateCareer,
      deleteMultipleCareer,
+     getCareerInSuggestForm,
+     getCareerNotInForm,
 }

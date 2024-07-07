@@ -259,6 +259,7 @@ router.post("/insertSubject", async (req, res) => {
             information: information,
             credit: credit,
             track: track,
+            deletedAt: null
             // sub_group_id: sub_group_id,
             // group_id: group_id,
             // acadyear: acadyear,

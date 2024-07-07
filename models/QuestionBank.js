@@ -19,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
     }
     QuestionBank.init({
         question: DataTypes.TEXT,
-        isMultipleChoice: DataTypes.BOOLEAN
+        isMultipleChoice: DataTypes.BOOLEAN,
+        track: DataTypes.STRING
     }, {
         sequelize,
         modelName: 'QuestionBank',

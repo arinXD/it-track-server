@@ -4,13 +4,15 @@ const isAuth = require("../middleware/authMiddleware")
 const isAdmin = require("../middleware/adminMiddleware");
 const { careerCreateUploader, careerUpdateUploader } = require('../utils/uploader');
 const { createCareer, getAllCareers, updateCareer, deleteMultipleCareer, getCareerByTrack,
-     getCareerByID
+     getCareerByID, getCareerInSuggestForm, getCareerNotInForm
 } = require('../controller/careerController');
 
 // GET
 router.get("/", isAuth, getAllCareers)
 router.get("/:id", isAdmin, getCareerByID)
 router.get("/tracks/:track", isAdmin, getCareerByTrack)
+router.get("/in-forms/:id", isAdmin, getCareerInSuggestForm)
+router.get("/not-in-forms/:id", isAdmin, getCareerNotInForm)
 
 // POST
 router.post("/", isAdmin, careerCreateUploader.single("image"), createCareer)
