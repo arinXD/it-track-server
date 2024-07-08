@@ -12,7 +12,9 @@ const createAssessmentSchema = Joi.object({
 
 const getAllAssessments = async (req, res) => {
     try {
-        const assessments = await AssessmentQuestionBank.findAll()
+        const assessments = await AssessmentQuestionBank.findAll({
+            attributes: defaultAssAttr,
+        })
         return res.status(200).json({
             ok: true,
             data: assessments
