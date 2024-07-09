@@ -106,6 +106,7 @@ const subjectRouter = require('./router/subjectRouter');
 const categoryRouter = require('./router/categoryRouter');
 const groupRouter = require('./router/groupRouter');
 const subGroupRouter = require('./router/subGroupRouter');
+const semiSubGroupRouter = require('./router/semiSubGroupRouter');
 
 //  program router
 const programRouter = require('./router/programRouter')
@@ -149,6 +150,7 @@ app.use('/api/subjects', subjectRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/groups', groupRouter);
 app.use('/api/subgroups', subGroupRouter);
+app.use('/api/semisubgroups', semiSubGroupRouter);
 app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/verify', verifyRouter);

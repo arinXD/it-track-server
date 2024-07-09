@@ -16,7 +16,8 @@ const SubjectVerify = models.SubjectVerify
 const SubgroupSubject = models.SubgroupSubject
 const Track = models.Track
 const CategoryVerify = models.CategoryVerify
-
+const SemiSubgroupSubject = models.SemiSubgroupSubject
+const SemiSubGroup = models.SemiSubGroup
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
@@ -26,13 +27,12 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
         const data = await Verify.findOne({
             where: {
                 program,
-                acadyear
+                acadyear: {
+                    [Op.lte]: parseInt(acadyear)
+                }
             },
+            order: [['acadyear', 'DESC']],
             include: [
-                {
-                    model: Subject,
-                    attributes: subjectAttr,
-                },
                 {
                     model: Program,
                 },
@@ -51,6 +51,29 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                             model: Subject,
                             include: [
                                 {
+                                    model: SemiSubgroupSubject,
+                                    include: [
+                                        {
+                                            model: SemiSubGroup,
+                                            include: [
+                                                {
+                                                    model: SubGroup,
+                                                    include: [
+                                                        {
+                                                            model: Group,
+                                                            include: [
+                                                                {
+                                                                    model: Categorie,
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
                                     model: SubgroupSubject,
                                     include: [
                                         {
@@ -60,7 +83,7 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                                                     model: Group,
                                                     include: [
                                                         {
-                                                            model: Categorie
+                                                            model: Categorie,
                                                         }
                                                     ]
                                                 }
@@ -88,7 +111,7 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                         }
                     ]
                 },
-            ],
+            ]
         })
         return res.status(200).json({
             ok: true,
