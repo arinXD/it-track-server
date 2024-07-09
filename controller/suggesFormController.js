@@ -1,14 +1,48 @@
 const models = require('../models');
 const SuggestionForm = models.SuggestionForm
+const AssessmentQuestionBank = models.AssessmentQuestionBank
+const QuestionBank = models.QuestionBank
+const Answer = models.Answer
 const FormAssessmentQuestion = models.FormAssessmentQuestion
 const FormQuestion = models.FormQuestion
+const FormCareer = models.FormCareer
+const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const Joi = require('joi');
 
 const createSuggestFormSchema = Joi.object({
+     id: Joi.alternatives().try(Joi.valid(null), Joi.number()),
      title: Joi.string().required(),
      desc: Joi.string().required(),
+     Questions: Joi.array().items(
+          Joi.object({
+               id: Joi.alternatives().try(Joi.string(), Joi.number(), Joi.valid(null)).required(),
+               question: Joi.string().required(),
+               isEnable: Joi.boolean().required(),
+               isMultipleChoice: Joi.boolean(),
+               track: Joi.string().valid('BIT', 'Web and Mobile', 'Network').required(),
+               Answers: Joi.array().items(
+                    Joi.object({
+                         id: Joi.alternatives().try(Joi.string(), Joi.number(), Joi.valid(null)).required(),
+                         answer: Joi.string().required(),
+                         isCorrect: Joi.boolean()
+                    })
+               ).min(1).required()
+          })
+     ).min(1).required(),
+     Assesstions: Joi.array().items(
+          Joi.object({
+               id: Joi.alternatives().try(Joi.string(), Joi.number(), Joi.valid(null)).required(),
+               question: Joi.string().required(),
+               track: Joi.string().valid('BIT', 'Web and Mobile', 'Network').required(),
+               isEnable: Joi.boolean().required(),
+          })
+     ).min(1).required(),
+     Careers: Joi.array().items(
+          Joi.number().required()
+     ).min(1).required()
 });
+
 const createFormQuestionSchema = Joi.object({
      formId: Joi.number().required(),
      questionId: Joi.number().required(),
@@ -23,7 +57,11 @@ const createFormAssessmentSchema = Joi.object({
 
 const getForms = async (req, res) => {
      try {
-          const suggestForms = await SuggestionForm.findAll()
+          const suggestForms = await SuggestionForm.findAll({
+               order: [
+                    ['id', 'DESC'],
+               ]
+          })
           return res.status(200).json({
                ok: true,
                data: suggestForms
@@ -97,28 +135,223 @@ const getDeletedForms = async (req, res) => {
 }
 
 const createForm = async (req, res) => {
-     const createData = req.body
+     const createData = req.body;
      const { error, value } = createSuggestFormSchema.validate(createData);
-
      if (error) {
           return res.status(400).json({
                ok: false,
                message: `Validation error: ${error.details[0].message}`
           });
      }
+
+     const t = await sequelize.transaction();
+
      try {
-          const form = await SuggestionForm.create(value)
+          let form;
+          if (value.id) {
+               await SuggestionForm.update(
+                    {
+                         title: value.title,
+                         desc: value.desc,
+                         isAvailable: false
+                    },
+                    {
+                         where: {
+                              id: value.id,
+                         },
+                    },
+                    { transaction: t });
+               form = { id: value.id }
+          } else {
+               form = await SuggestionForm.create({
+                    title: value.title,
+                    desc: value.desc,
+                    isAvailable: false
+               }, { transaction: t });
+          }
+
+          //   Questions, Answers
+          for (const questionData of value.Questions) {
+               if (!isNaN(Number(questionData.id))) {
+                    await QuestionBank.update({
+                         question: questionData.question,
+                         track: questionData.track
+                    }, {
+                         where: { id: Number(questionData.id) },
+                         transaction: t
+                    });
+               } else {
+                    const newQuestion = await QuestionBank.create({
+                         question: questionData.question,
+                         track: questionData.track
+                    }, { transaction: t });
+                    questionData.id = newQuestion?.dataValues?.id
+               }
+
+               const existingFormQuestion = await FormQuestion.findOne({
+                    where: {
+                         formId: form.id,
+                         questionId: questionData.id
+                    },
+                    transaction: t
+               });
+
+               if (existingFormQuestion) {
+                    await existingFormQuestion.update({
+                         isEnable: questionData.isEnable
+                    }, { transaction: t });
+               } else {
+                    await FormQuestion.create({
+                         formId: form.id,
+                         questionId: questionData.id,
+                         isEnable: questionData.isEnable
+                    }, { transaction: t });
+               }
+
+               //   Answers
+               for (const answerData of questionData.Answers) {
+                    if (!isNaN(Number(answerData.id))) {
+                         await Answer.update({
+                              answer: answerData.answer,
+                              isCorrect: answerData.isCorrect,
+                              questionId: questionData.id,
+                         }, {
+                              where: { id: Number(answerData.id) },
+                              transaction: t
+                         });
+                    } else {
+                         await Answer.create({
+                              answer: answerData.answer,
+                              isCorrect: answerData.isCorrect,
+                              questionId: questionData.id,
+                         }, { transaction: t });
+                    }
+               }
+          }
+
+          const existingFormQuestions = await FormQuestion.findAll({
+               where: {
+                    formId: form.id
+               },
+               transaction: t
+          });
+          const currentQuestionIds = value.Questions.map(q => q.id);
+          const formQuestionsToRemove = existingFormQuestions.filter(fq =>
+               !currentQuestionIds.includes(fq.questionId)
+          );
+          for (const fqToRemove of formQuestionsToRemove) {
+               await fqToRemove.destroy({ transaction: t });
+          }
+
+          //   Assessment
+          for (const assessmentData of value.Assesstions) {
+               if (!isNaN(Number(assessmentData.id))) {
+                    await AssessmentQuestionBank.update({
+                         question: assessmentData.question,
+                         track: assessmentData.track
+                    }, {
+                         where: { id: Number(assessmentData.id) },
+                         transaction: t
+                    });
+               } else {
+                    const newAssessmentQuestion = await AssessmentQuestionBank.create({
+                         question: assessmentData.question,
+                         track: assessmentData.track
+                    }, { transaction: t });
+
+                    assessmentData.id = newAssessmentQuestion?.dataValues?.id;
+               }
+
+               const existingFormAssessmentQuestion = await FormAssessmentQuestion.findOne({
+                    where: {
+                         formId: form.id,
+                         assessmentQuestionId: Number(assessmentData.id)
+                    },
+                    transaction: t
+               });
+
+               if (existingFormAssessmentQuestion) {
+                    await existingFormAssessmentQuestion.update({
+                         isEnable: assessmentData.isEnable
+                    }, { transaction: t });
+               } else {
+                    await FormAssessmentQuestion.create({
+                         formId: form.id,
+                         assessmentQuestionId: Number(assessmentData.id),
+                         isEnable: assessmentData.isEnable
+                    }, { transaction: t });
+               }
+          }
+          const existingFormAssessmentQuestions = await FormAssessmentQuestion.findAll({
+               where: {
+                    formId: form.id
+               },
+               transaction: t
+          });
+
+          const currentAssessmentIds = value.Assesstions.map(a => Number(a.id));
+
+          const formAssessmentQuestionsToRemove = existingFormAssessmentQuestions.filter(faq =>
+               !currentAssessmentIds.includes(faq.assessmentQuestionId)
+          );
+
+          for (const faqToRemove of formAssessmentQuestionsToRemove) {
+               await faqToRemove.destroy({ transaction: t });
+          }
+
+          //   Career
+          for (const careerId of value.Careers) {
+               const existingFormCareer = await FormCareer.findOne({
+                    where: {
+                         formId: form.id,
+                         careerId: careerId
+                    },
+                    transaction: t
+               });
+
+               if (!existingFormCareer) {
+                    await FormCareer.create({
+                         formId: form.id,
+                         careerId: careerId
+                    }, { transaction: t });
+               }
+          }
+          const existingFormCareers = await FormCareer.findAll({
+               where: {
+                    formId: form.id
+               },
+               transaction: t
+          });
+
+          const currentCareerIds = value.Careers;
+
+          const formCareersToRemove = existingFormCareers.filter(fc =>
+               !currentCareerIds.includes(fc.careerId)
+          );
+
+          for (const fcToRemove of formCareersToRemove) {
+               await fcToRemove.destroy({ transaction: t });
+          }
+
+
+          await t.commit();
+          // await t.rollback();
+
           return res.status(200).json({
                ok: true,
+               message: "Suggestion form created successfully",
                data: form
-          })
+          });
      } catch (error) {
+          console.log(error);
+          await t.rollback();
+          console.error("Error creating form:", error);
           return res.status(500).json({
                ok: false,
-               message: "Server error."
-          })
+               message: "Server error while creating the form."
+          });
      }
-}
+};
 
 const insertQuestionsToForm = async (req, res) => {
      const createData = req.body
@@ -233,7 +466,7 @@ const deleteMultiple = async (req, res) => {
           await deleteForms(forms, false)
           return res.status(200).json({
                ok: true,
-               data: "ลบแบบฟอร์มสำเร็จ"
+               message: "ลบแบบฟอร์มสำเร็จ"
           })
      } catch (error) {
           console.log(error);
