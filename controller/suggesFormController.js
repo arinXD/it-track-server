@@ -6,9 +6,16 @@ const Answer = models.Answer
 const FormAssessmentQuestion = models.FormAssessmentQuestion
 const FormQuestion = models.FormQuestion
 const FormCareer = models.FormCareer
+const Career = models.Career
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const Joi = require('joi');
+
+const formAttr = ["id", "title", "desc"]
+const questionAttr = ["id", "question", "isMultipleChoice",]
+const answerAttr = ["id", "answer"]
+const assesstionAttr = ["id", "question",]
+const careerAttr = [ "id", "name_th", "name_en", "image", "track",]
 
 const createSuggestFormSchema = Joi.object({
      id: Joi.alternatives().try(Joi.valid(null), Joi.number()),
@@ -97,13 +104,55 @@ const getAvailableForm = async (req, res) => {
           const suggestForms = await SuggestionForm.findOne({
                where: {
                     isAvailable: true
-               }
+               },
+               attributes: formAttr,
+               include:[
+                    {
+                         model: FormQuestion,
+                         where: {
+                              isEnable: true
+                         },
+                         include:{
+                              model: QuestionBank,
+                              attributes: questionAttr,
+                              include:{
+                                   model: Answer,
+                                   attributes: answerAttr,
+                              }
+                         }
+                    },
+                    {
+                         model: FormAssessmentQuestion,
+                         where: {
+                              isEnable: true
+                         },
+                         include:{
+                              model: AssessmentQuestionBank,
+                              attributes: assesstionAttr,
+                         }
+                    },
+                    {
+                         model: FormCareer,
+                         include:{
+                              model: Career,
+                              attributes: careerAttr,
+                         }
+                    },
+               ]
           })
+          const formatFormData = suggestForms.dataValues
+          formatFormData.Questions = formatFormData?.FormQuestions.map(fq => fq?.QuestionBank);
+          formatFormData.Assessments = formatFormData?.FormAssessmentQuestions.map(fq => fq?.AssessmentQuestionBank);
+          formatFormData.Careers = formatFormData?.FormCareers.map(fq => fq?.Career);
+          delete formatFormData.FormQuestions
+          delete formatFormData.FormAssessmentQuestions
+          delete formatFormData.FormCareers
           return res.status(200).json({
                ok: true,
-               data: suggestForms
+               data: formatFormData
           })
      } catch (error) {
+          console.log(error);
           return res.status(500).json({
                ok: false,
                message: "Server error."
@@ -153,7 +202,6 @@ const createForm = async (req, res) => {
                     {
                          title: value.title,
                          desc: value.desc,
-                         isAvailable: false
                     },
                     {
                          where: {
@@ -345,10 +393,10 @@ const createForm = async (req, res) => {
      } catch (error) {
           console.log(error);
           await t.rollback();
-          console.error("Error creating form:", error);
           return res.status(500).json({
                ok: false,
-               message: "Server error while creating the form."
+               message: "Server error while creating the form.",
+               data: req.body
           });
      }
 };
@@ -412,14 +460,12 @@ const availableForm = async (req, res) => {
      try {
           transaction = await models.sequelize.transaction();
 
-          const updatedForm = await SuggestionForm.update(
-               { isAvailable: true },
-               {
-                    where: { id: formId },
-                    returning: true,
-                    transaction
-               }
-          );
+          const updatedForm = await SuggestionForm.findOne({
+               where: { id: formId },
+          });
+           
+          updatedForm.isAvailable = !updatedForm?.dataValues?.isAvailable;
+          await updatedForm.save({ transaction });
 
           if (!updatedForm) {
                await transaction.rollback();

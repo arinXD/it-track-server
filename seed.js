@@ -67,7 +67,9 @@ async function insertToDB(file, className, tableName) {
 }
 
 async function bulkCreate(model, data) {
+    console.log("Inserting...",model.tableName )
     await model.bulkCreate(data);
+    console.log("\nDone");
 }
 
 async function insertData() {

@@ -12,7 +12,7 @@ const winstonLogger = require("./utils/logger");
 const expressRateLimit = require("express-rate-limit")
 const expressSlowDown = require("express-slow-down")
 const { randomBytes } = require("crypto");
-const getPublicIP = require("./utils/ip");
+const { Sequelize } = require('sequelize')
 const app = express()
 
 //-------------
@@ -40,10 +40,6 @@ app.use(cors({
         "http://localhost:3000",
     ]
 }))
-app.use(async (req, res, next) => {
-    req.publicIP = await getPublicIP();
-    next();
-});
 app.use(requestIp.mw()); // extract ip 
 app.use(expressWinston.logger({
     winstonInstance: winstonLogger,
@@ -54,7 +50,6 @@ app.use(expressWinston.logger({
     dynamicMeta: (req, res) => {
         return {
             ip: req.clientIp,
-            publicIP: req.publicIP
         };
     }
 }));
@@ -81,6 +76,30 @@ app.use(bodyParser.urlencoded({
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(limiter)
 app.use(speedLimiter)
+
+const port = 4000
+const sequelize = new Sequelize(
+    process.env.DATABASE,
+    process.env.DATABASE_USER,
+    process.env.DATABASE_PASSWORD, {
+    host: process.env.DATABASE_HOST,
+    logging: false,
+    dialect: 'mysql',
+    timezone: '+07:00',
+},
+)
+
+app.listen(port, async () => {
+    try {
+        await sequelize.sync()
+    } catch (err) {
+        console.error(err);
+        console.log("!!!!WARNING!!!!");
+        console.log(` - Check database connection`);
+    } finally {
+        console.log(`Server is listening on port ${port}`)
+    }
+})
 
 //-------------------------------
 // 
@@ -135,7 +154,6 @@ app.get('/', async (req, res, next) => {
     return res.json({
         message: 'IT Track by IT64',
         IPAddress,
-        publicIP
     })
 })
 app.use('/api/users', isAdmin, userRouter)
