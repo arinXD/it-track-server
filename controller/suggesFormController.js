@@ -15,7 +15,7 @@ const formAttr = ["id", "title", "desc"]
 const questionAttr = ["id", "question", "isMultipleChoice",]
 const answerAttr = ["id", "answer"]
 const assesstionAttr = ["id", "question",]
-const careerAttr = [ "id", "name_th", "name_en", "image", "track",]
+const careerAttr = ["id", "name_th", "name_en", "image", "track",]
 
 const createSuggestFormSchema = Joi.object({
      id: Joi.alternatives().try(Joi.valid(null), Joi.number()),
@@ -100,22 +100,30 @@ const getFormByID = async (req, res) => {
 }
 
 const getAvailableForm = async (req, res) => {
+     const shuffleArray = (array) => {
+          for (let i = array.length - 1; i > 0; i--) {
+               const j = Math.floor(Math.random() * (i + 1));
+               console.log(j);
+               [array[i], array[j]] = [array[j], array[i]];
+          }
+          return array;
+     }
      try {
           const suggestForms = await SuggestionForm.findOne({
                where: {
                     isAvailable: true
                },
                attributes: formAttr,
-               include:[
+               include: [
                     {
                          model: FormQuestion,
                          where: {
                               isEnable: true
                          },
-                         include:{
+                         include: {
                               model: QuestionBank,
                               attributes: questionAttr,
-                              include:{
+                              include: {
                                    model: Answer,
                                    attributes: answerAttr,
                               }
@@ -126,14 +134,14 @@ const getAvailableForm = async (req, res) => {
                          where: {
                               isEnable: true
                          },
-                         include:{
+                         include: {
                               model: AssessmentQuestionBank,
                               attributes: assesstionAttr,
                          }
                     },
                     {
                          model: FormCareer,
-                         include:{
+                         include: {
                               model: Career,
                               attributes: careerAttr,
                          }
@@ -141,12 +149,21 @@ const getAvailableForm = async (req, res) => {
                ]
           })
           const formatFormData = suggestForms.dataValues
-          formatFormData.Questions = formatFormData?.FormQuestions.map(fq => fq?.QuestionBank);
-          formatFormData.Assessments = formatFormData?.FormAssessmentQuestions.map(fq => fq?.AssessmentQuestionBank);
-          formatFormData.Careers = formatFormData?.FormCareers.map(fq => fq?.Career);
+
+          formatFormData.Questions = shuffleArray(formatFormData?.FormQuestions.map(fq => {
+               const question = fq?.QuestionBank;
+               if (question.Answers) {
+                    question.Answers = shuffleArray(question.Answers);
+               }
+               return question;
+          }));
+          formatFormData.Assessments = shuffleArray(formatFormData?.FormAssessmentQuestions.map(fq => fq?.AssessmentQuestionBank));
+          formatFormData.Careers = shuffleArray(formatFormData?.FormCareers.map(fq => fq?.Career));
+
           delete formatFormData.FormQuestions
           delete formatFormData.FormAssessmentQuestions
           delete formatFormData.FormCareers
+
           return res.status(200).json({
                ok: true,
                data: formatFormData
@@ -463,7 +480,7 @@ const availableForm = async (req, res) => {
           const updatedForm = await SuggestionForm.findOne({
                where: { id: formId },
           });
-           
+
           updatedForm.isAvailable = !updatedForm?.dataValues?.isAvailable;
           await updatedForm.save({ transaction });
 
