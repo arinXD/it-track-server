@@ -14,6 +14,8 @@ const SubjectVerify = models.SubjectVerify
 const SubgroupSubject = models.SubgroupSubject
 const Track = models.Track
 const CategoryVerify = models.CategoryVerify
+const SemiSubGroup = models.SemiSubGroup
+const SemiSubgroupSubject = models.SemiSubgroupSubject
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
@@ -104,6 +106,29 @@ router.get("/:id", async (req, res) => {
                         {
                             model: Subject,
                             include: [
+                                {
+                                    model: SemiSubgroupSubject,
+                                    include: [
+                                        {
+                                            model: SemiSubGroup,
+                                            include: [
+                                                {
+                                                    model: SubGroup,
+                                                    include: [
+                                                        {
+                                                            model: Group,
+                                                            include: [
+                                                                {
+                                                                    model: Categorie,
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
                                 {
                                     model: SubgroupSubject,
                                     include: [
@@ -291,6 +316,84 @@ router.post("/subgroup", adminMiddleware, async (req, res) => {
     }
 });
 
+router.post("/semisubgroup", adminMiddleware, async (req, res) => {
+    const { verify_id, semi_sub_group_id, subjects } = req.body;
+    try {
+
+        if (!Array.isArray(subjects)) {
+            return res.status(400).json({
+                ok: false,
+                message: "Subjects must be an array."
+            });
+        }
+
+        for (const subject_id of subjects) {
+            const groupSubjectExists = await GroupSubject.findOne({
+                where: { subject_id }
+            });
+
+            const subGroupSubjectExists = await SubgroupSubject.findOne({
+                where: { subject_id }
+            });
+
+            if (groupSubjectExists) {
+                return res.status(400).json({
+                    ok: false,
+                    message: `The subject ${subject_id} already exists in GroupSubject.`
+                });
+            }
+
+            if (subGroupSubjectExists) {
+                return res.status(400).json({
+                    ok: false,
+                    message: `The subject ${subject_id} already exists in SubgroupSubject.`
+                });
+            }
+
+            let semisubgroupSubject = await SemiSubgroupSubject.findOne({
+                where: { subject_id }
+            });
+
+            if (semisubgroupSubject) {
+                semisubgroupSubject.semi_sub_group_id = semi_sub_group_id;
+                await semisubgroupSubject.save();
+            } else {
+                semisubgroupSubject = await SemiSubgroupSubject.create({
+                    subject_id,
+                    semi_sub_group_id
+                });
+            }
+
+            const existingSubjectVerify = await SubjectVerify.findOne({
+                where: { subject_id, verify_id }
+            });
+
+            if (existingSubjectVerify) {
+                return res.status(200).json({
+                    ok: true,
+                    message: `Subject ${subject_id} already exists in SubjectVerify for verify_id ${verify_id}.`
+                });
+            } else {
+                const newSubjectVerify = await SubjectVerify.create({
+                    verify_id,
+                    subject_id
+                });
+            }
+        }
+
+        return res.status(201).json({
+            ok: true,
+            message: `Subjects added successfully.`
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
+
 router.post("/category", adminMiddleware, async (req, res) => {
     const { verify_id, category_id } = req.body;
 
@@ -407,6 +510,50 @@ router.delete("/subgroup/:id", adminMiddleware, async (req, res) => {
         });
     }
 });
+
+router.delete("/semisubgroup/:id", adminMiddleware, async (req, res) => {
+    const id = req.params.id;
+    try {
+        const semisubgroupSubject = await SemiSubgroupSubject.findOne({
+            where: { subject_id: id },
+            include: [
+                {
+                    model: Subject,
+                }
+            ]
+        });
+
+        if (!semisubgroupSubject) {
+            return res.status(404).json({
+                ok: false,
+                message: "SemiSubgroupSubject not found."
+            });
+        }
+
+        const subject_id = semisubgroupSubject.subject_id;
+        const subject_code = semisubgroupSubject.Subject.subject_code;
+
+        await SemiSubgroupSubject.destroy({
+            where: { subject_id }
+        });
+
+        await SubjectVerify.destroy({
+            where: { subject_id }
+        });
+
+        return res.status(200).json({
+            ok: true,
+            message: `ลบวิชา ${subject_code} สำเร็จ`
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
+
 
 router.delete("/category/:id", adminMiddleware, async (req, res) => {
     const id = req.params.id;

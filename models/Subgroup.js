@@ -12,6 +12,9 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'sub_group_id',
                 sourceKey: 'id',
             });
+            this.hasMany(models.SemiSubGroup, {
+                foreignKey: 'sub_group_id'
+            });
         }
     }
     SubGroup.init({
