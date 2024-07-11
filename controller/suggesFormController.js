@@ -7,6 +7,7 @@ const FormAssessmentQuestion = models.FormAssessmentQuestion
 const FormQuestion = models.FormQuestion
 const FormCareer = models.FormCareer
 const Career = models.Career
+const Track = models.Track
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const Joi = require('joi');
@@ -59,6 +60,24 @@ const createFormAssessmentSchema = Joi.object({
      formId: Joi.number().required(),
      assessmentQuestionId: Joi.number().required(),
      isEnable: Joi.boolean(),
+});
+
+const answerSchema = Joi.object({
+     questions: Joi.array().items(
+          Joi.object({
+               qId: Joi.number().required(),
+               aId: Joi.number().required(),
+          })
+     ).min(1).required(),
+     assessments: Joi.array().items(
+          Joi.object({
+               assId: Joi.number().required(),
+               index: Joi.number().required(),
+          })
+     ).min(1).required(),
+     careers: Joi.array().items(
+          Joi.number().required()
+     ).min(1).required()
 });
 
 
@@ -556,6 +575,136 @@ const forceDeleteMultiple = async (req, res) => {
      }
 }
 
+const summaryAnswers = async (req, res) => {
+     const answers = req.body;
+     try {
+          const { error, value } = answerSchema.validate(answers);
+          if (error) {
+               return res.status(400).json({
+                    ok: false,
+                    message: `Validation error: ${error.details[0].message}`
+               });
+          }
+
+          const tracks = await Track.findAll();
+          const trackScores = tracks.reduce((acc, track) => {
+               acc[track.track] = {
+                    questionScore: 0,
+                    assessmentScore: 0,
+                    careerScore: 0,
+                    correctAnswers: 0,
+                    totalQuestions: 0
+               };
+               return acc;
+          }, {});
+
+          const questionScores = await Promise.all(value.questions.map(async (q) => {
+               const question = await QuestionBank.findByPk(q.qId);
+               const correctAnswer = await Answer.findOne({
+                    where: { questionId: q.qId, isCorrect: true }
+               });
+               const isCorrect = correctAnswer && correctAnswer?.dataValues?.id === q.aId;
+               const score = isCorrect ? 10 : 0;
+
+               if (question && question?.dataValues?.track) {
+                    const track = question?.dataValues?.track;
+                    trackScores[track].questionScore += score;
+                    trackScores[track].totalQuestions += 1;
+                    if (isCorrect) {
+                         trackScores[track].correctAnswers += 1;
+                    }
+               }
+
+               return {
+                    qId: q.qId,
+                    track: question ? question?.dataValues?.track : null,
+                    score: score,
+                    isCorrect: isCorrect
+               };
+          }));
+
+          const assessmentScores = await Promise.all(value.assessments.map(async (a) => {
+               const assessment = await AssessmentQuestionBank.findByPk(a.assId);
+               const score = [5, 4, 3, 2, 1, 0][a.index] || 0;
+
+               if (assessment && assessment?.dataValues?.track) {
+                    trackScores[assessment?.dataValues?.track].assessmentScore += score;
+               }
+
+               return {
+                    assId: a.assId,
+                    track: assessment ? assessment?.dataValues?.track : null,
+                    score: score
+               };
+          }));
+
+          await Promise.all(value.careers.map(async (careerId) => {
+               const career = await Career.findByPk(careerId);
+               if (career && career?.dataValues?.track) {
+                    trackScores[career?.dataValues?.track].careerScore += 5;
+               }
+          }));
+
+          const trackSummaries = Object.entries(trackScores).map(([track, scores]) => {
+               const correctPercentage = scores.totalQuestions > 0
+                    ? (scores.correctAnswers / scores.totalQuestions * 100).toFixed(2)
+                    : 0;
+               return {
+                    track,
+                    questionScore: scores.questionScore,
+                    assessmentScore: scores.assessmentScore,
+                    careerScore: scores.careerScore,
+                    totalScore: scores.questionScore + scores.assessmentScore + scores.careerScore,
+                    correctAnswers: scores.correctAnswers,
+                    totalQuestions: scores.totalQuestions,
+                    correctPercentage: `${correctPercentage}%`,
+                    summary: `คะแนนคำถาม ${scores.questionScore} คะแนน, คะแนนแบบประเมิน ${scores.assessmentScore} คะแนน, คะแนนความชอบ ${scores.careerScore} คะแนน, ตอบคำถามถูก ${scores.correctAnswers} จาก ${scores.totalQuestions} ข้อ (${correctPercentage}%).`
+               };
+          });
+          const sortedTracks = trackSummaries.sort((a, b) => b.totalScore - a.totalScore);
+          const topTracks = sortedTracks.slice(0, 3);
+          const recommendation = topTracks.map((track, index) => {
+               let strength = index === 0 ? "เหมาะสมมาก" : index === 1 ? "ค่อนข้างเหมาะสม" : "ทำได้ดี";
+               return `${index + 1}) คุณ${strength}กับแทร็ก ${track.track} คะแนนรวมของคุณคือ ${track.totalScore} คะแนน, คุณตอบคำถามถูก ${track.correctPercentage} จากคำถามทั้งหมดภายในแทร็ก`;
+          }).join(' ');
+
+          const totalQuestionScore = questionScores.reduce((sum, q) => sum + q.score, 0);
+          // const totalAssessmentScore = assessmentScores.reduce((sum, a) => sum + a.score, 0);
+          // const totalCareerScore = Object.values(trackScores).reduce((sum, scores) => sum + scores.careerScore, 0);
+          // const overallScore = totalQuestionScore + totalAssessmentScore + totalCareerScore;
+
+          const totalCorrectAnswers = Object.values(trackScores).reduce((sum, scores) => sum + scores.correctAnswers, 0);
+          const totalQuestions = Object.values(trackScores).reduce((sum, scores) => sum + scores.totalQuestions, 0);
+          const overallCorrectPercentage = totalQuestions > 0
+               ? (totalCorrectAnswers / totalQuestions * 100).toFixed(2)
+               : 0;
+
+          return res.status(200).json({
+               ok: true,
+               data: {
+                    questionScores,
+                    assessmentScores,
+                    trackSummaries,
+                    totalQuestionScore,
+                    // totalAssessmentScore,
+                    // totalCareerScore,
+                    // overallScore,
+                    totalCorrectAnswers,
+                    totalQuestions,
+                    overallCorrectPercentage: `${overallCorrectPercentage}%`,
+                    recommendation
+               },
+               message: "Answer summary processed successfully"
+          });
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          });
+     }
+};
+
 module.exports = {
      getForms,
      getFormByID,
@@ -568,4 +717,5 @@ module.exports = {
      availableForm,
      deleteMultiple,
      forceDeleteMultiple,
+     summaryAnswers,
 }

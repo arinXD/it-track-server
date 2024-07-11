@@ -4,10 +4,8 @@ const isAdmin = require('../middleware/adminMiddleware');
 const isAuth = require('../middleware/authMiddleware');
 const { getForms, createForm, getAvailableForm, deleteMultiple,
      forceDeleteMultiple, getDeletedForms, availableForm,
-     updateForm,
-     getFormByID,
-     insertQuestionsToForm,
-     insertAssessmentsToForm
+     updateForm, getFormByID, insertQuestionsToForm, insertAssessmentsToForm,
+     summaryAnswers
 } = require('../controller/suggesFormController');
 
 // GET
@@ -18,6 +16,7 @@ router.get("/get-form/:id", isAdmin, getFormByID)
 
 // POST
 router.post("/", isAdmin, createForm)
+router.post("/summarize", isAuth, summaryAnswers)
 router.post("/questions/:id", isAdmin, insertQuestionsToForm)
 router.post("/assessments/:id", isAdmin, insertAssessmentsToForm)
 
