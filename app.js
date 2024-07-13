@@ -12,7 +12,7 @@ const winstonLogger = require("./utils/logger");
 const expressRateLimit = require("express-rate-limit")
 const expressSlowDown = require("express-slow-down")
 const { randomBytes } = require("crypto");
-const { Sequelize } = require('sequelize')
+const { Sequelize, Op } = require('sequelize')
 const app = express()
 
 //-------------

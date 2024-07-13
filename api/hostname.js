@@ -1,6 +1,9 @@
 require("dotenv").config();
-let hostname = "http://localhost:3000"
-hostname = "https://it-track-client.vercel.app/"
+const hostList = {
+    dev: "http://localhost:3000",
+    prod: "https://it-track-client.vercel.app/",
+}
+const hostname = hostList[process.env.STAGE] || hostList.dev
 
 const getHostname = () => {
     const stage = process.env.STAGE

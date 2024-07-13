@@ -574,8 +574,11 @@ const forceDeleteMultiple = async (req, res) => {
           })
      }
 }
-
+const sleep = (milliseconds) => {
+     return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
 const summaryAnswers = async (req, res) => {
+     await sleep(2000) 
      const answers = req.body;
      try {
           const { error, value } = answerSchema.validate(answers);
@@ -617,6 +620,7 @@ const summaryAnswers = async (req, res) => {
 
                return {
                     qId: q.qId,
+                    question: question?.dataValues?.question,
                     track: question ? question?.dataValues?.track : null,
                     score: score,
                     isCorrect: isCorrect
@@ -633,6 +637,7 @@ const summaryAnswers = async (req, res) => {
 
                return {
                     assId: a.assId,
+                    question: assessment?.dataValues?.question ,
                     track: assessment ? assessment?.dataValues?.track : null,
                     score: score
                };
@@ -666,7 +671,7 @@ const summaryAnswers = async (req, res) => {
           const recommendation = topTracks.map((track, index) => {
                let strength = index === 0 ? "เหมาะสมมาก" : index === 1 ? "ค่อนข้างเหมาะสม" : "ทำได้ดี";
                return `${index + 1}) คุณ${strength}กับแทร็ก ${track.track} คะแนนรวมของคุณคือ ${track.totalScore} คะแนน, คุณตอบคำถามถูก ${track.correctPercentage} จากคำถามทั้งหมดภายในแทร็ก`;
-          }).join(' ');
+          });
 
           const totalQuestionScore = questionScores.reduce((sum, q) => sum + q.score, 0);
           // const totalAssessmentScore = assessmentScores.reduce((sum, a) => sum + a.score, 0);

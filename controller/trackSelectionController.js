@@ -35,7 +35,7 @@ async function sendResultToEmail(stuid, result, acadyear) {
         html: htmlTemplate
     }
     try {
-        // mailSender.sendMail(mailOption);
+        mailSender.sendMail(mailOption);
     } catch (error) {
         console.log(error);
     }
@@ -54,23 +54,24 @@ const sendEmailToStudent = async (req, res) => {
                 },
             ]
         })
+        const mockupEmail = ["643020423-0"];
+        const emailPromises = selections
+            .filter(selection => mockupEmail.includes(selection.dataValues.stu_id))
+            .map(selection => sendResultToEmail(selection.dataValues.stu_id, selection.dataValues.result, acadyear));
 
-        for (let index = 0; index < selections.length; index++) {
-            const element = selections[index]?.dataValues
-            sendResultToEmail(element.stu_id, element.result, acadyear)
-        }
+        await Promise.all(emailPromises);
 
         return res.status(200).json({
             ok: true,
             message: "ส่งอีเมลสำเร็จ"
         })
     } catch (error) {
-        console.error(error);
+        console.error("Error in sendEmailToStudent:", error);
         return res.status(500).json({
             ok: false,
             message: "Server error.",
-            error
-        })
+            error: error.message
+        });
     }
 }
 
@@ -211,7 +212,7 @@ const getStudentInTrackSelection = async (req, res) => {
                             include: [
                                 {
                                     model: Enrollment,
-                                    attributes: ["subject_code", "grade"],
+                                    attributes: ["subject_id", "grade"],
                                     include: [
                                         {
                                             model: Subject,
@@ -224,7 +225,7 @@ const getStudentInTrackSelection = async (req, res) => {
                         },
                         {
                             model: SelectionDetail,
-                            attributes: ["grade", "subject_code"],
+                            attributes: ["grade", "subject_id"],
                             include: [
                                 {
                                     model: Subject,
@@ -618,393 +619,622 @@ const updateTrackSelection = async (req, res) => {
 }
 
 const selectTrack = async (req, res) => {
-    async function calGrade(grades) {
-        const gradeValues = {
-            'A': 4.0,
-            'B+': 3.5,
-            'B': 3.0,
-            'C+': 2.5,
-            'C': 2.0,
-            'D+': 1.5,
-            'D': 1.0,
-            'F': 0.0
-        };
-        const numericalGrades = grades.map(grade => gradeValues[grade] || 0);
-        const validNumericalGrades = numericalGrades.filter(val => val !== undefined);
+    const gradeValues = {
+        'A': 4.0, 'B+': 3.5, 'B': 3.0, 'C+': 2.5,
+        'C': 2.0, 'D+': 1.5, 'D': 1.0, 'F': 0.0
+    };
 
-        if (validNumericalGrades.length === 0) {
-            return 0;
-        }
+    const calGrade = (grades) => {
+        const validGrades = grades.filter(grade => grade in gradeValues);
+        if (validGrades.length === 0) return 0;
+        const sum = validGrades.reduce((acc, grade) => acc + gradeValues[grade] * 3, 0);
+        return parseFloat((sum / (validGrades.length * 3)).toFixed(6));
+    };
 
-        const sum = validNumericalGrades.reduce((acc, val) => acc + (val * 3), 0);
-        const average = sum / 12;
+    const sortStudentData = (a, b) =>
+        b.gpa - a.gpa || new Date(a.updatedAt) - new Date(b.updatedAt);
 
-        return parseFloat(average.toFixed(6));
-    }
-
-    function sortStudentData(firstSelect, secondSelect) {
-        if (firstSelect.gpa !== secondSelect.gpa) {
-            return secondSelect.gpa - firstSelect.gpa
-        }
-        return new Date(firstSelect.updatedAt) - new Date(secondSelect.updatedAt)
-    }
-
-    function getRandomTrack() {
-        const tracks = ["BIT", "Network", "Web and Mobile"];
-        const randomNumber = Math.floor(Math.random() * tracks.length);
-        return tracks[randomNumber];
-    }
-
-    function getRandomTrack(skipTrack) {
+    const getRandomTrack = (skipTrack) => {
         const tracks = ["BIT", "Network", "Web and Mobile"].filter(track => track !== skipTrack);
-        const randomNumber = Math.floor(Math.random() * tracks.length);
-        return tracks[randomNumber];
-    }
+        return tracks[Math.floor(Math.random() * tracks.length)];
+    };
 
-    async function distributeTracks(stuData, courseType, trackCount, limit) {
-        const selectionResult = stuData
-        const trackOrder = [stuData.track_order_1, stuData.track_order_2, stuData.track_order_3]
-        const countTrackOrder = trackOrder.filter(trackOrderElement => trackOrderElement).length
+    const distributeTracks = (stuData, courseType, trackCount, limit) => {
+        const selectionResult = { ...stuData };
+        const trackOrder = [stuData.track_order_1, stuData.track_order_2, stuData.track_order_3].filter(Boolean);
 
-        // Who has not sign the form.
-        if (countTrackOrder < 3) {
-            let trackResult = selectionResult.result
-
+        if (trackOrder.length < 3) {
+            let trackResult = selectionResult.result;
             if (trackCount[courseType][trackResult] >= limit[courseType]) {
-                const oldTrack = [trackResult]
-                while (true) {
+                const usedTracks = new Set([trackResult]);
+                while (usedTracks.size < 3) {
                     const randomTrack = getRandomTrack();
-                    if (!oldTrack.includes(randomTrack)) {
-                        const trackLimit = limit[courseType];
-                        const currentTrackCount = trackCount[courseType][randomTrack];
-                        if (trackCount[courseType]["BIT"] === trackLimit &&
-                            trackCount[courseType]["Network"] === trackLimit &&
-                            trackCount[courseType]["Web and Mobile"] === trackLimit
-                        ) {
-                            trackCount[courseType][randomTrack] += 1;
-                            selectionResult.result = randomTrack
-                            return selectionResult;
-                        }
-                        if (currentTrackCount <= trackLimit) {
-                            trackCount[courseType][randomTrack] += 1;
-                            selectionResult.result = randomTrack
-                            return selectionResult;
-                        } else {
-                            oldTrack.push(randomTrack)
-                        }
+                    if (!usedTracks.has(randomTrack) && trackCount[courseType][randomTrack] < limit[courseType]) {
+                        trackCount[courseType][randomTrack]++;
+                        selectionResult.result = randomTrack;
+                        return selectionResult;
                     }
+                    usedTracks.add(randomTrack);
                 }
-            }
 
-            trackCount[courseType][trackResult] += 1
-            return selectionResult
+                const leastFilledTrack = Object.keys(trackCount[courseType]).reduce((a, b) =>
+                    trackCount[courseType][a] < trackCount[courseType][b] ? a : b
+                );
+                trackCount[courseType][leastFilledTrack]++;
+                selectionResult.result = leastFilledTrack;
+                return selectionResult;
+            }
+            trackCount[courseType][trackResult]++;
+            return selectionResult;
         }
 
-        // Sign the form
         for (const track of trackOrder) {
             if (trackCount[courseType][track] < limit[courseType]) {
-                selectionResult.result = track
-                trackCount[courseType][track] += 1
-                return selectionResult
+                selectionResult.result = track;
+                trackCount[courseType][track]++;
+                return selectionResult;
             }
         }
 
-        const randomTrack = getRandomTrack()
-        selectionResult.result = randomTrack
-        trackCount[courseType][randomTrack] += 1
-        return selectionResult
-    }
+        const randomTrack = getRandomTrack();
+        selectionResult.result = randomTrack;
+        trackCount[courseType][randomTrack]++;
+        return selectionResult;
+    };
 
-    function getRandomIndex(array) {
-        const randomIndex = Math.floor(Math.random() * array.length);
-        return randomIndex;
-    }
-
-    async function countStudents(program, acadyear, coursesType) {
-        return await Student.count({
-            where: {
-                program,
-                acadyear,
-                courses_type: coursesType
-            },
+    const countStudents = async (program, acadyear, coursesType) => {
+        return Student.count({
+            where: { program, acadyear, courses_type: coursesType },
             distinct: true,
             col: 'id',
-            include: [
-                {
-                    model: StudentStatus,
-                    where: {
-                        id: 10
-                    }
-                },
-            ]
+            include: [{
+                model: StudentStatus,
+                where: { id: 10 }
+            }]
         });
     };
 
     try {
-        let message
-        const trackSelectId = req.params.id
+        const trackSelectId = req.params.id;
         const trackSelection = await TrackSelection.findOne({
-            where: {
-                id: trackSelectId
-            },
-            include: [{
-                model: Subject,
-                attributes: subjectAttr,
-            },
-            {
-                model: Selection,
-                include: [{
-                    model: Student
-                },
+            where: { id: trackSelectId },
+            include: [
+                { model: Subject, attributes: subjectAttr },
                 {
-                    model: SelectionDetail
-                },
-                ]
-            },
-            ],
-        })
-        const acadyear = trackSelection?.dataValues?.acadyear
-        const subjects = trackSelection?.dataValues?.Subjects?.map(subj => {
-            return subj?.dataValues?.TrackSubject?.dataValues?.subject_id
-        })
+                    model: Selection,
+                    include: [{ model: Student }, { model: SelectionDetail }]
+                }
+            ]
+        });
 
-        // init limit 
-        const totalNormalCount = await countStudents("IT", trackSelection.acadyear, "โครงการปกติ");
-        const totalVipCount = await countStudents("IT", trackSelection.acadyear, "โครงการพิเศษ");
-        const normalLimit = Math.ceil(totalNormalCount / 3) || 1
-        const vipLimit = Math.ceil(totalVipCount / 3) || 1
+        if (!trackSelection) {
+            return res.status(404).json({ ok: false, message: "Track selection not found" });
+        }
 
-        // set limit
+        const acadyear = trackSelection.acadyear;
+        const subjects = trackSelection.Subjects.map(subj => subj.TrackSubject.subject_id);
+
+        const [totalNormalCount, totalVipCount] = await Promise.all([
+            countStudents("IT", acadyear, "โครงการปกติ"),
+            countStudents("IT", acadyear, "โครงการพิเศษ")
+        ]);
+
         const limit = {
-            normal: normalLimit,
-            vip: vipLimit
-        }
+            normal: Math.ceil(totalNormalCount / 3) || 1,
+            vip: Math.ceil(totalVipCount / 3) || 1
+        };
 
-        // init counting track
         const trackCount = {
-            normal: {
-                "BIT": 0,
-                "Network": 0,
-                "Web and Mobile": 0
-            },
-            vip: {
-                "BIT": 0,
-                "Network": 0,
-                "Web and Mobile": 0
-            }
-        }
+            normal: { "BIT": 0, "Network": 0, "Web and Mobile": 0 },
+            vip: { "BIT": 0, "Network": 0, "Web and Mobile": 0 }
+        };
 
         const typeMapping = {
             'โครงการพิเศษ': 'vip',
             'โครงการปกติ': 'normal',
         };
 
-        // update convert status 
-        await trackSelection.update({
-            has_finished: !(trackSelection.has_finished)
-        })
+        await trackSelection.update({ has_finished: !trackSelection.has_finished });
 
-        await trackSelection.save()
+        const message = trackSelection.has_finished ? "ปิดการคัดเลือก" : "เปิดการคัดเลือก";
 
         if (trackSelection.has_finished) {
-            message = `ปิดการคัดเลือก`
-
-            // get all student selection who sign the form
-            const selections = trackSelection.dataValues.Selections
+            const selections = trackSelection.Selections;
             if (selections.length > 0) {
-
-                // classify student course
-                const selectDataAll = {
-                    normal: [],
-                    vip: []
-                }
+                const selectDataAll = { normal: [], vip: [] };
 
                 for (const selection of selections) {
+                    const { id, stu_id, track_order_1, track_order_2, track_order_3, Student, SelectionDetails, result, updatedAt } = selection;
+                    const coursesType = typeMapping[Student.courses_type];
+                    const grades = SelectionDetails.map(detail => detail.grade);
 
-                    // get student selection data detail
-                    const value = selection.dataValues
-
-                    // collect selection value
-                    const selectData = {
-                        id: value.id,
-                        stu_id: value.stu_id,
-                        track_order_1: value.track_order_1,
-                        track_order_2: value.track_order_2,
-                        track_order_3: value.track_order_3,
-                        courses_type: typeMapping[value.Student.dataValues.courses_type],
-                        result: value.result,
-                        updatedAt: value.updatedAt,
-                    }
-
-                    // get grade from selection detail
-                    const selectDetails = selection.dataValues.SelectionDetails
-                    const grades = []
-                    for (const selectDetail of selectDetails) {
-                        const selectData = selectDetail.dataValues
-                        grades.push(selectData.grade)
-                    }
-
-                    // calculate gpa
-                    selectData.gpa = await calGrade(grades)
-                    selectDataAll[selectData.courses_type].push(selectData)
+                    selectDataAll[coursesType].push({
+                        id, stu_id, track_order_1, track_order_2, track_order_3,
+                        courses_type: coursesType, result, updatedAt,
+                        gpa: calGrade(grades)
+                    });
                 }
 
-                // sort each course type
-                Object.keys(selectDataAll).forEach(courseType => {
-                    selectDataAll[courseType].sort(sortStudentData)
-                })
-                // Process
-                for (let courseType of Object.keys(selectDataAll)) {
+                for (const courseType of Object.keys(selectDataAll)) {
+                    selectDataAll[courseType].sort(sortStudentData);
                     for (const stuData of selectDataAll[courseType]) {
-                        const selectionResult = await distributeTracks(stuData, courseType, trackCount, limit)
-
-                        // update track selection result
-
-                        await Selection.update({
-                            result: selectionResult.result
-                        }, {
-                            where: {
-                                id: selectionResult.id,
-                            },
-                        });
+                        const selectionResult = distributeTracks(stuData, courseType, trackCount, limit);
+                        await Selection.update({ result: selectionResult.result }, { where: { id: selectionResult.id } });
                     }
                 }
-            } // scope if selections.length > 0 
+            }
 
-            // students who haven't sign the form
-            let studentsIT = await models.sequelize.query(`
-            SELECT Students.stu_id, Students.courses_type
-            FROM Students LEFT JOIN Selections
-            ON Students.stu_id = Selections.stu_id
-            WHERE Selections.stu_id IS NULL
-            AND Students.acadyear = ${trackSelection.acadyear}
-            AND Students.program = 'IT'
-            AND Students.status_code = 10`, {
+            // Handle students who haven't signed the form
+            const unsignedStudents = await models.sequelize.query(`
+                SELECT Students.stu_id, Students.courses_type
+                FROM Students LEFT JOIN Selections
+                ON Students.stu_id = Selections.stu_id
+                WHERE Selections.stu_id IS NULL
+                AND Students.acadyear = :acadyear
+                AND Students.program = 'IT'
+                AND Students.status_code = 10
+            `, {
+                replacements: { acadyear },
                 type: QueryTypes.SELECT
             });
 
-            if (studentsIT.length > 0) {
-                // sort student data by student id
-                studentsIT.sort((firstStudentRecord, secondStudentRecord) => firstStudentRecord.stu_id.localeCompare(secondStudentRecord.stu_id));
+            if (unsignedStudents.length > 0) {
+                const courseTypeStudents = { normal: [], vip: [] };
+                unsignedStudents.forEach(student =>
+                    courseTypeStudents[typeMapping[student.courses_type]].push(student.stu_id)
+                );
 
-                const courseTypeStudents = {
-                    normal: [],
-                    vip: []
-                }
-
-                studentsIT.forEach(student => {
-                    const courseType = typeMapping[student.courses_type]
-                    courseTypeStudents[courseType].push(student.stu_id)
-                })
-
-                console.log("studentsIT:", courseTypeStudents);
-
-                async function createSelection(insertSelectionData) {
-                    const stuid = insertSelectionData.stu_id
-                    const selection = await Selection.create(insertSelectionData)
-                    const sid = selection.dataValues.id
-                    for (const subj of subjects) {
+                const createSelection = async (insertSelectionData) => {
+                    const selection = await Selection.create(insertSelectionData);
+                    await Promise.all(subjects.map(async (subj) => {
                         const enrollment = await Enrollment.findOne({
-                            where: {
-                                stu_id: stuid,
-                                subject_id: subj
-                            },
+                            where: { stu_id: insertSelectionData.stu_id, subject_id: subj },
                             attributes: ["grade"],
-                        })
-                        const grade = enrollment?.dataValues?.grade || null
-
+                        });
                         await SelectionDetail.create({
-                            selection_id: sid,
+                            selection_id: selection.id,
                             subject_id: subj,
-                            grade: grade
-                        })
-                    }
-                }
+                            grade: enrollment?.grade || null
+                        });
+                    }));
+                };
 
-                // Process
                 for (const courseType of Object.keys(courseTypeStudents)) {
-                    const tracks = ["BIT", "Network", "Web and Mobile"]
+                    const tracks = ["BIT", "Network", "Web and Mobile"];
                     const studentIDArray = courseTypeStudents[courseType];
 
                     while (studentIDArray.length > 0) {
-                        // 3 loop
-                        for (const track of tracks) {
-                            if (studentIDArray.length === 0) {
-                                break;
-                            }
-
+                        for (const track of [...tracks]) {
+                            if (studentIDArray.length === 0) break;
                             if (trackCount[courseType][track] === limit[courseType]) {
-                                const trackIndex = tracks.indexOf(track)
-                                tracks.splice(trackIndex, 1);
-                                continue
+                                tracks.splice(tracks.indexOf(track), 1);
+                                continue;
                             }
-
-                            const randomIndex = getRandomIndex(studentIDArray);
-                            const studentId = studentIDArray[randomIndex];
-
-                            const insertSelectionData = {
+                            const studentId = studentIDArray.pop();
+                            await createSelection({
                                 track_selection_id: trackSelectId,
                                 stu_id: studentId,
                                 result: track
-                            };
-
-                            // create track selection
-                            await createSelection(insertSelectionData);
-                            trackCount[courseType][track] += 1
-                            // decrease length of array 
-                            studentIDArray.splice(randomIndex, 1);
+                            });
+                            trackCount[courseType][track]++;
                         }
 
-                        if (studentIDArray.length === 0) {
-                            break;
-                        }
+                        if (studentIDArray.length === 0) break;
                         if (tracks.length === 0) {
-                            const randomIndex = getRandomIndex(studentIDArray);
-                            const studentId = studentIDArray[randomIndex];
-                            let randomTrack
-                            while (true) {
-                                randomTrack = getRandomTrack()
-                                const trackCountsArray = Object.values(trackCount[courseType]);
-                                const minValue = Math.min(...trackCountsArray);
-                                if (trackCount[courseType][randomTrack] === minValue) {
-                                    break
-                                }
-                            }
-                            const insertSelectionData = {
+                            const studentId = studentIDArray.pop();
+                            const minTrackCount = Math.min(...Object.values(trackCount[courseType]));
+                            const availableTracks = Object.keys(trackCount[courseType]).filter(
+                                track => trackCount[courseType][track] === minTrackCount
+                            );
+                            const randomTrack = availableTracks[Math.floor(Math.random() * availableTracks.length)];
+                            await createSelection({
                                 track_selection_id: trackSelectId,
                                 stu_id: studentId,
                                 result: randomTrack
-                            };
-
-                            // create track selection
-                            await createSelection(insertSelectionData);
-                            trackCount[courseType][randomTrack] += 1
-                            // decrease length of array 
-                            studentIDArray.splice(randomIndex, 1);
+                            });
+                            trackCount[courseType][randomTrack]++;
                         }
                     }
                 }
-
-            } // unsign length > 0
-            console.log(limit);
-            console.log(trackCount);
-        } else {
-            message = `เปิดการคัดเลือก`
+            }
         }
 
-        return res.status(200).json({
-            ok: true,
-            message
-        })
+        return res.status(200).json({ ok: true, message });
 
     } catch (err) {
         console.error(err);
-        return res.status(500).json({
-            ok: false,
-            message: "Server error."
-        })
+        return res.status(500).json({ ok: false, message: "Server error." });
     }
-}
+};
+
+// const selectTrack = async (req, res) => {
+//     async function calGrade(grades) {
+//         const gradeValues = {
+//             'A': 4.0,
+//             'B+': 3.5,
+//             'B': 3.0,
+//             'C+': 2.5,
+//             'C': 2.0,
+//             'D+': 1.5,
+//             'D': 1.0,
+//             'F': 0.0
+//         };
+//         const numericalGrades = grades.map(grade => gradeValues[grade] || 0);
+//         const validNumericalGrades = numericalGrades.filter(val => val !== undefined);
+
+//         if (validNumericalGrades.length === 0) {
+//             return 0;
+//         }
+
+//         const sum = validNumericalGrades.reduce((acc, val) => acc + (val * 3), 0);
+//         const average = sum / 12;
+
+//         return parseFloat(average.toFixed(6));
+//     }
+
+//     function sortStudentData(firstSelect, secondSelect) {
+//         if (firstSelect.gpa !== secondSelect.gpa) {
+//             return secondSelect.gpa - firstSelect.gpa
+//         }
+//         return new Date(firstSelect.updatedAt) - new Date(secondSelect.updatedAt)
+//     }
+
+//     function getRandomTrack() {
+//         const tracks = ["BIT", "Network", "Web and Mobile"];
+//         const randomNumber = Math.floor(Math.random() * tracks.length);
+//         return tracks[randomNumber];
+//     }
+
+//     function getRandomTrack(skipTrack) {
+//         const tracks = ["BIT", "Network", "Web and Mobile"].filter(track => track !== skipTrack);
+//         const randomNumber = Math.floor(Math.random() * tracks.length);
+//         return tracks[randomNumber];
+//     }
+
+//     async function distributeTracks(stuData, courseType, trackCount, limit) {
+//         const selectionResult = stuData
+//         const trackOrder = [stuData.track_order_1, stuData.track_order_2, stuData.track_order_3]
+//         const countTrackOrder = trackOrder.filter(trackOrderElement => trackOrderElement).length
+
+//         // Who has not sign the form.
+//         if (countTrackOrder < 3) {
+//             let trackResult = selectionResult.result
+
+//             if (trackCount[courseType][trackResult] >= limit[courseType]) {
+//                 const oldTrack = [trackResult]
+//                 while (true) {
+//                     const randomTrack = getRandomTrack();
+//                     if (!oldTrack.includes(randomTrack)) {
+//                         const trackLimit = limit[courseType];
+//                         const currentTrackCount = trackCount[courseType][randomTrack];
+//                         if (trackCount[courseType]["BIT"] === trackLimit &&
+//                             trackCount[courseType]["Network"] === trackLimit &&
+//                             trackCount[courseType]["Web and Mobile"] === trackLimit
+//                         ) {
+//                             trackCount[courseType][randomTrack] += 1;
+//                             selectionResult.result = randomTrack
+//                             return selectionResult;
+//                         }
+//                         if (currentTrackCount <= trackLimit) {
+//                             trackCount[courseType][randomTrack] += 1;
+//                             selectionResult.result = randomTrack
+//                             return selectionResult;
+//                         } else {
+//                             oldTrack.push(randomTrack)
+//                         }
+//                     }
+//                 }
+//             }
+
+//             trackCount[courseType][trackResult] += 1
+//             return selectionResult
+//         }
+
+//         // Sign the form
+//         for (const track of trackOrder) {
+//             if (trackCount[courseType][track] < limit[courseType]) {
+//                 selectionResult.result = track
+//                 trackCount[courseType][track] += 1
+//                 return selectionResult
+//             }
+//         }
+
+//         const randomTrack = getRandomTrack()
+//         selectionResult.result = randomTrack
+//         trackCount[courseType][randomTrack] += 1
+//         return selectionResult
+//     }
+
+//     function getRandomIndex(array) {
+//         const randomIndex = Math.floor(Math.random() * array.length);
+//         return randomIndex;
+//     }
+
+//     async function countStudents(program, acadyear, coursesType) {
+//         return await Student.count({
+//             where: {
+//                 program,
+//                 acadyear,
+//                 courses_type: coursesType
+//             },
+//             distinct: true,
+//             col: 'id',
+//             include: [
+//                 {
+//                     model: StudentStatus,
+//                     where: {
+//                         id: 10
+//                     }
+//                 },
+//             ]
+//         });
+//     };
+
+//     try {
+//         let message
+//         const trackSelectId = req.params.id
+//         const trackSelection = await TrackSelection.findOne({
+//             where: {
+//                 id: trackSelectId
+//             },
+//             include: [{
+//                 model: Subject,
+//                 attributes: subjectAttr,
+//             },
+//             {
+//                 model: Selection,
+//                 include: [{
+//                     model: Student
+//                 },
+//                 {
+//                     model: SelectionDetail
+//                 },
+//                 ]
+//             },
+//             ],
+//         })
+//         const acadyear = trackSelection?.dataValues?.acadyear
+//         const subjects = trackSelection?.dataValues?.Subjects?.map(subj => {
+//             return subj?.dataValues?.TrackSubject?.dataValues?.subject_id
+//         })
+
+//         // init limit 
+//         const totalNormalCount = await countStudents("IT", trackSelection.acadyear, "โครงการปกติ");
+//         const totalVipCount = await countStudents("IT", trackSelection.acadyear, "โครงการพิเศษ");
+//         const normalLimit = Math.ceil(totalNormalCount / 3) || 1
+//         const vipLimit = Math.ceil(totalVipCount / 3) || 1
+
+//         // set limit
+//         const limit = {
+//             normal: normalLimit,
+//             vip: vipLimit
+//         }
+
+//         // init counting track
+//         const trackCount = {
+//             normal: {
+//                 "BIT": 0,
+//                 "Network": 0,
+//                 "Web and Mobile": 0
+//             },
+//             vip: {
+//                 "BIT": 0,
+//                 "Network": 0,
+//                 "Web and Mobile": 0
+//             }
+//         }
+
+//         const typeMapping = {
+//             'โครงการพิเศษ': 'vip',
+//             'โครงการปกติ': 'normal',
+//         };
+
+//         // update convert status 
+//         await trackSelection.update({
+//             has_finished: !(trackSelection.has_finished)
+//         })
+
+//         await trackSelection.save()
+
+//         if (trackSelection.has_finished) {
+//             message = `ปิดการคัดเลือก`
+
+//             // get all student selection who sign the form
+//             const selections = trackSelection.dataValues.Selections
+//             if (selections.length > 0) {
+
+//                 // classify student course
+//                 const selectDataAll = {
+//                     normal: [],
+//                     vip: []
+//                 }
+
+//                 for (const selection of selections) {
+
+//                     // get student selection data detail
+//                     const value = selection.dataValues
+
+//                     // collect selection value
+//                     const selectData = {
+//                         id: value.id,
+//                         stu_id: value.stu_id,
+//                         track_order_1: value.track_order_1,
+//                         track_order_2: value.track_order_2,
+//                         track_order_3: value.track_order_3,
+//                         courses_type: typeMapping[value.Student.dataValues.courses_type],
+//                         result: value.result,
+//                         updatedAt: value.updatedAt,
+//                     }
+
+//                     // get grade from selection detail
+//                     const selectDetails = selection.dataValues.SelectionDetails
+//                     const grades = []
+//                     for (const selectDetail of selectDetails) {
+//                         const selectData = selectDetail.dataValues
+//                         grades.push(selectData.grade)
+//                     }
+
+//                     // calculate gpa
+//                     selectData.gpa = await calGrade(grades)
+//                     selectDataAll[selectData.courses_type].push(selectData)
+//                 }
+
+//                 // sort each course type
+//                 Object.keys(selectDataAll).forEach(courseType => {
+//                     selectDataAll[courseType].sort(sortStudentData)
+//                 })
+//                 // Process
+//                 for (let courseType of Object.keys(selectDataAll)) {
+//                     for (const stuData of selectDataAll[courseType]) {
+//                         const selectionResult = await distributeTracks(stuData, courseType, trackCount, limit)
+
+//                         // update track selection result
+
+//                         await Selection.update({
+//                             result: selectionResult.result
+//                         }, {
+//                             where: {
+//                                 id: selectionResult.id,
+//                             },
+//                         });
+//                     }
+//                 }
+//             } // scope if selections.length > 0 
+
+//             // students who haven't sign the form
+//             let studentsIT = await models.sequelize.query(`
+//             SELECT Students.stu_id, Students.courses_type
+//             FROM Students LEFT JOIN Selections
+//             ON Students.stu_id = Selections.stu_id
+//             WHERE Selections.stu_id IS NULL
+//             AND Students.acadyear = ${trackSelection.acadyear}
+//             AND Students.program = 'IT'
+//             AND Students.status_code = 10`, {
+//                 type: QueryTypes.SELECT
+//             });
+
+//             if (studentsIT.length > 0) {
+//                 // sort student data by student id
+//                 studentsIT.sort((firstStudentRecord, secondStudentRecord) => firstStudentRecord.stu_id.localeCompare(secondStudentRecord.stu_id));
+
+//                 const courseTypeStudents = {
+//                     normal: [],
+//                     vip: []
+//                 }
+
+//                 studentsIT.forEach(student => {
+//                     const courseType = typeMapping[student.courses_type]
+//                     courseTypeStudents[courseType].push(student.stu_id)
+//                 })
+
+//                 console.log("studentsIT:", courseTypeStudents);
+
+//                 async function createSelection(insertSelectionData) {
+//                     const stuid = insertSelectionData.stu_id
+//                     const selection = await Selection.create(insertSelectionData)
+//                     const sid = selection.dataValues.id
+//                     for (const subj of subjects) {
+//                         const enrollment = await Enrollment.findOne({
+//                             where: {
+//                                 stu_id: stuid,
+//                                 subject_id: subj
+//                             },
+//                             attributes: ["grade"],
+//                         })
+//                         const grade = enrollment?.dataValues?.grade || null
+
+//                         await SelectionDetail.create({
+//                             selection_id: sid,
+//                             subject_id: subj,
+//                             grade: grade
+//                         })
+//                     }
+//                 }
+
+//                 // Process
+//                 for (const courseType of Object.keys(courseTypeStudents)) {
+//                     const tracks = ["BIT", "Network", "Web and Mobile"]
+//                     const studentIDArray = courseTypeStudents[courseType];
+
+//                     while (studentIDArray.length > 0) {
+//                         // 3 loop
+//                         for (const track of tracks) {
+//                             if (studentIDArray.length === 0) {
+//                                 break;
+//                             }
+
+//                             if (trackCount[courseType][track] === limit[courseType]) {
+//                                 const trackIndex = tracks.indexOf(track)
+//                                 tracks.splice(trackIndex, 1);
+//                                 continue
+//                             }
+
+//                             const randomIndex = getRandomIndex(studentIDArray);
+//                             const studentId = studentIDArray[randomIndex];
+
+//                             const insertSelectionData = {
+//                                 track_selection_id: trackSelectId,
+//                                 stu_id: studentId,
+//                                 result: track
+//                             };
+
+//                             // create track selection
+//                             await createSelection(insertSelectionData);
+//                             trackCount[courseType][track] += 1
+//                             // decrease length of array 
+//                             studentIDArray.splice(randomIndex, 1);
+//                         }
+
+//                         if (studentIDArray.length === 0) {
+//                             break;
+//                         }
+//                         if (tracks.length === 0) {
+//                             const randomIndex = getRandomIndex(studentIDArray);
+//                             const studentId = studentIDArray[randomIndex];
+//                             let randomTrack
+//                             while (true) {
+//                                 randomTrack = getRandomTrack()
+//                                 const trackCountsArray = Object.values(trackCount[courseType]);
+//                                 const minValue = Math.min(...trackCountsArray);
+//                                 if (trackCount[courseType][randomTrack] === minValue) {
+//                                     break
+//                                 }
+//                             }
+//                             const insertSelectionData = {
+//                                 track_selection_id: trackSelectId,
+//                                 stu_id: studentId,
+//                                 result: randomTrack
+//                             };
+
+//                             // create track selection
+//                             await createSelection(insertSelectionData);
+//                             trackCount[courseType][randomTrack] += 1
+//                             // decrease length of array 
+//                             studentIDArray.splice(randomIndex, 1);
+//                         }
+//                     }
+//                 }
+
+//             } // unsign length > 0
+//             console.log(limit);
+//             console.log(trackCount);
+//         } else {
+//             message = `เปิดการคัดเลือก`
+//         }
+
+//         return res.status(200).json({
+//             ok: true,
+//             message
+//         })
+
+//     } catch (err) {
+//         console.error(err);
+//         return res.status(500).json({
+//             ok: false,
+//             message: "Server error."
+//         })
+//     }
+// }
 
 const deleteTraclSelect = async (req, res) => {
     const id = req.params.id
