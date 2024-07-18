@@ -70,6 +70,52 @@ router.get("/:stuid", validateStudent, async (req, res) => {
     }
 })
 
+router.get("/:stuid/gpa", validateStudent, async (req, res) => {
+    const stuid = req.params.stuid
+    try {
+        const gpa = await models.sequelize.query(`
+        SELECT Students.stu_id AS stuid,
+        SUM((CASE 
+                WHEN Enrollments.grade IN ('A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F') THEN 
+                    CASE Enrollments.grade
+                        WHEN 'A' THEN 4
+                        WHEN 'B+' THEN 3.5
+                        WHEN 'B' THEN 3
+                        WHEN 'C+' THEN 2.5
+                        WHEN 'C' THEN 2
+                        WHEN 'D+' THEN 1.5
+                        WHEN 'D' THEN 1
+                        WHEN 'F' THEN 0
+                    END
+                ELSE 0
+            END) * Subjects.credit) / 
+            (SELECT SUM(Subjects.credit)
+                FROM Subjects, Enrollments
+                WHERE Subjects.subject_id = Enrollments.subject_id
+                AND Students.stu_id = Enrollments.stu_id
+                AND Enrollments.grade IN ('A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F')
+                GROUP BY Enrollments.stu_id) as gpa
+        FROM Enrollments
+        JOIN Students ON Enrollments.stu_id = Students.stu_id
+        JOIN Subjects ON Enrollments.subject_id = Subjects.subject_id
+        WHERE Students.stu_id = ${stuid}
+        GROUP BY stuid
+        ORDER BY stuid ASC`, {
+            type: QueryTypes.SELECT
+        });
+        return res.status(200).json({
+            ok: true,
+            data: gpa,
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error.",
+            error
+        })
+    }
+})
 router.get("/:acadyear/gpa", async (req, res) => {
     const acadyear = parseInt(req.params.acadyear)
     if (typeof acadyear != "number") {

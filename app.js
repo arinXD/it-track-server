@@ -157,7 +157,7 @@ app.get('/', async (req, res, next) => {
         IPAddress,
     })
 })
-app.use('/api/users', isAdmin, userRouter)
+app.use('/api/users', userRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/students', studentRouter)
 app.use('/api/students/enrollments', enrollmentRouter)

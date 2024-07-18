@@ -1,30 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const models = require('../models');
-const isAdmin = require('../middleware/adminMiddleware');
-const User = models.User
-const Student = models.Student
+const isAuth = require('../middleware/authMiddleware');
+const { getUserData } = require('../controller/userController');
 
-router.get('/', isAdmin, async (req, res, next) => {
-    try {
-        const result = await User.findAll({
-            include: {
-                model: Student
-            }
-        })
-        return res.status(200).json({
-            ok: true,
-            users: result
-        })
-    } catch (err) {
-        console.log(err);
-        return res.status(403).json({
-            ok: false,
-            message: "authentication fail",
-            err
-        })
-    }
-})
+router.get('/:email', getUserData)
 
 
 module.exports = router
