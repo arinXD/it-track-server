@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const isAuth = require('../middleware/authMiddleware');
+const isOwner = require('../middleware/isOwnerMiddleware');
 const { getUserData } = require('../controller/userController');
 
-router.get('/:email', getUserData)
+router.get('/:email', isOwner, getUserData)
 
 
 module.exports = router

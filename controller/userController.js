@@ -88,6 +88,9 @@ const getUserData = async (req, res) => {
                               {
                                    model: Enrollment,
                                    attributes: ["grade", "enroll_year"],
+                                   order: [
+                                        ['enroll_year', 'DESC']
+                                   ],
                                    include: [
                                         {
                                              model: Subject,
@@ -103,7 +106,7 @@ const getUserData = async (req, res) => {
 
           if (data && data?.dataValues?.Student) {
                const groupedEnrollments = {}
-               const enrollments = data?.dataValues?.Student?.dataValues?.Enrollments
+               const enrollments = data?.dataValues?.Student?.dataValues?.Enrollments.sort((a, b) => (b?.dataValues?.enroll_year - a?.dataValues?.enroll_year))
                for (let index = 0; index < enrollments.length; index++) {
                     const enroll = enrollments[index];
                     if (!groupedEnrollments[enroll?.dataValues?.enroll_year]) {
@@ -121,7 +124,6 @@ const getUserData = async (req, res) => {
                data.Student.dataValues.Enrollments = groupedEnrollments;
                data.Student.dataValues.track = data.Student?.dataValues?.Selection?.result
                data.Student.dataValues.gpa = await getStudentGPA(data.Student?.dataValues?.stu_id)
-
 
                delete data.Student.dataValues.Selection
           }
