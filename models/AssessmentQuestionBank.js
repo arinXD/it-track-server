@@ -15,7 +15,8 @@ module.exports = (sequelize, DataTypes) => {
     }
     AssessmentQuestionBank.init({
         question: DataTypes.TEXT,
-        track: DataTypes.STRING
+        track: DataTypes.STRING,
+        desc: DataTypes.STRING,
     }, {
         sequelize,
         modelName: 'AssessmentQuestionBank',

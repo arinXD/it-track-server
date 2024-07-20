@@ -13,10 +13,10 @@ const { Op } = require('sequelize');
 const Joi = require('joi');
 
 const formAttr = ["id", "title", "desc"]
-const questionAttr = ["id", "question", "isMultipleChoice",]
+const questionAttr = ["id", "question", "isMultipleChoice", "desc"]
 const answerAttr = ["id", "answer"]
-const assesstionAttr = ["id", "question",]
-const careerAttr = ["id", "name_th", "name_en", "image", "track",]
+const assesstionAttr = ["id", "question", "desc"]
+const careerAttr = ["id", "name_th", "name_en", "image", "track", "desc"]
 
 const createSuggestFormSchema = Joi.object({
      id: Joi.alternatives().try(Joi.valid(null), Joi.number()),
@@ -29,6 +29,7 @@ const createSuggestFormSchema = Joi.object({
                isEnable: Joi.boolean().required(),
                isMultipleChoice: Joi.boolean(),
                track: Joi.string().valid('BIT', 'Web and Mobile', 'Network').required(),
+               desc: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
                Answers: Joi.array().items(
                     Joi.object({
                          id: Joi.alternatives().try(Joi.string(), Joi.number(), Joi.valid(null)).required(),
@@ -44,13 +45,13 @@ const createSuggestFormSchema = Joi.object({
                question: Joi.string().required(),
                track: Joi.string().valid('BIT', 'Web and Mobile', 'Network').required(),
                isEnable: Joi.boolean().required(),
+               desc: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
           })
      ).min(1).required(),
      Careers: Joi.array().items(
           Joi.number().required()
      ).min(1).required()
-});
-
+})
 const createFormQuestionSchema = Joi.object({
      formId: Joi.number().required(),
      questionId: Joi.number().required(),
@@ -122,7 +123,6 @@ const getAvailableForm = async (req, res) => {
      const shuffleArray = (array) => {
           for (let i = array.length - 1; i > 0; i--) {
                const j = Math.floor(Math.random() * (i + 1));
-               console.log(j);
                [array[i], array[j]] = [array[j], array[i]];
           }
           return array;
@@ -219,13 +219,93 @@ const getDeletedForms = async (req, res) => {
      }
 }
 
+async function checkEquals(values) {
+     const requireTrackQ = {}
+     const requireTrackA = {}
+     const requireTrackC = {}
+
+     const tracks = await Track.findAll({
+          attributes: ["track"]
+     });
+
+     for (let index = 0; index < tracks.length; index++) {
+          const track = tracks[index]?.dataValues?.track;
+          requireTrackQ[track] = 0
+          requireTrackA[track] = 0
+          requireTrackC[track] = 0
+     }
+
+     values.Questions.map(question => {
+          requireTrackQ[question.track] += 1
+     })
+     values.Assesstions.map(assessment => {
+          requireTrackA[assessment.track] += 1
+     })
+     for (let index = 0; index < values.Careers.length; index++) {
+          const cid = values.Careers[index];
+          const career = await Career.findOne({
+               where: { id: cid },
+               attributes: ["track"]
+          })
+          const track = career?.dataValues?.track
+          requireTrackC[track] += 1
+     }
+
+     function analyzeInequality(obj) {
+          const values = Object.values(obj);
+          const max = Math.max(...values);
+          const inequalTracks = [];
+          for (let track in obj) {
+               if (obj[track] < max) {
+                    inequalTracks.push({
+                         track: track,
+                         difference: max - obj[track],
+                    });
+               }
+          }
+          return inequalTracks;
+     }
+
+     let message = null;
+     let inequalityInfo = {};
+
+     if (!Object.values(requireTrackQ).every(v => v === Object.values(requireTrackQ)[0])) {
+          message = "คำถามในแต่ละแทร็กไม่เท่ากัน";
+          inequalityInfo.items = analyzeInequality(requireTrackQ);
+          inequalityInfo.type = "ข้อ"
+     }
+     else if (!Object.values(requireTrackA).every(v => v === Object.values(requireTrackA)[0])) {
+          message = "แบบประเมินในแต่ละแทร็กไม่เท่ากัน";
+          inequalityInfo.items = analyzeInequality(requireTrackA);
+          inequalityInfo.type = "ข้อ"
+     }
+     else if (!Object.values(requireTrackC).every(v => v === Object.values(requireTrackC)[0])) {
+          message = "อาชีพในแต่ละแทร็กไม่เท่ากัน";
+          inequalityInfo.items = analyzeInequality(requireTrackC);
+          inequalityInfo.type = "อาชีพ"
+     }
+     console.log(requireTrackQ, Object.values(requireTrackQ).every(v => v === Object.values(requireTrackQ)[0]));
+     console.log(requireTrackA, Object.values(requireTrackA).every(v => v === Object.values(requireTrackA)[0]));
+     console.log(requireTrackC, Object.values(requireTrackC).every(v => v === Object.values(requireTrackC)[0]));
+     return { message, inequalityInfo };
+}
+
 const createForm = async (req, res) => {
      const createData = req.body;
      const { error, value } = createSuggestFormSchema.validate(createData);
      if (error) {
-          return res.status(400).json({
+          return res.status(406).json({
                ok: false,
-               message: `Validation error: ${error.details[0].message}`
+               message: `${error.details[0].message}`
+          });
+     }
+
+     const { message: errMessage, inequalityInfo } = await checkEquals(value)
+     if (errMessage) {
+          return res.status(406).json({
+               ok: false,
+               message: errMessage,
+               inequalityInfo
           });
      }
 
@@ -259,7 +339,8 @@ const createForm = async (req, res) => {
                if (!isNaN(Number(questionData.id))) {
                     await QuestionBank.update({
                          question: questionData.question,
-                         track: questionData.track
+                         track: questionData.track,
+                         desc: questionData.desc,
                     }, {
                          where: { id: Number(questionData.id) },
                          transaction: t
@@ -267,7 +348,8 @@ const createForm = async (req, res) => {
                } else {
                     const newQuestion = await QuestionBank.create({
                          question: questionData.question,
-                         track: questionData.track
+                         track: questionData.track,
+                         desc: questionData.desc,
                     }, { transaction: t });
                     questionData.id = newQuestion?.dataValues?.id
                }
@@ -332,7 +414,8 @@ const createForm = async (req, res) => {
                if (!isNaN(Number(assessmentData.id))) {
                     await AssessmentQuestionBank.update({
                          question: assessmentData.question,
-                         track: assessmentData.track
+                         track: assessmentData.track,
+                         desc: assessmentData.desc,
                     }, {
                          where: { id: Number(assessmentData.id) },
                          transaction: t
@@ -340,7 +423,8 @@ const createForm = async (req, res) => {
                } else {
                     const newAssessmentQuestion = await AssessmentQuestionBank.create({
                          question: assessmentData.question,
-                         track: assessmentData.track
+                         track: assessmentData.track,
+                         desc: assessmentData.desc,
                     }, { transaction: t });
 
                     assessmentData.id = newAssessmentQuestion?.dataValues?.id;
@@ -578,7 +662,7 @@ const sleep = (milliseconds) => {
      return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
 const summaryAnswers = async (req, res) => {
-     await sleep(2000) 
+     await sleep(2000)
      const answers = req.body;
      try {
           const { error, value } = answerSchema.validate(answers);
@@ -637,7 +721,7 @@ const summaryAnswers = async (req, res) => {
 
                return {
                     assId: a.assId,
-                    question: assessment?.dataValues?.question ,
+                    question: assessment?.dataValues?.question,
                     track: assessment ? assessment?.dataValues?.track : null,
                     score: score
                };

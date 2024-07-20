@@ -12,7 +12,8 @@ module.exports = (sequelize, DataTypes) => {
     Career.init({
         name_th: DataTypes.STRING,
         name_en: DataTypes.STRING,
-        image: DataTypes.STRING
+        image: DataTypes.STRING,
+        desc: DataTypes.STRING,
     }, {
         sequelize,
         modelName: 'Career',

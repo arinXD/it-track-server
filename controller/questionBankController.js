@@ -5,7 +5,7 @@ const FormQuestion = models.FormQuestion
 const { Op } = require('sequelize');
 const Joi = require('joi');
 
-const defaultQuestionAttr = ["id", "question", "isMultipleChoice", "track"]
+const defaultQuestionAttr = ["id", "question", "isMultipleChoice", "track", "desc"]
 const defaultAnswerAttr = ["id", "answer", "isCorrect"]
 
 const createQuestionSchema = Joi.object({
