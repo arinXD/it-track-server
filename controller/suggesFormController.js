@@ -727,11 +727,17 @@ const summaryAnswers = async (req, res) => {
                };
           }));
 
-          await Promise.all(value.careers.map(async (careerId) => {
+          const careersScores = await Promise.all(value.careers.map(async (careerId) => {
                const career = await Career.findByPk(careerId);
                if (career && career?.dataValues?.track) {
                     trackScores[career?.dataValues?.track].careerScore += 5;
                }
+               return {
+                    name_th: career?.dataValues?.name_th,
+                    name_en: career?.dataValues?.name_en,
+                    track: career?.dataValues?.track || null,
+                    score: 5
+               };
           }));
 
           const trackSummaries = Object.entries(trackScores).map(([track, scores]) => {
@@ -747,20 +753,24 @@ const summaryAnswers = async (req, res) => {
                     correctAnswers: scores.correctAnswers,
                     totalQuestions: scores.totalQuestions,
                     correctPercentage: `${correctPercentage}%`,
-                    summary: `คะแนนคำถาม ${scores.questionScore} คะแนน, คะแนนแบบประเมิน ${scores.assessmentScore} คะแนน, คะแนนความชอบ ${scores.careerScore} คะแนน, ตอบคำถามถูก ${scores.correctAnswers} จาก ${scores.totalQuestions} ข้อ (${correctPercentage}%).`
+                    summary: `คะแนนแบบทดสอบ ${scores.questionScore} คะแนน, คะแนนแบบประเมิน ${scores.assessmentScore} คะแนน, คะแนนความชอบ ${scores.careerScore} คะแนน, ตอบคำถามถูก ${scores.correctAnswers}/${scores.totalQuestions} ข้อ (${correctPercentage}%).`
                };
           });
           const sortedTracks = trackSummaries.sort((a, b) => b.totalScore - a.totalScore);
           const topTracks = sortedTracks.slice(0, 3);
           const recommendation = topTracks.map((track, index) => {
                let strength = index === 0 ? "เหมาะสมมาก" : index === 1 ? "ค่อนข้างเหมาะสม" : "ทำได้ดี";
-               return `${index + 1}) คุณ${strength}กับแทร็ก ${track.track} คะแนนรวมของคุณคือ ${track.totalScore} คะแนน, คุณตอบคำถามถูก ${track.correctPercentage} จากคำถามทั้งหมดภายในแทร็ก`;
+               return {
+                    track: track.track,
+                    recText: `คุณ${strength}กับแทร็ก ${track.track}`,
+                    descText: `คะแนนรวมของคุณคือ ${track.totalScore} คะแนน, ${track.summary}`
+               }
           });
 
           const totalQuestionScore = questionScores.reduce((sum, q) => sum + q.score, 0);
-          // const totalAssessmentScore = assessmentScores.reduce((sum, a) => sum + a.score, 0);
-          // const totalCareerScore = Object.values(trackScores).reduce((sum, scores) => sum + scores.careerScore, 0);
-          // const overallScore = totalQuestionScore + totalAssessmentScore + totalCareerScore;
+          const totalAssessmentScore = assessmentScores.reduce((sum, a) => sum + a.score, 0);
+          const totalCareerScore = Object.values(trackScores).reduce((sum, scores) => sum + scores.careerScore, 0);
+          const overallScore = totalQuestionScore + totalAssessmentScore + totalCareerScore;
 
           const totalCorrectAnswers = Object.values(trackScores).reduce((sum, scores) => sum + scores.correctAnswers, 0);
           const totalQuestions = Object.values(trackScores).reduce((sum, scores) => sum + scores.totalQuestions, 0);
@@ -774,13 +784,14 @@ const summaryAnswers = async (req, res) => {
                     questionScores,
                     assessmentScores,
                     trackSummaries,
+                    careersScores,
                     totalQuestionScore,
                     // totalAssessmentScore,
                     // totalCareerScore,
-                    // overallScore,
+                    overallScore,
                     totalCorrectAnswers,
                     totalQuestions,
-                    overallCorrectPercentage: `${overallCorrectPercentage}%`,
+                    overallCorrectPercentage,
                     recommendation
                },
                message: "Answer summary processed successfully"
