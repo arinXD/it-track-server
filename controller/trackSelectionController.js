@@ -198,7 +198,7 @@ const getStudentInTrackSelection = async (req, res) => {
             where: {
                 acadyear,
             },
-            attributes: ["id", "acadyear", "title"],
+            attributes: ["acadyear", "title"],
             include: [
                 {
                     model: Selection,
@@ -268,9 +268,8 @@ const getStudentInTrackSelection = async (req, res) => {
 
 const getDashboardData = async (req, res) => {
     const acadyear = req.params.acadyear
-    let data = []
     try {
-        data = await TrackSelection.findOne({
+        const data = await TrackSelection.findOne({
             where: {
                 acadyear,
             },
@@ -294,7 +293,7 @@ const getDashboardData = async (req, res) => {
                                     ]
                                 }
                             ],
-                            attributes: ["id", "stu_id", "email", "first_name", "last_name", "courses_type", "acadyear"],
+                            attributes: ["stu_id", "email", "first_name", "last_name", "courses_type", "acadyear"],
                         },
                         {
                             model: SelectionDetail,
@@ -311,6 +310,82 @@ const getDashboardData = async (req, res) => {
                 },
             ],
         })
+        const selections = data?.dataValues?.Selections
+        let tracks = await Track.findAll()
+        tracks = [...tracks?.map(e => e.dataValues.track)]
+        if (selections?.length > 0) {
+            for (const [index, selection] of selections.entries()) {
+                const enrollments = selection?.dataValues?.Student?.dataValues?.Enrollments
+                const selectionDetail = selection?.dataValues?.SelectionDetails
+                selections[index].dataValues.gpa = calculateGPA(enrollments)
+                selections[index].dataValues.score = calculateGPA(selectionDetail)
+                selections[index].dataValues.stuId = data.dataValues.Selections[index].dataValues.Student?.dataValues?.stu_id
+                selections[index].dataValues.stuName = data.dataValues.Selections[index].dataValues.Student?.dataValues?.first_name + " " + data.dataValues.Selections[index].dataValues.Student?.dataValues?.last_name
+                delete data.dataValues.Selections[index].dataValues.Student
+                delete data.dataValues.Selections[index].dataValues.SelectionDetails
+            }
+        }
+        if (data) {
+            data.dataValues.Selections = selections
+            const result = [];
+            const popularity = []
+            const selectedCount = {
+                selected: [],
+                nonSelected: [],
+            }
+            data.dataValues.Selections.forEach(selection => {
+                // หาเกรดเฉลี่ยรวมและจำนวนนักศึกษาในแทร็ก
+                const sl = selection?.dataValues;
+                let rs = result.find(item => item.track === sl.result);
+                if (!rs) {
+                    rs = {
+                        track: sl.result,
+                        total: 1,
+                        gpaSum: sl.gpa,
+                        gpaAvg: sl.gpa
+                    };
+                    result.push(rs);
+                } else {
+                    rs.total += 1;
+                    rs.gpaSum += sl.gpa;
+                    rs.gpaAvg = rs.gpaSum / rs.total;
+                }
+
+                // หาแทร็กที่ถูกเลือกเยอะที่สุด
+                let pop = popularity.find(item => item.track === sl.track_order_1);
+                if (!pop) {
+                    pop = {
+                        track: sl.track_order_1,
+                        selected: 1
+                    }
+                    popularity.push(pop)
+                } else {
+                    pop.selected += 1
+                }
+
+                // หาคนที่มาคัดและไม่ได้มาคัด
+                if (sl.track_order_1 !== null) {
+                    selectedCount.selected.push(sl)
+                } else {
+                    selectedCount.nonSelected.push(sl)
+                }
+                delete sl.updatedAt
+                delete sl.gpa
+                delete sl.score
+            });
+
+            delete data.dataValues.Selections
+
+            data.dataValues.result = result.sort((a, b) => (b.gpaAvg - a.gpaAvg))
+            data.dataValues.popularity = popularity
+            data.dataValues.selectedCount = selectedCount
+        }
+
+
+        return res.status(200).json({
+            ok: true,
+            data
+        })
     }
     catch (error) {
         console.log(error);
@@ -319,36 +394,17 @@ const getDashboardData = async (req, res) => {
             message: "Server error."
         })
     }
-
-    const selections = data?.dataValues?.Selections
-    let tracks = await Track.findAll()
-    tracks = [...tracks?.map(e => e.dataValues.track), null]
-    if (selections?.length > 0) {
-        for (const [index, selection] of selections.entries()) {
-            const enrollments = selection?.dataValues?.Student?.dataValues?.Enrollments
-            const selectionDetail = selection?.dataValues?.SelectionDetails
-            selections[index].dataValues.gpa = calculateGPA(enrollments)
-            selections[index].dataValues.score = calculateGPA(selectionDetail)
-
-            if (selection?.dataValues?.track_order_1 == null) {
-                let randomNum = Math.floor(Math.random() * 10) + 1;
-                const trackIndex = randomNum === 10 ? tracks.length - 1 : Math.floor(Math.random() * (tracks.length - 1));
-                selections[index].dataValues.track_order_1 = tracks[trackIndex];
-            }
-        }
-    }
-    if (data) {
-        data.dataValues.Selections = selections
-    }
-
-    return res.status(200).json({
-        ok: true,
-        data
-    })
 }
 
 const getMostPopularTrack = async (req, res) => {
-    const acadyear = req.params.acadyear
+    const acadyear = parseInt(req.params.acadyear, 10);
+    console.log(typeof acadyear, acadyear);
+    if (isNaN(acadyear)) {
+        return res.status(406).json({
+            ok: false,
+            message: "acadyear must be a number."
+        });
+    }
     const pastFiveYears = acadyear - 4;
     let data = []
     try {
@@ -440,7 +496,7 @@ const getLastest = async (req, res) => {
                             include: [
                                 {
                                     model: Enrollment,
-                                    attributes: ["subject_code", "grade"],
+                                    attributes: ["subject_id", "grade"],
                                     include: [
                                         {
                                             model: Subject,
@@ -453,7 +509,7 @@ const getLastest = async (req, res) => {
                         },
                         {
                             model: SelectionDetail,
-                            attributes: ["grade", "subject_code"],
+                            attributes: ["grade", "subject_id"],
                             include: [
                                 {
                                     model: Subject,
