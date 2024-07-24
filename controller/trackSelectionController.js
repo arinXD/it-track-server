@@ -398,17 +398,17 @@ const getDashboardData = async (req, res) => {
 
 const getMostPopularTrack = async (req, res) => {
     const acadyear = parseInt(req.params.acadyear, 10);
-    console.log(typeof acadyear, acadyear);
     if (isNaN(acadyear)) {
         return res.status(406).json({
             ok: false,
             message: "acadyear must be a number."
         });
     }
+
     const pastFiveYears = acadyear - 4;
-    let data = []
+
     try {
-        data = await TrackSelection.findAll({
+        const data = await TrackSelection.findAll({
             where: {
                 acadyear: {
                     [Op.between]: [pastFiveYears, acadyear + 1]
@@ -426,6 +426,29 @@ const getMostPopularTrack = async (req, res) => {
                 },
             ],
         })
+        for (let index = 0; index < data.length; index++) {
+            const result = []
+            const selection = data[index]?.dataValues?.Selections;
+            for (let j = 0; j < selection.length; j++) {
+                const track = selection[j]?.dataValues?.track_order_1;
+                let rs = result.find(item => item.track === track);
+                if (!rs) {
+                    rs = {
+                        track: track,
+                        count: 1
+                    }
+                    result.push(rs)
+                } else {
+                    rs.count += 1
+                }
+            }
+            data[index].dataValues.result = result
+            delete data[index].dataValues.Selections
+        }
+        return res.status(200).json({
+            ok: true,
+            data: data.filter(rs=>rs.dataValues.result.length)
+        })
     }
     catch (error) {
         console.log(error);
@@ -434,23 +457,6 @@ const getMostPopularTrack = async (req, res) => {
             message: "Server error."
         })
     }
-    let tracks = await Track.findAll()
-    tracks = [...tracks?.map(e => e.dataValues.track)]
-    for (const [i, ts] of data.entries()) {
-        const selections = ts?.dataValues?.Selections || []
-        for (const [index, select] of selections.entries()) {
-            if (select?.dataValues?.track_order_1 == null) {
-                const randomNum = Math.floor(Math.random() * tracks.length)
-                selections[index].dataValues.track_order_1 = tracks[randomNum]
-            }
-        }
-        data[i].dataValues.Selections = selections
-    }
-
-    return res.status(200).json({
-        ok: true,
-        data
-    })
 }
 
 const getSubjectInTrackSelection = async (req, res) => {
