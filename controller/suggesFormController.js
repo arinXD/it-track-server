@@ -6,9 +6,17 @@ const Answer = models.Answer
 const FormAssessmentQuestion = models.FormAssessmentQuestion
 const FormQuestion = models.FormQuestion
 const FormCareer = models.FormCareer
+const Career = models.Career
+const Track = models.Track
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const Joi = require('joi');
+
+const formAttr = ["id", "title", "desc"]
+const questionAttr = ["id", "question", "isMultipleChoice", "desc"]
+const answerAttr = ["id", "answer"]
+const assesstionAttr = ["id", "question", "desc"]
+const careerAttr = ["id", "name_th", "name_en", "image", "track", "desc"]
 
 const createSuggestFormSchema = Joi.object({
      id: Joi.alternatives().try(Joi.valid(null), Joi.number()),
@@ -21,6 +29,7 @@ const createSuggestFormSchema = Joi.object({
                isEnable: Joi.boolean().required(),
                isMultipleChoice: Joi.boolean(),
                track: Joi.string().valid('BIT', 'Web and Mobile', 'Network').required(),
+               desc: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
                Answers: Joi.array().items(
                     Joi.object({
                          id: Joi.alternatives().try(Joi.string(), Joi.number(), Joi.valid(null)).required(),
@@ -36,13 +45,13 @@ const createSuggestFormSchema = Joi.object({
                question: Joi.string().required(),
                track: Joi.string().valid('BIT', 'Web and Mobile', 'Network').required(),
                isEnable: Joi.boolean().required(),
+               desc: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
           })
      ).min(1).required(),
      Careers: Joi.array().items(
           Joi.number().required()
      ).min(1).required()
-});
-
+})
 const createFormQuestionSchema = Joi.object({
      formId: Joi.number().required(),
      questionId: Joi.number().required(),
@@ -52,6 +61,24 @@ const createFormAssessmentSchema = Joi.object({
      formId: Joi.number().required(),
      assessmentQuestionId: Joi.number().required(),
      isEnable: Joi.boolean(),
+});
+
+const answerSchema = Joi.object({
+     questions: Joi.array().items(
+          Joi.object({
+               qId: Joi.number().required(),
+               aId: Joi.number().required(),
+          })
+     ).min(1).required(),
+     assessments: Joi.array().items(
+          Joi.object({
+               assId: Joi.number().required(),
+               index: Joi.number().required(),
+          })
+     ).min(1).required(),
+     careers: Joi.array().items(
+          Joi.number().required()
+     ).min(1).required()
 });
 
 
@@ -93,17 +120,75 @@ const getFormByID = async (req, res) => {
 }
 
 const getAvailableForm = async (req, res) => {
+     const shuffleArray = (array) => {
+          for (let i = array.length - 1; i > 0; i--) {
+               const j = Math.floor(Math.random() * (i + 1));
+               [array[i], array[j]] = [array[j], array[i]];
+          }
+          return array;
+     }
      try {
           const suggestForms = await SuggestionForm.findOne({
                where: {
                     isAvailable: true
-               }
+               },
+               attributes: formAttr,
+               include: [
+                    {
+                         model: FormQuestion,
+                         where: {
+                              isEnable: true
+                         },
+                         include: {
+                              model: QuestionBank,
+                              attributes: questionAttr,
+                              include: {
+                                   model: Answer,
+                                   attributes: answerAttr,
+                              }
+                         }
+                    },
+                    {
+                         model: FormAssessmentQuestion,
+                         where: {
+                              isEnable: true
+                         },
+                         include: {
+                              model: AssessmentQuestionBank,
+                              attributes: assesstionAttr,
+                         }
+                    },
+                    {
+                         model: FormCareer,
+                         include: {
+                              model: Career,
+                              attributes: careerAttr,
+                         }
+                    },
+               ]
           })
+          const formatFormData = suggestForms.dataValues
+
+          formatFormData.Questions = shuffleArray(formatFormData?.FormQuestions.map(fq => {
+               const question = fq?.QuestionBank;
+               if (question.Answers) {
+                    question.Answers = shuffleArray(question.Answers);
+               }
+               return question;
+          }));
+          formatFormData.Assessments = shuffleArray(formatFormData?.FormAssessmentQuestions.map(fq => fq?.AssessmentQuestionBank));
+          formatFormData.Careers = shuffleArray(formatFormData?.FormCareers.map(fq => fq?.Career));
+
+          delete formatFormData.FormQuestions
+          delete formatFormData.FormAssessmentQuestions
+          delete formatFormData.FormCareers
+
           return res.status(200).json({
                ok: true,
-               data: suggestForms
+               data: formatFormData
           })
      } catch (error) {
+          console.log(error);
           return res.status(500).json({
                ok: false,
                message: "Server error."
@@ -134,13 +219,93 @@ const getDeletedForms = async (req, res) => {
      }
 }
 
+async function checkEquals(values) {
+     const requireTrackQ = {}
+     const requireTrackA = {}
+     const requireTrackC = {}
+
+     const tracks = await Track.findAll({
+          attributes: ["track"]
+     });
+
+     for (let index = 0; index < tracks.length; index++) {
+          const track = tracks[index]?.dataValues?.track;
+          requireTrackQ[track] = 0
+          requireTrackA[track] = 0
+          requireTrackC[track] = 0
+     }
+
+     values.Questions.map(question => {
+          requireTrackQ[question.track] += 1
+     })
+     values.Assesstions.map(assessment => {
+          requireTrackA[assessment.track] += 1
+     })
+     for (let index = 0; index < values.Careers.length; index++) {
+          const cid = values.Careers[index];
+          const career = await Career.findOne({
+               where: { id: cid },
+               attributes: ["track"]
+          })
+          const track = career?.dataValues?.track
+          requireTrackC[track] += 1
+     }
+
+     function analyzeInequality(obj) {
+          const values = Object.values(obj);
+          const max = Math.max(...values);
+          const inequalTracks = [];
+          for (let track in obj) {
+               if (obj[track] < max) {
+                    inequalTracks.push({
+                         track: track,
+                         difference: max - obj[track],
+                    });
+               }
+          }
+          return inequalTracks;
+     }
+
+     let message = null;
+     let inequalityInfo = {};
+
+     if (!Object.values(requireTrackQ).every(v => v === Object.values(requireTrackQ)[0])) {
+          message = "คำถามในแต่ละแทร็กไม่เท่ากัน";
+          inequalityInfo.items = analyzeInequality(requireTrackQ);
+          inequalityInfo.type = "ข้อ"
+     }
+     else if (!Object.values(requireTrackA).every(v => v === Object.values(requireTrackA)[0])) {
+          message = "แบบประเมินในแต่ละแทร็กไม่เท่ากัน";
+          inequalityInfo.items = analyzeInequality(requireTrackA);
+          inequalityInfo.type = "ข้อ"
+     }
+     else if (!Object.values(requireTrackC).every(v => v === Object.values(requireTrackC)[0])) {
+          message = "อาชีพในแต่ละแทร็กไม่เท่ากัน";
+          inequalityInfo.items = analyzeInequality(requireTrackC);
+          inequalityInfo.type = "อาชีพ"
+     }
+     console.log(requireTrackQ, Object.values(requireTrackQ).every(v => v === Object.values(requireTrackQ)[0]));
+     console.log(requireTrackA, Object.values(requireTrackA).every(v => v === Object.values(requireTrackA)[0]));
+     console.log(requireTrackC, Object.values(requireTrackC).every(v => v === Object.values(requireTrackC)[0]));
+     return { message, inequalityInfo };
+}
+
 const createForm = async (req, res) => {
      const createData = req.body;
      const { error, value } = createSuggestFormSchema.validate(createData);
      if (error) {
-          return res.status(400).json({
+          return res.status(406).json({
                ok: false,
-               message: `Validation error: ${error.details[0].message}`
+               message: `${error.details[0].message}`
+          });
+     }
+
+     const { message: errMessage, inequalityInfo } = await checkEquals(value)
+     if (errMessage) {
+          return res.status(406).json({
+               ok: false,
+               message: errMessage,
+               inequalityInfo
           });
      }
 
@@ -153,7 +318,6 @@ const createForm = async (req, res) => {
                     {
                          title: value.title,
                          desc: value.desc,
-                         isAvailable: false
                     },
                     {
                          where: {
@@ -175,7 +339,8 @@ const createForm = async (req, res) => {
                if (!isNaN(Number(questionData.id))) {
                     await QuestionBank.update({
                          question: questionData.question,
-                         track: questionData.track
+                         track: questionData.track,
+                         desc: questionData.desc,
                     }, {
                          where: { id: Number(questionData.id) },
                          transaction: t
@@ -183,7 +348,8 @@ const createForm = async (req, res) => {
                } else {
                     const newQuestion = await QuestionBank.create({
                          question: questionData.question,
-                         track: questionData.track
+                         track: questionData.track,
+                         desc: questionData.desc,
                     }, { transaction: t });
                     questionData.id = newQuestion?.dataValues?.id
                }
@@ -248,7 +414,8 @@ const createForm = async (req, res) => {
                if (!isNaN(Number(assessmentData.id))) {
                     await AssessmentQuestionBank.update({
                          question: assessmentData.question,
-                         track: assessmentData.track
+                         track: assessmentData.track,
+                         desc: assessmentData.desc,
                     }, {
                          where: { id: Number(assessmentData.id) },
                          transaction: t
@@ -256,7 +423,8 @@ const createForm = async (req, res) => {
                } else {
                     const newAssessmentQuestion = await AssessmentQuestionBank.create({
                          question: assessmentData.question,
-                         track: assessmentData.track
+                         track: assessmentData.track,
+                         desc: assessmentData.desc,
                     }, { transaction: t });
 
                     assessmentData.id = newAssessmentQuestion?.dataValues?.id;
@@ -345,10 +513,10 @@ const createForm = async (req, res) => {
      } catch (error) {
           console.log(error);
           await t.rollback();
-          console.error("Error creating form:", error);
           return res.status(500).json({
                ok: false,
-               message: "Server error while creating the form."
+               message: "Server error while creating the form.",
+               data: req.body
           });
      }
 };
@@ -412,14 +580,12 @@ const availableForm = async (req, res) => {
      try {
           transaction = await models.sequelize.transaction();
 
-          const updatedForm = await SuggestionForm.update(
-               { isAvailable: true },
-               {
-                    where: { id: formId },
-                    returning: true,
-                    transaction
-               }
-          );
+          const updatedForm = await SuggestionForm.findOne({
+               where: { id: formId },
+          });
+
+          updatedForm.isAvailable = !updatedForm?.dataValues?.isAvailable;
+          await updatedForm.save({ transaction });
 
           if (!updatedForm) {
                await transaction.rollback();
@@ -492,6 +658,152 @@ const forceDeleteMultiple = async (req, res) => {
           })
      }
 }
+const sleep = (milliseconds) => {
+     return new Promise(resolve => setTimeout(resolve, milliseconds))
+}
+const summaryAnswers = async (req, res) => {
+     await sleep(2000)
+     const answers = req.body;
+     try {
+          const { error, value } = answerSchema.validate(answers);
+          if (error) {
+               return res.status(400).json({
+                    ok: false,
+                    message: `Validation error: ${error.details[0].message}`
+               });
+          }
+
+          const tracks = await Track.findAll();
+          const trackScores = tracks.reduce((acc, track) => {
+               acc[track.track] = {
+                    questionScore: 0,
+                    assessmentScore: 0,
+                    careerScore: 0,
+                    correctAnswers: 0,
+                    totalQuestions: 0
+               };
+               return acc;
+          }, {});
+
+          const questionScores = await Promise.all(value.questions.map(async (q) => {
+               const question = await QuestionBank.findByPk(q.qId);
+               const correctAnswer = await Answer.findOne({
+                    where: { questionId: q.qId, isCorrect: true }
+               });
+               const isCorrect = correctAnswer && correctAnswer?.dataValues?.id === q.aId;
+               const score = isCorrect ? 10 : 0;
+
+               if (question && question?.dataValues?.track) {
+                    const track = question?.dataValues?.track;
+                    trackScores[track].questionScore += score;
+                    trackScores[track].totalQuestions += 1;
+                    if (isCorrect) {
+                         trackScores[track].correctAnswers += 1;
+                    }
+               }
+
+               return {
+                    qId: q.qId,
+                    question: question?.dataValues?.question,
+                    track: question ? question?.dataValues?.track : null,
+                    score: score,
+                    isCorrect: isCorrect
+               };
+          }));
+
+          const assessmentScores = await Promise.all(value.assessments.map(async (a) => {
+               const assessment = await AssessmentQuestionBank.findByPk(a.assId);
+               const score = [5, 4, 3, 2, 1, 0][a.index] || 0;
+
+               if (assessment && assessment?.dataValues?.track) {
+                    trackScores[assessment?.dataValues?.track].assessmentScore += score;
+               }
+
+               return {
+                    assId: a.assId,
+                    question: assessment?.dataValues?.question,
+                    track: assessment ? assessment?.dataValues?.track : null,
+                    score: score
+               };
+          }));
+
+          const careersScores = await Promise.all(value.careers.map(async (careerId) => {
+               const career = await Career.findByPk(careerId);
+               if (career && career?.dataValues?.track) {
+                    trackScores[career?.dataValues?.track].careerScore += 5;
+               }
+               return {
+                    name_th: career?.dataValues?.name_th,
+                    name_en: career?.dataValues?.name_en,
+                    track: career?.dataValues?.track || null,
+                    score: 5
+               };
+          }));
+
+          const trackSummaries = Object.entries(trackScores).map(([track, scores]) => {
+               const correctPercentage = scores.totalQuestions > 0
+                    ? (scores.correctAnswers / scores.totalQuestions * 100).toFixed(2)
+                    : 0;
+               return {
+                    track,
+                    questionScore: scores.questionScore,
+                    assessmentScore: scores.assessmentScore,
+                    careerScore: scores.careerScore,
+                    totalScore: scores.questionScore + scores.assessmentScore + scores.careerScore,
+                    correctAnswers: scores.correctAnswers,
+                    totalQuestions: scores.totalQuestions,
+                    correctPercentage: `${correctPercentage}%`,
+                    summary: `คะแนนแบบทดสอบ ${scores.questionScore} คะแนน, คะแนนแบบประเมิน ${scores.assessmentScore} คะแนน, คะแนนความชอบ ${scores.careerScore} คะแนน, ตอบคำถามถูก ${scores.correctAnswers}/${scores.totalQuestions} ข้อ (${correctPercentage}%).`
+               };
+          });
+          const sortedTracks = trackSummaries.sort((a, b) => b.totalScore - a.totalScore);
+          const topTracks = sortedTracks.slice(0, 3);
+          const recommendation = topTracks.map((track, index) => {
+               let strength = index === 0 ? "เหมาะสมมาก" : index === 1 ? "ค่อนข้างเหมาะสม" : "ทำได้ดี";
+               return {
+                    track: track.track,
+                    recText: `คุณ${strength}กับแทร็ก ${track.track}`,
+                    descText: `คะแนนรวมของคุณคือ ${track.totalScore} คะแนน, ${track.summary}`
+               }
+          });
+
+          const totalQuestionScore = questionScores.reduce((sum, q) => sum + q.score, 0);
+          const totalAssessmentScore = assessmentScores.reduce((sum, a) => sum + a.score, 0);
+          const totalCareerScore = Object.values(trackScores).reduce((sum, scores) => sum + scores.careerScore, 0);
+          const overallScore = totalQuestionScore + totalAssessmentScore + totalCareerScore;
+
+          const totalCorrectAnswers = Object.values(trackScores).reduce((sum, scores) => sum + scores.correctAnswers, 0);
+          const totalQuestions = Object.values(trackScores).reduce((sum, scores) => sum + scores.totalQuestions, 0);
+          const overallCorrectPercentage = totalQuestions > 0
+               ? (totalCorrectAnswers / totalQuestions * 100).toFixed(2)
+               : 0;
+
+          return res.status(200).json({
+               ok: true,
+               data: {
+                    questionScores,
+                    assessmentScores,
+                    trackSummaries,
+                    careersScores,
+                    totalQuestionScore,
+                    // totalAssessmentScore,
+                    // totalCareerScore,
+                    overallScore,
+                    totalCorrectAnswers,
+                    totalQuestions,
+                    overallCorrectPercentage,
+                    recommendation
+               },
+               message: "Answer summary processed successfully"
+          });
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          });
+     }
+};
 
 module.exports = {
      getForms,
@@ -505,4 +817,5 @@ module.exports = {
      availableForm,
      deleteMultiple,
      forceDeleteMultiple,
+     summaryAnswers,
 }

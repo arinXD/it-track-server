@@ -310,6 +310,7 @@ router.put("/restore/select", adminMiddleware, async (req, res) => {
 router.put("/:id", adminMiddleware, async (req, res) => {
     const stuid = req.params.id
     const stuData = req.body
+    console.log(stuData);
     try {
         await Student.update(stuData, {
             where: {

@@ -3,7 +3,7 @@ const AssessmentQuestionBank = models.AssessmentQuestionBank
 const FormAssessmentQuestion = models.FormAssessmentQuestion
 const { Op } = require('sequelize');
 const Joi = require('joi');
-const defaultAssAttr = ["id", "question", "track"]
+const defaultAssAttr = ["id", "question", "track", "desc"]
 
 const createAssessmentSchema = Joi.object({
     question: Joi.string().required(),

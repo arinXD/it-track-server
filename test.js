@@ -1,9 +1,7 @@
-var rand = function() {
-    return Math.random().toString(36).substr(2)
-};
+const { base64encode, base64decode } = require('nodejs-base64');
 
-var token = function() {
-    console.log(rand() + rand()+ rand())
-};
+const baseString = "awdlaw,fpmawd1a561wd68aw1d@aw-dp-_Ada+a-wd!awd,awd415641651asdaw0awdaOKSAXC_)OW_Q"
 
-token();
+const encoded = base64encode(baseString);
+const decoded = base64decode(encoded); 
+

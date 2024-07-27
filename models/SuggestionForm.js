@@ -7,6 +7,14 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'formId',
                 sourceKey: 'id',
             });
+            this.hasMany(models.FormAssessmentQuestion, {
+                foreignKey: 'formId',
+                sourceKey: 'id',
+            });
+            this.hasMany(models.FormCareer, {
+                foreignKey: 'formId',
+                sourceKey: 'id',
+            });
         }
     }
     SuggestionForm.init({

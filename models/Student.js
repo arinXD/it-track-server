@@ -36,6 +36,7 @@ module.exports = (sequelize, DataTypes) => {
         courses_type: DataTypes.STRING,
         program: DataTypes.STRING,
         acadyear: DataTypes.INTEGER,
+        acadyear_desc: DataTypes.STRING,
         status_code: DataTypes.INTEGER,
         daletedAt: DataTypes.DATE,
     }, {
