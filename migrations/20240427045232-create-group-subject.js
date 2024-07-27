@@ -9,6 +9,16 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      verify_id: {
+        allowNull: true,
+        defaultValue: null,
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Verifies',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
+      },
       subject_id: {
         allowNull: true,
         type: Sequelize.INTEGER,

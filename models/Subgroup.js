@@ -15,6 +15,9 @@ module.exports = (sequelize, DataTypes) => {
             this.hasMany(models.SemiSubGroup, {
                 foreignKey: 'sub_group_id'
             });
+            this.hasMany(models.ConditionSubgroupVerify, {
+                foreignKey: 'sub_group_id',
+            });
         }
     }
     SubGroup.init({

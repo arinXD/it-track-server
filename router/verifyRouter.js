@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const models = require('../models');
 const Verify = models.Verify;
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const adminMiddleware = require("../middleware/adminMiddleware");
+const { log } = require('console');
 const Program = models.Program;
 const Subject = models.Subject
 const Categorie = models.Categorie
@@ -84,6 +85,14 @@ router.post("/", adminMiddleware, async (req, res) => {
 router.get("/:id", async (req, res) => {
     const id = req.params.id
     try {
+        const verify_id = await Verify.findOne({
+            where: {
+                verify: id
+            },
+            attributes: ["id"]
+        })
+        // console.log(verify_id);
+
         const data = await Verify.findOne({
             where: {
                 verify: id
@@ -102,6 +111,10 @@ router.get("/:id", async (req, res) => {
                 },
                 {
                     model: SubjectVerify,
+                    where: {
+                        verify_id: verify_id?.dataValues?.id,
+                    },
+                    required: false,
                     include: [
                         {
                             model: Subject,
@@ -127,6 +140,13 @@ router.get("/:id", async (req, res) => {
                                                 }
                                             ]
                                         }
+                                        ,
+                                        {
+                                            model: Verify,
+                                            where: {
+                                                id: verify_id?.dataValues?.id
+                                            },
+                                        }
                                     ]
                                 },
                                 {
@@ -145,6 +165,12 @@ router.get("/:id", async (req, res) => {
                                                 }
                                             ]
                                         }
+                                        , {
+                                            model: Verify,
+                                            where: {
+                                                id: verify_id?.dataValues?.id
+                                            },
+                                        }
                                     ]
                                 },
                                 {
@@ -157,6 +183,11 @@ router.get("/:id", async (req, res) => {
                                                     model: Categorie
                                                 }
                                             ]
+                                        }, {
+                                            model: Verify,
+                                            where: {
+                                                id: verify_id?.dataValues?.id
+                                            },
                                         }
                                     ]
                                 },
@@ -185,7 +216,6 @@ router.get("/:id", async (req, res) => {
 router.post("/group", adminMiddleware, async (req, res) => {
     const { verify_id, group_id, subjects } = req.body;
     try {
-
         if (!Array.isArray(subjects)) {
             return res.status(400).json({
                 ok: false,
@@ -195,7 +225,11 @@ router.post("/group", adminMiddleware, async (req, res) => {
 
         for (const subject_id of subjects) {
             const subGroupSubjectExists = await SubgroupSubject.findOne({
-                where: { subject_id }
+                where: { verify_id, subject_id }
+            });
+
+            const semisubgroupgroupSubjectExists = await SemiSubgroupSubject.findOne({
+                where: { verify_id, subject_id }
             });
 
             if (subGroupSubjectExists) {
@@ -205,31 +239,34 @@ router.post("/group", adminMiddleware, async (req, res) => {
                 });
             }
 
+            if (semisubgroupgroupSubjectExists) {
+                return res.status(400).json({
+                    ok: false,
+                    message: `The subject ${subject_id} already exists in SemiSubgroupSubject.`
+                });
+            }
+
             let groupSubject = await GroupSubject.findOne({
-                where: { subject_id }
+                where: { subject_id, verify_id }
             });
 
-            if (groupSubject) {
-                groupSubject.group_id = group_id;
-                await groupSubject.save();
-            } else {
+            if (!groupSubject) {
                 groupSubject = await GroupSubject.create({
+                    verify_id,
                     subject_id,
                     group_id
                 });
+            } else {
+                groupSubject.group_id = group_id;
+                await groupSubject.save();
             }
 
             const existingSubjectVerify = await SubjectVerify.findOne({
                 where: { subject_id, verify_id }
             });
 
-            if (existingSubjectVerify) {
-                return res.status(200).json({
-                    ok: true,
-                    message: `Subject ${subject_id} already exists in SubjectVerify for verify_id ${verify_id}.`
-                });
-            } else {
-                const newSubjectVerify = await SubjectVerify.create({
+            if (!existingSubjectVerify) {
+                await SubjectVerify.create({
                     verify_id,
                     subject_id
                 });
@@ -238,7 +275,7 @@ router.post("/group", adminMiddleware, async (req, res) => {
 
         return res.status(201).json({
             ok: true,
-            message: `Subjects added successfully.`
+            message: "Subjects added successfully."
         });
     } catch (err) {
         console.error(err);
@@ -262,8 +299,13 @@ router.post("/subgroup", adminMiddleware, async (req, res) => {
 
         for (const subject_id of subjects) {
             const groupSubjectExists = await GroupSubject.findOne({
-                where: { subject_id }
+                where: { verify_id, subject_id }
             });
+
+            const semisubgroupgroupSubjectExists = await SemiSubgroupSubject.findOne({
+                where: { verify_id, subject_id }
+            });
+
 
             if (groupSubjectExists) {
                 return res.status(400).json({
@@ -272,8 +314,16 @@ router.post("/subgroup", adminMiddleware, async (req, res) => {
                 });
             }
 
+
+            if (semisubgroupgroupSubjectExists) {
+                return res.status(400).json({
+                    ok: false,
+                    message: `The subject ${subject_id} already exists in SemiSubgroupSubject.`
+                });
+            }
+
             let subgroupSubject = await SubgroupSubject.findOne({
-                where: { subject_id }
+                where: { subject_id, verify_id }
             });
 
             if (subgroupSubject) {
@@ -281,6 +331,7 @@ router.post("/subgroup", adminMiddleware, async (req, res) => {
                 await subgroupSubject.save();
             } else {
                 subgroupSubject = await SubgroupSubject.create({
+                    verify_id,
                     subject_id,
                     sub_group_id
                 });
@@ -329,11 +380,11 @@ router.post("/semisubgroup", adminMiddleware, async (req, res) => {
 
         for (const subject_id of subjects) {
             const groupSubjectExists = await GroupSubject.findOne({
-                where: { subject_id }
+                where: { verify_id, subject_id }
             });
 
             const subGroupSubjectExists = await SubgroupSubject.findOne({
-                where: { subject_id }
+                where: { verify_id, subject_id }
             });
 
             if (groupSubjectExists) {
@@ -351,7 +402,7 @@ router.post("/semisubgroup", adminMiddleware, async (req, res) => {
             }
 
             let semisubgroupSubject = await SemiSubgroupSubject.findOne({
-                where: { subject_id }
+                where: { subject_id, verify_id }
             });
 
             if (semisubgroupSubject) {
@@ -359,6 +410,7 @@ router.post("/semisubgroup", adminMiddleware, async (req, res) => {
                 await semisubgroupSubject.save();
             } else {
                 semisubgroupSubject = await SemiSubgroupSubject.create({
+                    verify_id,
                     subject_id,
                     semi_sub_group_id
                 });
@@ -425,8 +477,9 @@ router.post("/category", adminMiddleware, async (req, res) => {
     }
 });
 
-router.delete("/group/:id", adminMiddleware, async (req, res) => {
+router.delete("/group/:id/:verify_id", adminMiddleware, async (req, res) => {
     const id = req.params.id;
+    const { verify_id } = req.params;
     try {
         const groupSubject = await GroupSubject.findOne({
             where: { id },
@@ -448,11 +501,11 @@ router.delete("/group/:id", adminMiddleware, async (req, res) => {
         const subject_code = groupSubject.Subject.subject_code;
 
         await GroupSubject.destroy({
-            where: { id }
+            where: { subject_id, verify_id }
         });
 
         await SubjectVerify.destroy({
-            where: { subject_id }
+            where: { subject_id, verify_id }
         });
 
         return res.status(200).json({
@@ -468,8 +521,9 @@ router.delete("/group/:id", adminMiddleware, async (req, res) => {
     }
 });
 
-router.delete("/subgroup/:id", adminMiddleware, async (req, res) => {
+router.delete("/subgroup/:id/:verify_id", adminMiddleware, async (req, res) => {
     const id = req.params.id;
+    const { verify_id } = req.params;
     try {
         const subgroupSubject = await SubgroupSubject.findOne({
             where: { subject_id: id },
@@ -491,11 +545,11 @@ router.delete("/subgroup/:id", adminMiddleware, async (req, res) => {
         const subject_code = subgroupSubject.Subject.subject_code;
 
         await SubgroupSubject.destroy({
-            where: { subject_id }
+            where: { subject_id, verify_id }
         });
 
         await SubjectVerify.destroy({
-            where: { subject_id }
+            where: { subject_id, verify_id }
         });
 
         return res.status(200).json({
@@ -511,8 +565,9 @@ router.delete("/subgroup/:id", adminMiddleware, async (req, res) => {
     }
 });
 
-router.delete("/semisubgroup/:id", adminMiddleware, async (req, res) => {
+router.delete("/semisubgroup/:id/:verify_id", adminMiddleware, async (req, res) => {
     const id = req.params.id;
+    const { verify_id } = req.params;
     try {
         const semisubgroupSubject = await SemiSubgroupSubject.findOne({
             where: { subject_id: id },
@@ -534,11 +589,11 @@ router.delete("/semisubgroup/:id", adminMiddleware, async (req, res) => {
         const subject_code = semisubgroupSubject.Subject.subject_code;
 
         await SemiSubgroupSubject.destroy({
-            where: { subject_id }
+            where: { subject_id, verify_id }
         });
 
         await SubjectVerify.destroy({
-            where: { subject_id }
+            where: { subject_id, verify_id }
         });
 
         return res.status(200).json({
