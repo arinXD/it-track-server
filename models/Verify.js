@@ -13,7 +13,22 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(models.SubjectVerify, {
         foreignKey: 'verify_id',
       });
+      this.hasMany(models.ConditionVerify, {
+        foreignKey: 'verify_id',
+      });
+      this.hasMany(models.ConditionSubgroupVerify, {
+        foreignKey: 'verify_id',
+      });
       this.hasMany(models.CategoryVerify, {
+        foreignKey: 'verify_id',
+      });
+      this.hasMany(models.GroupSubject, {
+        foreignKey: 'verify_id',
+      });
+      this.hasMany(models.SemiSubgroupSubject, {
+        foreignKey: 'verify_id',
+      });
+      this.hasMany(models.SubgroupSubject, {
         foreignKey: 'verify_id',
       });
       this.belongsTo(models.Program, {

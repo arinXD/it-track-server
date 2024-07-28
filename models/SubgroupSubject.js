@@ -16,6 +16,9 @@ module.exports = (sequelize, DataTypes) => {
                 targetKey: 'subject_id',
                 allowNull: true,
             });
+            this.belongsTo(models.Verify, {
+                foreignKey: 'verify_id',
+            });
         }
     }
     SubgroupSubject.init({
@@ -23,7 +26,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             primaryKey: true,
         },
-        acadyear: DataTypes.INTEGER,
     }, {
         sequelize,
         modelName: 'SubgroupSubject',

@@ -9,6 +9,15 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
+            verify_id: {
+                allowNull: true,
+                type: Sequelize.INTEGER,
+                references: {
+                  model: 'Verifies',
+                  key: 'id',
+                },
+                onDelete: 'CASCADE',
+              },
             subject_id: {
                 allowNull: true,
                 type: Sequelize.INTEGER,
@@ -26,10 +35,6 @@ module.exports = {
                     key: 'id'
                 },
                 defaultValue: null
-            },
-            acadyear: {
-                type: Sequelize.INTEGER,
-                defaultValue: 0,
             },
             createdAt: {
                 allowNull: false,

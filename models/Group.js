@@ -15,6 +15,9 @@ module.exports = (sequelize, DataTypes) => {
             this.hasMany(models.GroupSubject, {
                 foreignKey: 'group_id',
             });
+            this.hasMany(models.ConditionVerify, {
+                foreignKey: 'group_id',
+            });
         }
     }
     Group.init({
