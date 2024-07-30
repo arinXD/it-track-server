@@ -29,7 +29,7 @@ const createSuggestFormSchema = Joi.object({
                isEnable: Joi.boolean().required(),
                isMultipleChoice: Joi.boolean(),
                track: Joi.string().valid('BIT', 'Web and Mobile', 'Network').required(),
-               desc: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
+               desc: Joi.alternatives().try(Joi.string().allow(''), Joi.valid(null)),
                Answers: Joi.array().items(
                     Joi.object({
                          id: Joi.alternatives().try(Joi.string(), Joi.number(), Joi.valid(null)).required(),
@@ -45,7 +45,7 @@ const createSuggestFormSchema = Joi.object({
                question: Joi.string().required(),
                track: Joi.string().valid('BIT', 'Web and Mobile', 'Network').required(),
                isEnable: Joi.boolean().required(),
-               desc: Joi.alternatives().try(Joi.string(), Joi.valid(null)),
+               desc: Joi.alternatives().try(Joi.string().allow(''), Joi.valid(null)),
           })
      ).min(1).required(),
      Careers: Joi.array().items(

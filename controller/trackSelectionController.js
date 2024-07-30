@@ -433,24 +433,22 @@ const getDashboardData = async (req, res) => {
 }
 
 const getMostPopularTrack = async (req, res) => {
-    const acadyear = parseInt(req.params.acadyear, 10);
-    if (isNaN(acadyear)) {
+    const start = parseInt(req.params.start, 10);
+    const end = parseInt(req.params.end, 10);
+    if (isNaN(start) || isNaN(end)) {
         return res.status(406).json({
             ok: false,
             message: "acadyear must be a number."
         });
     }
 
-    const pastFiveYears = acadyear - 4;
-
     try {
         const data = await TrackSelection.findAll({
             where: {
                 acadyear: {
-                    [Op.between]: [pastFiveYears, acadyear + 1]
+                    [Op.between]: [start, end]
                 }
             },
-            limit: 5,
             order: [
                 ['acadyear', 'asc'],
             ],

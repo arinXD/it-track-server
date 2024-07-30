@@ -14,6 +14,14 @@ module.exports = (sequelize, DataTypes) => {
             this.hasOne(models.EmailVerify, {
                 foreignKey: "user_id"
             });
+            this.hasMany(models.TrackPetition, {
+                foreignKey: 'senderId',
+                sourceKey: 'id',
+            });
+            this.hasMany(models.TrackPetition, {
+                foreignKey: 'approver',
+                sourceKey: 'id',
+            });
         }
     }
     User.init({
