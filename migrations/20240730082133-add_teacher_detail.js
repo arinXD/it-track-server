@@ -13,7 +13,7 @@ module.exports = {
             },)
         await queryInterface.addColumn(
             'Teachers', // table name
-            'name', // new field name
+            'teacherName', // new field name
             {
                 allowNull: true,
                 unique: false,

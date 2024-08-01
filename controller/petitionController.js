@@ -22,7 +22,7 @@ const updatePetition = Joi.object({
 });
 const petitionStatus = Joi.string().valid('all', 'approved', 'rejected').required()
 
-const userAttr = ["id", "email"]
+const userAttr = ["id", "email", "image"]
 const petitionAttr = ["id", "title", "detail", "status", "oldTrack", "newTrack", "createdAt",]
 const studentAttr = ["stu_id", "email", "first_name", "last_name", "courses_type", "program", "acadyear"]
 
