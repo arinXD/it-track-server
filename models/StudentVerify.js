@@ -22,6 +22,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'student_verify_id',
                 sourceKey: 'id',
             });
+            this.hasMany(models.StudentCategoryVerify, {
+                foreignKey: 'student_verify_id',
+                sourceKey: 'id',
+            });
         }
     }
     StudentVerify.init({

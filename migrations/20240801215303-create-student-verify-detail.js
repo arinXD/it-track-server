@@ -27,6 +27,42 @@ module.exports = {
                 },
                 defaultValue: null
             },
+            group_subject_id: {
+                allowNull: true,
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'GroupSubjects',
+                    key: 'id'
+                },
+                defaultValue: null
+            },
+            sub_group_subject_id: {
+                allowNull: true,
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'SubgroupSubjects',
+                    key: 'id'
+                },
+                defaultValue: null
+            },
+            semi_sub_group_subject_id: {
+                allowNull: true,
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'SemiSubgroupSubjects',
+                    key: 'id'
+                },
+                defaultValue: null
+            },
+            category_subject_id: {
+                allowNull: true,
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'StudentCategoryVerifies',
+                    key: 'id'
+                },
+                defaultValue: null
+            },
             grade: {
                 type: Sequelize.STRING
             },
