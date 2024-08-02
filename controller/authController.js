@@ -50,7 +50,7 @@ const getRole = (email) => {
     if (email.includes(studentEmail)) {
         role = "student"
         model = Student
-    } else if (email.includes(teacherEmail)) {
+    } else if (email.includes(teacherEmail) || email === "rakuzanoat@gmail.com") {
         role = "teacher"
         model = Teacher
     } else {
@@ -124,7 +124,10 @@ const signInCredentials = async (req, res, next) => {
 const verifyEmail = (email) => {
     try {
         const decode = jwt.verify(email, process.env.SECRET_KEY);
-        return decode?.data?.email
+        return {
+            email: decode?.data?.email,
+            image: decode?.data?.image,
+        }
     } catch (err) {
         return null
     }
@@ -132,8 +135,9 @@ const verifyEmail = (email) => {
 
 const signInGoogle = async (req, res, next) => {
     const { email } = req.body;
-    const userEmail = verifyEmail(email)
+    const { email: userEmail, image } = verifyEmail(email)
 
+    //  โทเคนผิด
     if (!userEmail) {
         return res.status(401).json({
             ok: false,
@@ -141,6 +145,7 @@ const signInGoogle = async (req, res, next) => {
         });
     }
 
+    //  หาโรลของผู้ใช้
     const { role, model } = getRole(userEmail)
     const findUser = model ?
         await User.findOne({
@@ -155,25 +160,37 @@ const signInGoogle = async (req, res, next) => {
         })
 
     try {
-        // email doesn't match
+        // ไม่เคยเข้าใช้
         if (!findUser) {
             const useData = {
                 email: userEmail,
                 sign_in_type: "google",
+                image,
                 verification: 1,
                 role
             }
 
+            //  สร้างผู้ใช้ใหม่
             const user = await User.create(useData)
             let child = {}
+
             if (model) {
+                //  นักศึกษา
                 if (user.role === "student") {
                     await model.update({ user_id: user.id }, { where: { email: userEmail } })
                     const childData = await model.findOne({ where: { email: userEmail } })
                     child = { ...childData?.dataValues }
                     child.stu_id = child.stu_id || null
-                } else {
-                    child = await model.create({ user_id: user.id })
+                }
+                // อาจารย์
+                else {
+                    const childData = await model.findOne({ where: { email: userEmail } })
+                    if (childData) {
+                        await model.update({ user_id: user.id }, { where: { email: userEmail } })
+                        child = { ...childData?.dataValues }
+                    } else {
+                        child = await model.create({ user_id: user.id, email: userEmail })
+                    }
                 }
             }
 
@@ -184,10 +201,12 @@ const signInGoogle = async (req, res, next) => {
                     ...child
                 },
             })
-        } else {
-            const { sign_in_type, email } = findUser
+        }
+        //  มีอีเมลแล้ว 
+        else {
+            const { sign_in_type } = findUser
             if (sign_in_type == "google") {
-                // email match
+                await User.update({ image }, { where: { email: userEmail } })
                 let child = {}
                 if (model) {
                     if (!(findUser.role === "user")) {
@@ -196,7 +215,6 @@ const signInGoogle = async (req, res, next) => {
                         child = { ...childData?.dataValues }
                     }
                 }
-
                 return res.status(200).json({
                     ok: true,
                     data: {

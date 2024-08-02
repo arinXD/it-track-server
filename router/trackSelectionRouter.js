@@ -20,7 +20,7 @@ router.get("/:id/subjects", adminMiddleware, getSubjectInTrackSelection)
 router.get("/get/last", adminMiddleware, getLastest)
 router.get("/:acadyear/students", adminMiddleware, getStudentInTrackSelection)
 router.get("/:acadyear/non-select", adminMiddleware, getStudentNonSelect)
-router.get("/:acadyear/popular", adminMiddleware, getMostPopularTrack)
+router.get("/popular/:start/:end", adminMiddleware, getMostPopularTrack)
 router.get("/:acadyear/students/dashboard", adminMiddleware , getDashboardData)
 router.get("/:id/subjects/students", adminMiddleware, getStudentAndSubject)
 

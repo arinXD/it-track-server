@@ -267,6 +267,7 @@ const getStudentInTrackSelection = async (req, res) => {
 }
 
 const getDashboardData = async (req, res) => {
+    const courseTypes = { "โครงการปกติ": "regular", "โครงการพิเศษ": "special" }
     const acadyear = req.params.acadyear
     try {
         const data = await TrackSelection.findOne({
@@ -319,6 +320,7 @@ const getDashboardData = async (req, res) => {
                 const selectionDetail = selection?.dataValues?.SelectionDetails
                 selections[index].dataValues.gpa = calculateGPA(enrollments)
                 selections[index].dataValues.score = calculateGPA(selectionDetail)
+                selections[index].dataValues.courseType = courseTypes[data.dataValues.Selections[index].dataValues.Student?.dataValues?.courses_type]
                 selections[index].dataValues.stuId = data.dataValues.Selections[index].dataValues.Student?.dataValues?.stu_id
                 selections[index].dataValues.stuName = data.dataValues.Selections[index].dataValues.Student?.dataValues?.first_name + " " + data.dataValues.Selections[index].dataValues.Student?.dataValues?.last_name
                 delete data.dataValues.Selections[index].dataValues.Student
@@ -327,8 +329,16 @@ const getDashboardData = async (req, res) => {
         }
         if (data) {
             data.dataValues.Selections = selections
-            const result = [];
-            const popularity = []
+            const result = [
+                { type: "all", data: [] },
+                { type: "regular", data: [] },
+                { type: "special", data: [] },
+            ];
+            const popularity = [
+                { type: "all", data: [] },
+                { type: "regular", data: [] },
+                { type: "special", data: [] },
+            ]
             const selectedCount = {
                 selected: [],
                 nonSelected: [],
@@ -336,7 +346,9 @@ const getDashboardData = async (req, res) => {
             data.dataValues.Selections.forEach(selection => {
                 // หาเกรดเฉลี่ยรวมและจำนวนนักศึกษาในแทร็ก
                 const sl = selection?.dataValues;
-                let rs = result.find(item => item.track === sl.result);
+                const resultData = result.find(resultType => resultType.type == sl.courseType).data
+                let rs = resultData.find(item => item.track === sl.result);
+                let rsTotal = result[0].data.find(item => item.track === sl.result);
                 if (!rs) {
                     rs = {
                         track: sl.result,
@@ -344,23 +356,47 @@ const getDashboardData = async (req, res) => {
                         gpaSum: sl.gpa,
                         gpaAvg: sl.gpa
                     };
-                    result.push(rs);
+                    resultData.push(rs)
                 } else {
                     rs.total += 1;
                     rs.gpaSum += sl.gpa;
                     rs.gpaAvg = rs.gpaSum / rs.total;
                 }
+                if (!rsTotal) {
+                    rsTotal = {
+                        track: sl.result,
+                        total: 1,
+                        gpaSum: sl.gpa,
+                        gpaAvg: sl.gpa
+                    };
+                    result[0].data.push(rsTotal)
+                } else {
+                    rsTotal.total += 1;
+                    rsTotal.gpaSum += sl.gpa;
+                    rsTotal.gpaAvg = rsTotal.gpaSum / rsTotal.total;
+                }
 
                 // หาแทร็กที่ถูกเลือกเยอะที่สุด
-                let pop = popularity.find(item => item.track === sl.track_order_1);
+                const popData = popularity.find(popType => popType.type == sl.courseType).data
+                let pop = popData.find(item => item.track === sl.track_order_1);
+                let popTotal = popularity[0].data.find(item => item.track === sl.track_order_1);
                 if (!pop) {
                     pop = {
                         track: sl.track_order_1,
                         selected: 1
                     }
-                    popularity.push(pop)
+                    popData.push(pop)
                 } else {
                     pop.selected += 1
+                }
+                if (!popTotal) {
+                    popTotal = {
+                        track: sl.track_order_1,
+                        selected: 1
+                    }
+                    popularity[0].data.push(popTotal)
+                } else {
+                    popTotal.selected += 1
                 }
 
                 // หาคนที่มาคัดและไม่ได้มาคัด
@@ -397,24 +433,22 @@ const getDashboardData = async (req, res) => {
 }
 
 const getMostPopularTrack = async (req, res) => {
-    const acadyear = parseInt(req.params.acadyear, 10);
-    if (isNaN(acadyear)) {
+    const start = parseInt(req.params.start, 10);
+    const end = parseInt(req.params.end, 10);
+    if (isNaN(start) || isNaN(end)) {
         return res.status(406).json({
             ok: false,
             message: "acadyear must be a number."
         });
     }
 
-    const pastFiveYears = acadyear - 4;
-
     try {
         const data = await TrackSelection.findAll({
             where: {
                 acadyear: {
-                    [Op.between]: [pastFiveYears, acadyear + 1]
+                    [Op.between]: [start, end]
                 }
             },
-            limit: 5,
             order: [
                 ['acadyear', 'asc'],
             ],
@@ -423,21 +457,34 @@ const getMostPopularTrack = async (req, res) => {
                 {
                     model: Selection,
                     attributes: ["track_order_1"],
+                    include: [
+                        {
+                            model: Student,
+                            attributes: ["courses_type"]
+                        }
+                    ]
                 },
             ],
         })
+        const courseTypes = { "โครงการปกติ": "regular", "โครงการพิเศษ": "special" }
         for (let index = 0; index < data.length; index++) {
-            const result = []
+            const result = [
+                { type: "regular", data: [] },
+                { type: "special", data: [] },
+            ];
             const selection = data[index]?.dataValues?.Selections;
             for (let j = 0; j < selection.length; j++) {
-                const track = selection[j]?.dataValues?.track_order_1;
-                let rs = result.find(item => item.track === track);
+                const sl = selection[j]?.dataValues
+                const track = sl?.track_order_1;
+                const coursesType = courseTypes[sl?.Student?.dataValues?.courses_type]
+                const resultData = result.find(rsData => rsData.type == coursesType).data
+                let rs = resultData.find(item => item.track === track);
                 if (!rs) {
                     rs = {
                         track: track,
                         count: 1
                     }
-                    result.push(rs)
+                    resultData.push(rs)
                 } else {
                     rs.count += 1
                 }
@@ -445,9 +492,13 @@ const getMostPopularTrack = async (req, res) => {
             data[index].dataValues.result = result
             delete data[index].dataValues.Selections
         }
+        const filteredData = data.filter(yearData => {
+            return yearData?.dataValues?.result.some(result => result?.data?.length > 0);
+        });
+
         return res.status(200).json({
             ok: true,
-            data: data.filter(rs=>rs.dataValues.result.length)
+            data: filteredData
         })
     }
     catch (error) {

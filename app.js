@@ -119,6 +119,8 @@ const careerRouter = require('./router/careerRouter');
 const suggestionFormRouter = require('./router/suggestionFormRouter');
 const questionBankRouter = require('./router/questionBankRouter');
 const assessmentRouter = require('./router/assessmentRouter');
+const petitionRouter = require('./router/petitionRouter');
+const selectionRouter = require('./router/selectionRouter');
 
 //  subject router
 const subjectRouter = require('./router/subjectRouter');
@@ -183,6 +185,8 @@ app.use('/api/careers', careerRouter)
 app.use('/api/suggestion-forms', suggestionFormRouter)
 app.use('/api/questions', questionBankRouter)
 app.use('/api/assessments', assessmentRouter)
+app.use('/api/petitions', petitionRouter)
+app.use('/api/selections', selectionRouter)
 
 app.get("/api/get-token", async (req, res) => {
     const token = randomBytes(16).toString("hex")

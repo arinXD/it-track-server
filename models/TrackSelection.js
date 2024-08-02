@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         title: DataTypes.STRING,
         startAt: DataTypes.DATE,
         expiredAt: DataTypes.DATE,
+        announcementDate: DataTypes.DATE,
         has_finished: DataTypes.BOOLEAN,
         daletedAt: DataTypes.DATE,
     }, {

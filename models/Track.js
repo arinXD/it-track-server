@@ -26,6 +26,14 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'track',
                 sourceKey: 'track',
             });
+            this.hasMany(models.TrackPetition, {
+                foreignKey: 'approver',
+                sourceKey: 'track',
+            });
+            this.hasMany(models.TrackPetition, {
+                foreignKey: 'oldTrack',
+                sourceKey: 'track',
+            });
         }
     }
     Track.init({
