@@ -31,6 +31,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'subject_id',
                 sourceKey: 'subject_id',
             });
+            this.hasMany(models.StudentItVerifyGrade, {
+                foreignKey: 'subject_id',
+                sourceKey: 'subject_id',
+            });
 
             this.hasMany(models.Enrollment, {
                 foreignKey: 'subject_id',
