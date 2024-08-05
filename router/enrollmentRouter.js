@@ -116,7 +116,7 @@ router.get("/:stuid/gpa", validateStudent, async (req, res) => {
         })
     }
 })
-router.get("/:acadyear/gpa", async (req, res) => {
+router.get("/:acadyear/gpa/all", async (req, res) => {
     const acadyear = parseInt(req.params.acadyear)
     if (typeof acadyear != "number") {
         return res.status(400).json({
@@ -156,6 +156,7 @@ router.get("/:acadyear/gpa", async (req, res) => {
         ORDER BY stuid ASC`, {
             type: QueryTypes.SELECT
         });
+        console.log("allGpa", allGpa);
         return res.status(200).json({
             ok: true,
             data: allGpa,

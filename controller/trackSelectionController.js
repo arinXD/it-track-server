@@ -662,6 +662,7 @@ const createTrackSelection = async (req, res) => {
         title,
         startAt,
         expiredAt,
+        announcementDate,
         trackSubj,
     } = req.body
 
@@ -678,6 +679,7 @@ const createTrackSelection = async (req, res) => {
                 title,
                 startAt,
                 expiredAt,
+                announcementDate
             }
             const newTs = await TrackSelection.create(newTsData)
             for (const subj of trackSubj) {

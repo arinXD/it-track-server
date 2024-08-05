@@ -121,6 +121,7 @@ const questionBankRouter = require('./router/questionBankRouter');
 const assessmentRouter = require('./router/assessmentRouter');
 const petitionRouter = require('./router/petitionRouter');
 const selectionRouter = require('./router/selectionRouter');
+const newsRouter = require('./router/newsRouter');
 
 //  subject router
 const subjectRouter = require('./router/subjectRouter');
@@ -185,6 +186,7 @@ app.use('/api/questions', questionBankRouter)
 app.use('/api/assessments', assessmentRouter)
 app.use('/api/petitions', petitionRouter)
 app.use('/api/selections', selectionRouter)
+app.use('/api/news', newsRouter)
 
 app.get("/api/get-token", async (req, res) => {
     const token = randomBytes(16).toString("hex")
