@@ -138,6 +138,7 @@ const programCodeRouter = require('./router/programCodeRouter')
 const verifyRouter = require('./router/verifyRouter')
 const verifySelectionRouter = require('./router/verifySelectionRouter');
 const conditionVerifyRouter = require('./router/conditionVerifyRouter')
+const verifySelectionTeacherRouter = require('./router/verifySelectionTeacherRouter')
 
 // middleware
 const isAuth = require("./middleware/authMiddleware")
@@ -177,6 +178,7 @@ app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/verify', verifyRouter);
 app.use('/api/verify/selects', verifySelectionRouter);
+app.use('/api/verify/selects/teachers', verifySelectionTeacherRouter);
 app.use('/api/condition', conditionVerifyRouter);
 app.use('/api/statuses', isAdmin, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)

@@ -9,6 +9,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'stu_id',
                 sourceKey: 'stu_id',
             });
+            this.hasMany(models.StudentItVerifyGrade, {
+                foreignKey: 'stu_id',
+                sourceKey: 'stu_id',
+            });
             this.hasOne(models.Selection, {
                 foreignKey: "stu_id",
                 sourceKey: 'stu_id',

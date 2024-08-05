@@ -21,19 +21,37 @@ const CategoryVerify = models.CategoryVerify
 const SemiSubgroupSubject = models.SemiSubgroupSubject
 const SemiSubGroup = models.SemiSubGroup
 
-const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
-router.get("/:program/:acadyear", isAuth, async (req, res) => {
-    const { program, acadyear } = req.params;
+router.get("/", isAdmin, async (req, res) => {
     try {
+        const studentverify = await StudentVerify.findAll();
+        return res.status(200).json({
+            ok: true,
+            data: studentverify
+        });
+    } catch (error) {
+        console.error('Error fetching verify:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/:stu_id", isAdmin, async (req, res) => {
+    const id = req.params.verify_id
+    try {
+        const verify_id = await Verify.findOne({
+            where: {
+                verify: id
+            },
+            attributes: ["id"]
+        })
+
         const data = await Verify.findOne({
             where: {
-                program,
-                acadyear: {
-                    [Op.lte]: parseInt(acadyear)
-                }
+                verify: id
             },
-            order: [['acadyear', 'DESC']],
             include: [
                 {
                     model: Program,
@@ -48,6 +66,10 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                 },
                 {
                     model: SubjectVerify,
+                    where: {
+                        verify_id: verify_id?.dataValues?.id,
+                    },
+                    required: false,
                     include: [
                         {
                             model: Subject,
@@ -73,6 +95,13 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                                                 }
                                             ]
                                         }
+                                        ,
+                                        {
+                                            model: Verify,
+                                            where: {
+                                                id: verify_id?.dataValues?.id
+                                            },
+                                        }
                                     ]
                                 },
                                 {
@@ -91,6 +120,12 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                                                 }
                                             ]
                                         }
+                                        , {
+                                            model: Verify,
+                                            where: {
+                                                id: verify_id?.dataValues?.id
+                                            },
+                                        }
                                     ]
                                 },
                                 {
@@ -103,18 +138,26 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                                                     model: Categorie
                                                 }
                                             ]
+                                        }, {
+                                            model: Verify,
+                                            where: {
+                                                id: verify_id?.dataValues?.id
+                                            },
                                         }
                                     ]
                                 },
                                 {
                                     model: Track,
+                                },
+                                {
+                                    model: StudentVerifyDetail,
                                 }
                             ]
                         }
                     ]
                 },
             ]
-        })
+        });
         return res.status(200).json({
             ok: true,
             data
@@ -128,114 +171,6 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
     }
 })
 
-router.get("/:stu_id", isAuth, async (req, res) => {
-    const { stu_id } = req.params;
-    try {
-        const sv = await StudentVerify.findOne({
-            where: { 
-                stu_id 
-            },
-            attributes: ["status"]
-        });
-        return res.status(200).json({
-            ok: true,
-            data: sv
-        });
-    } catch (error) {
-        console.error('Error fetching stdverify:', error);
-        return res.status(500).json({
-            ok: false,
-            error: 'Internal Server Error'
-        });
-    }
-});
 
-router.post("/:verify_id/:stu_id", isAuth, async (req, res) => {
-    const { verify_id, stu_id } = req.params;
-    const { term, cum_laude, acadyear, status, subjects } = req.body;
-    // console.log(subjects);
-
-    try {
-        if (!Array.isArray(subjects)) {
-            return res.status(400).json({
-                ok: false,
-                message: "Subjects must be an array."
-            });
-        }
-
-        // Find or create the StudentVerify entry
-        const sv = await StudentVerify.findOne({
-            where: { verify_id, stu_id }
-        });
-        // console.log(sv);
-
-        await StudentVerify.create({
-            verify_id, stu_id, term, cum_laude, acadyear, status
-        });
-        
-
-        // Loop through the subjects and create StudentVerifyDetail entries
-        for (const subjectDetail of subjects) {
-            const { type, subjects: subjectList } = subjectDetail;
-
-            for (const subject of subjectList) {
-                const { subject: s, grade } = subject;
-
-                let group_subject_id = null;
-                let sub_group_subject_id = null;
-                let semi_sub_group_subject_id = null;
-                let category_subject_id = null;
-
-                if (type === 'group') {
-                    const groupSubject = await GroupSubject.findOne({
-                        where: { verify_id, subject_id: s.subject_id }
-                    });
-                    if (groupSubject) {
-                        group_subject_id = groupSubject.id;
-                    }
-                }
-                if (type === 'subgroup') {
-                    const subGroupSubject = await SubgroupSubject.findOne({
-                        where: { verify_id, subject_id: s.subject_id }
-                    });
-                    if (subGroupSubject) {
-                        sub_group_subject_id = subGroupSubject.id;
-                    }
-                }
-                if (type === 'semisubgroup') {
-                    const semiSubGroupSubject = await SemiSubgroupSubject.findOne({
-                        where: { verify_id, subject_id: s.subject_id }
-                    });
-                    if (semiSubGroupSubject) {
-                        semi_sub_group_subject_id = semiSubGroupSubject.id;
-                    }
-                }
-
-                // Create the entry in StudentVerifyDetail
-                await StudentVerifyDetail.create({
-                    student_verify_id: sv.id,
-                    subject_id: s.subject_id,
-                    grade,
-                    group_subject_id,
-                    sub_group_subject_id,
-                    semi_sub_group_subject_id,
-                    category_subject_id,
-                });
-            }
-        }
-
-        return res.status(201).json({
-            ok: true,
-            message: "Subjects added successfully."
-        });
-
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({
-            ok: false,
-            message: "Server error."
-        });
-    }
-});
 
 module.exports = router;

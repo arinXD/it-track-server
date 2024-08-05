@@ -18,6 +18,22 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'student_verify_id',
                 targetKey: 'id',
             });
+            this.belongsTo(models.GroupSubject, {
+                foreignKey: 'group_subject_id',
+                targetKey: 'id',
+            });
+            this.belongsTo(models.SubgroupSubject, {
+                foreignKey: 'sub_group_subject_id',
+                targetKey: 'id',
+            });
+            this.belongsTo(models.SemiSubgroupSubject, {
+                foreignKey: 'semi_sub_group_subject_id',
+                targetKey: 'id',
+            });
+            this.belongsTo(models.StudentCategoryVerify, {
+                foreignKey: 'category_subject_id',
+                sourceKey: 'id',
+            });
         }
     }
     StudentVerifyDetail.init({

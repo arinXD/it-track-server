@@ -3,33 +3,32 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class CategoryVerify extends Model {
+  class StudentItVerifyGrade extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      this.belongsTo(models.Verify, {
-        foreignKey: 'verify_id',
+      this.belongsTo(models.Subject, {
+        foreignKey: 'subject_id',
+        targetKey: 'subject_id',
       });
-      this.belongsTo(models.Categorie, {
-        foreignKey: 'category_id',
-      });
-      this.hasMany(models.StudentCategoryVerify, {
-        foreignKey: 'category_verify_id',
-        sourceKey: 'id',
-      });
+      this.belongsTo(models.Student, {
+        foreignKey: 'stu_id',
+        targetKey: 'stu_id',
+    });
     }
   }
-  CategoryVerify.init({
+  StudentItVerifyGrade.init({
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
     },
+    grade: DataTypes.STRING
   }, {
     sequelize,
-    modelName: 'CategoryVerify',
+    modelName: 'StudentItVerifyGrade',
   });
-  return CategoryVerify;
+  return StudentItVerifyGrade;
 };

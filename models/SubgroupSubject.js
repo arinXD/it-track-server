@@ -19,6 +19,9 @@ module.exports = (sequelize, DataTypes) => {
             this.belongsTo(models.Verify, {
                 foreignKey: 'verify_id',
             });
+            this.hasMany(models.StudentVerifyDetail, {
+                foreignKey: 'sub_group_subject_id',
+              });
         }
     }
     SubgroupSubject.init({
