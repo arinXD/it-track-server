@@ -6,8 +6,11 @@ const isAdmin = require("../middleware/adminMiddleware");
 const isAuth = require('../middleware/authMiddleware');
 
 const Verify = models.Verify;
+const Student = models.Student
 const StudentVerify = models.StudentVerify;
 const StudentVerifyDetail = models.StudentVerifyDetail
+const StudentCategoryVerify = models.StudentCategoryVerify
+const StudentItVerifyGrade = models.StudentItVerifyGrade
 const Program = models.Program;
 const Subject = models.Subject
 const Categorie = models.Categorie
@@ -21,13 +24,16 @@ const CategoryVerify = models.CategoryVerify
 const SemiSubgroupSubject = models.SemiSubgroupSubject
 const SemiSubGroup = models.SemiSubGroup
 
-
 router.get("/", isAdmin, async (req, res) => {
     try {
-        const studentverify = await StudentVerify.findAll();
+        const verify = await StudentVerify.findAll({
+            include:[{
+                model: Student
+            }]
+        });
         return res.status(200).json({
             ok: true,
-            data: studentverify
+            data: verify
         });
     } catch (error) {
         console.error('Error fetching verify:', error);
@@ -38,47 +44,112 @@ router.get("/", isAdmin, async (req, res) => {
     }
 });
 
-router.get("/:stu_id", isAdmin, async (req, res) => {
-    const id = req.params.verify_id
+router.get("/it/:stu_id", isAdmin, async (req, res) => {
+    const stu_id = req.params.stu_id;
     try {
-        const verify_id = await Verify.findOne({
+        const verify = await StudentItVerifyGrade.findAll({
             where: {
-                verify: id
+                stu_id,
             },
-            attributes: ["id"]
-        })
+            include: [{
+                model: Subject
+            }]
+        });
+        return res.status(200).json({
+            ok: true,
+            data: verify
+        });
+    } catch (error) {
+        console.error('Error fetching verify:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
 
-        const data = await Verify.findOne({
+
+router.get("/:stu_id", isAdmin, async (req, res) => {
+    const stu_id = req.params.stu_id;
+    try {
+        // Fetch the StudentVerify record using the stu_id
+        const studentVerify = await StudentVerify.findOne({
             where: {
-                verify: id
+                stu_id,
+            }
+        });
+
+        if (!studentVerify) {
+            return res.status(404).json({
+                ok: false,
+                message: "StudentVerify record not found."
+            });
+        }
+
+        // Extract the verify_id from the fetched StudentVerify record
+        const verify_id = studentVerify.verify_id;
+
+        // Fetch the StudentVerify record with associated models
+        const sv = await StudentVerify.findOne({
+            where: {
+                stu_id,
             },
             include: [
                 {
-                    model: Program,
-                },
-                {
-                    model: CategoryVerify,
+                    model: Verify,
                     include: [
                         {
-                            model: Categorie,
-                        }
-                    ]
-                },
-                {
-                    model: SubjectVerify,
-                    where: {
-                        verify_id: verify_id?.dataValues?.id,
-                    },
-                    required: false,
-                    include: [
+                            model: Program,
+                        },
                         {
-                            model: Subject,
+                            model: CategoryVerify,
                             include: [
                                 {
-                                    model: SemiSubgroupSubject,
+                                    model: Categorie,
+                                }
+                            ]
+                        },
+                        {
+                            model: SubjectVerify,
+                            where: {
+                                verify_id,
+                            },
+                            required: false,
+                            include: [
+                                {
+                                    model: Subject,
                                     include: [
                                         {
-                                            model: SemiSubGroup,
+                                            model: SemiSubgroupSubject,
+                                            include: [
+                                                {
+                                                    model: SemiSubGroup,
+                                                    include: [
+                                                        {
+                                                            model: SubGroup,
+                                                            include: [
+                                                                {
+                                                                    model: Group,
+                                                                    include: [
+                                                                        {
+                                                                            model: Categorie,
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    model: Verify,
+                                                    where: {
+                                                        id: verify_id
+                                                    },
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            model: SubgroupSubject,
                                             include: [
                                                 {
                                                     model: SubGroup,
@@ -92,84 +163,133 @@ router.get("/:stu_id", isAdmin, async (req, res) => {
                                                             ]
                                                         }
                                                     ]
+                                                },
+                                                {
+                                                    model: Verify,
+                                                    where: {
+                                                        id: verify_id
+                                                    },
                                                 }
                                             ]
-                                        }
-                                        ,
+                                        },
                                         {
-                                            model: Verify,
-                                            where: {
-                                                id: verify_id?.dataValues?.id
-                                            },
-                                        }
-                                    ]
-                                },
-                                {
-                                    model: SubgroupSubject,
-                                    include: [
-                                        {
-                                            model: SubGroup,
+                                            model: GroupSubject,
                                             include: [
                                                 {
                                                     model: Group,
                                                     include: [
                                                         {
-                                                            model: Categorie,
+                                                            model: Categorie
                                                         }
                                                     ]
-                                                }
-                                            ]
-                                        }
-                                        , {
-                                            model: Verify,
-                                            where: {
-                                                id: verify_id?.dataValues?.id
-                                            },
-                                        }
-                                    ]
-                                },
-                                {
-                                    model: GroupSubject,
-                                    include: [
-                                        {
-                                            model: Group,
-                                            include: [
+                                                },
                                                 {
-                                                    model: Categorie
+                                                    model: Verify,
+                                                    where: {
+                                                        id: verify_id
+                                                    },
                                                 }
                                             ]
-                                        }, {
-                                            model: Verify,
-                                            where: {
-                                                id: verify_id?.dataValues?.id
-                                            },
+                                        },
+                                        {
+                                            model: Track,
                                         }
                                     ]
-                                },
-                                {
-                                    model: Track,
-                                },
-                                {
-                                    model: StudentVerifyDetail,
                                 }
                             ]
+                        },
+                    ]
+                },
+                {
+                    model: StudentVerifyDetail,
+                    include: [
+                        {
+                            model: StudentCategoryVerify,
+                            include: [
+                                {
+                                    model: CategoryVerify,
+                                    include: [
+                                        {
+                                            model: Categorie
+                                        }
+                                    ]
+                                },
+                            ]
+                        }, {
+                            model: Subject,
                         }
                     ]
                 },
+                {
+                    model: StudentCategoryVerify,
+                    include: [
+                        {
+                            model: CategoryVerify,
+                            include: [
+                                {
+                                    model: Categorie
+                                }
+                            ]
+                        },
+                    ]
+                },
+                {
+                    model: Student
+                }
             ]
         });
+
         return res.status(200).json({
             ok: true,
-            data
-        })
+            data: sv
+        });
+
     } catch (error) {
         console.error(error);
         return res.status(500).json({
             ok: false,
             message: "Server error."
-        })
+        });
     }
-})
+});
+
+
+router.post("/status/:stu_id", isAuth, async (req, res) => {
+    const { stu_id } = req.params;
+
+    try {
+        const studentVerify = await StudentVerify.findOne({
+            where: {
+                stu_id,
+            },
+        });
+
+        if (!studentVerify) {
+            return res.status(404).json({
+                ok: false,
+                message: "StudentVerify record not found."
+            });
+        }
+
+        // Update status from 1 to 2
+        if (studentVerify.status === 1) {
+            await studentVerify.update({ status: 2 });
+        }
+
+
+        return res.status(201).json({
+            ok: true,
+            message: "Status updated successfully."
+        });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
 
 
 

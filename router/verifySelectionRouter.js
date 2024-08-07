@@ -8,6 +8,8 @@ const isAuth = require('../middleware/authMiddleware');
 const Verify = models.Verify;
 const StudentVerify = models.StudentVerify;
 const StudentVerifyDetail = models.StudentVerifyDetail
+const StudentItVerifyGrade = models.StudentItVerifyGrade
+const StudentCategoryVerify = models.StudentCategoryVerify
 const Program = models.Program;
 const Subject = models.Subject
 const Categorie = models.Categorie
@@ -132,8 +134,8 @@ router.get("/:stu_id", isAuth, async (req, res) => {
     const { stu_id } = req.params;
     try {
         const sv = await StudentVerify.findOne({
-            where: { 
-                stu_id 
+            where: {
+                stu_id
             },
             attributes: ["status"]
         });
@@ -152,8 +154,7 @@ router.get("/:stu_id", isAuth, async (req, res) => {
 
 router.post("/:verify_id/:stu_id", isAuth, async (req, res) => {
     const { verify_id, stu_id } = req.params;
-    const { term, cum_laude, acadyear, status, subjects } = req.body;
-    // console.log(subjects);
+    const { term, cum_laude, acadyear, status, subjects, tracksubject, studentcategory } = req.body;
 
     try {
         if (!Array.isArray(subjects)) {
@@ -163,18 +164,64 @@ router.post("/:verify_id/:stu_id", isAuth, async (req, res) => {
             });
         }
 
-        // Find or create the StudentVerify entry
-        const sv = await StudentVerify.findOne({
+
+        let sv = await StudentVerify.findOne({
             where: { verify_id, stu_id }
         });
-        // console.log(sv);
 
-        await StudentVerify.create({
-            verify_id, stu_id, term, cum_laude, acadyear, status
+        if (!sv) {
+            sv = await StudentVerify.create({
+                verify_id, stu_id, term, cum_laude, acadyear, status
+            });
+        }
+
+        const svds = await StudentVerify.findOne({
+            where: { verify_id, stu_id }
         });
-        
 
-        // Loop through the subjects and create StudentVerifyDetail entries
+        for (const sc of studentcategory) {
+            const { category_id, verifySubj } = sc;
+
+            // Find or create CategoryVerify entry
+            const categoryVerify = await CategoryVerify.findOne({
+                where: { verify_id, category_id }
+            });
+
+            if (categoryVerify) {
+                // Create StudentCategoryVerify entries
+                for (const subj of verifySubj) {
+                    const { grade } = subj;
+
+                    let group_subject_id = null;
+                    let sub_group_subject_id = null;
+                    let semi_sub_group_subject_id = null;
+
+                    await StudentCategoryVerify.create({
+                        student_verify_id: svds.id,
+                        category_verify_id: categoryVerify.id,
+                        subject_id: subj.subject_id,
+                    });
+
+                    const updatedScv = await StudentCategoryVerify.findOne({
+                        where: { student_verify_id: svds.id, category_verify_id: categoryVerify.id }
+                    });
+
+                    await StudentVerifyDetail.create({
+                        student_verify_id: svds.id,
+                        subject_id: subj.subject_id,
+                        grade,
+                        group_subject_id,
+                        sub_group_subject_id,
+                        semi_sub_group_subject_id,
+                        category_subject_id: updatedScv.id,
+                    });
+                }
+            } else {
+                // Handle the case where CategoryVerify doesn't exist
+                console.error(`CategoryVerify with category_id ${category_id} not found.`);
+            }
+        }
+
         for (const subjectDetail of subjects) {
             const { type, subjects: subjectList } = subjectDetail;
 
@@ -213,7 +260,7 @@ router.post("/:verify_id/:stu_id", isAuth, async (req, res) => {
 
                 // Create the entry in StudentVerifyDetail
                 await StudentVerifyDetail.create({
-                    student_verify_id: sv.id,
+                    student_verify_id: svds.id,
                     subject_id: s.subject_id,
                     grade,
                     group_subject_id,
@@ -223,6 +270,21 @@ router.post("/:verify_id/:stu_id", isAuth, async (req, res) => {
                 });
             }
         }
+
+        // Delete old StudentItVerifyGrade records for the given stu_id
+        await StudentItVerifyGrade.destroy({
+            where: { stu_id }
+        });
+
+        // Insert new StudentItVerifyGrade records
+        for (const subtrack of tracksubject) {
+            await StudentItVerifyGrade.create({
+                stu_id: stu_id,
+                subject_id: subtrack.subject_id,
+                grade: subtrack.grade,
+            });
+        }
+
 
         return res.status(201).json({
             ok: true,
