@@ -10,7 +10,7 @@ const { createCareer, getAllCareers, updateCareer, deleteMultipleCareer, getCare
 // GET
 router.get("/", isAuth, getAllCareers)
 router.get("/:id", isAdmin, getCareerByID)
-router.get("/tracks/:track", isAdmin, getCareerByTrack)
+router.get("/tracks/:track", isAuth, getCareerByTrack)
 router.get("/in-forms/:id", isAdmin, getCareerInSuggestForm)
 router.get("/not-in-forms/:id", isAdmin, getCareerNotInForm)
 
