@@ -19,6 +19,7 @@ const getAllPublishedNews = async (req, res) => {
                return res.status(200).json(news);
           }
           const news = await models.News.findAll({
+               order: [['updatedAt', 'DESC']],
                where: {
                     published: true
                }
@@ -38,7 +39,9 @@ const getAllNews = async (req, res) => {
                }
                return res.status(200).json(news);
           }
-          const news = await models.News.findAll();
+          const news = await models.News.findAll({
+               order: [['createdAt', 'DESC']],
+          });
           res.status(200).json(news);
      } catch (error) {
           res.status(500).json({ message: "Error fetching news", error: error.message });
@@ -130,7 +133,9 @@ const deleteMultipleNews = async (req, res) => {
 
           newsToDelete.forEach(news => {
                if (news.image) {
-                    const filePath = path.join(__dirname, `../public/images/news/${news?.image?.split('/')?.pop()}`);
+                    const fileName = news?.image?.split('/')?.pop()
+                    if (fileName === "default_track_select.jpeg") return
+                    const filePath = path.join(__dirname, `../public/images/news/${fileName}`);
                     if (fs.existsSync(filePath)) {
                          fs.unlinkSync(filePath);
                     }

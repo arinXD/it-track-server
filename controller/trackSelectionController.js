@@ -12,10 +12,12 @@ const Student = models.Student
 const Track = models.Track
 const Enrollment = models.Enrollment
 const StudentStatus = models.StudentStatus
+const News = models.News
 
 const { mailSender } = require('../controller/mailSender');
-const { hostname } = require('../api/hostname');
+const { hostname, getHostname } = require('../api/hostname');
 const { findSubjectByCode } = require('../utils/subject');
+const { simpleDMY } = require('../utils/simpleDateFormatter');
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
@@ -657,20 +659,10 @@ const getStudentAndSubject = async (req, res) => {
 }
 
 const createTrackSelection = async (req, res) => {
-    const {
-        acadyear,
-        title,
-        startAt,
-        expiredAt,
-        announcementDate,
-        trackSubj,
-    } = req.body
-
+    const { acadyear, title, startAt, expiredAt, announcementDate, trackSubj, } = req.body
     try {
         const ts = await TrackSelection.findOne({
-            where: {
-                acadyear
-            }
+            where: { acadyear }
         })
 
         if (!ts) {
@@ -689,6 +681,40 @@ const createTrackSelection = async (req, res) => {
                     subject_id: subjectId
                 })
             }
+
+            // default_track_select.jpeg
+            const newsTitle = `การคัดเลือกความเชี่ยวชาญ วิทยาลัยการคอมพิวเตอร์ หลักสูตรเทคโนโลยีสารสนเทศ ปีการศึกษา ${acadyear}`
+            const desc = `เริ่มคัดเลือกตั้งแต่วันที่ ${simpleDMY(startAt)} จนถึงวันที่ ${simpleDMY(expiredAt)} ประกาศผลวันที่ ${simpleDMY(announcementDate)}`
+
+            const subjects = await Promise.all(trackSubj.map(subj =>
+                Subject.findOne({ where: { subject_code: subj } })
+            ));
+
+            const subjectList = subjects.map((subject, index) => `
+                <li class="flex items-start gap-4"> 
+                    <strong>${trackSubj[index]}</strong>
+                    <p class="flex flex-col gap-1">
+                        <span>${subject?.dataValues?.title_en || ''}</span>
+                        <span>${subject?.dataValues?.title_th || ''}</span>
+                    </p>
+                </li>
+                `).join('');
+
+            const detail = `<p>${newsTitle} ของนักศึกษาหลักสูตรเทคโนโลยีสารสนเทศ</p>
+            <p>${desc}</p>
+            <p class="mt-4 mb-2">รายวิชาที่จะใช้ในการคัดเลือก</p>
+            <ul class="list-disc flex flex-col gap-2">
+                ${subjectList}
+            </ul>`;
+
+            await News.create({
+                title: newsTitle,
+                desc,
+                detail,
+                published: true,
+                image: `${getHostname()}/images/news/default_track_select.jpeg`
+            });
+
             return res.status(201).json({
                 ok: true,
                 message: `เพิ่มการคัดแทร็กปีการศึกษา ${acadyear} เรียบร้อย`
@@ -1427,7 +1453,7 @@ const getStudentNonSelect = async (req, res) => {
             data: students
         })
     } catch (error) {
-        console.error(err);
+        console.error(error);
         return res.status(500).json({
             ok: false,
             message: "Server error.",
