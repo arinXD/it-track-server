@@ -198,7 +198,11 @@ router.get("/find/:subject", isAdmin, async (req, res) => {
 
 
 router.get("/track/selection", isAdmin, async (req, res) => {
-    const defaultSubjects = req.query.subjects
+    let defaultSubjects = req.query.subjects
+    if (!Array.isArray(defaultSubjects)) {
+        defaultSubjects = [defaultSubjects]
+    }
+
     try {
         const subjects = await Subject.findAll({
             where: {
