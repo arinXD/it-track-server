@@ -178,7 +178,7 @@ app.use('/api/programs', programRouter);
 app.use('/api/programcodes', programCodeRouter);
 app.use('/api/verify', verifyRouter);
 app.use('/api/verify/selects', verifySelectionRouter);
-app.use('/api/verify/selects/teachers', verifySelectionTeacherRouter);
+app.use('/api/verifies/approve', verifySelectionTeacherRouter);
 app.use('/api/condition', conditionVerifyRouter);
 app.use('/api/statuses', isAdmin, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)

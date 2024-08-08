@@ -11,7 +11,6 @@ module.exports = {
       },
       stu_id: {
         allowNull: false,
-        unique: true,
         type: Sequelize.STRING,
         references: {
           model: 'Students',
