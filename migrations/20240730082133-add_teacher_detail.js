@@ -19,10 +19,19 @@ module.exports = {
                 unique: false,
                 type: Sequelize.STRING
             },)
+        await queryInterface.addColumn(
+            'Teachers', // table name
+            'prefix', // new field name
+            {
+                allowNull: true,
+                unique: false,
+                type: Sequelize.STRING
+            },)
     },
 
     async down(queryInterface, Sequelize) {
         await queryInterface.removeConstraint('Teachers', 'email');
         await queryInterface.removeColumn('Teachers', 'name')
+        await queryInterface.removeColumn('Teachers', 'prefix')
     }
 };

@@ -23,7 +23,7 @@ const updatePetition = Joi.object({
 const petitionStatus = Joi.string().valid('all', 'approved', 'rejected').required()
 
 const userAttr = ["id", "email", "image"]
-const petitionAttr = ["id", "title", "detail", "status", "oldTrack", "newTrack", "createdAt",]
+const petitionAttr = ["id", "title", "detail", "status", "oldTrack", "newTrack", "responseText", "createdAt","actionTime",]
 const studentAttr = ["stu_id", "email", "first_name", "last_name", "courses_type", "program", "acadyear"]
 
 const getPetitionByStatus = async (req, res) => {
@@ -391,6 +391,7 @@ const retrievePetition = async (req, res) => {
 
 const approvePetition = async (req, res) => {
      const { pid, email, status } = req.params;
+     const data = req.body
      const { error } = Joi.number().valid(1, 2).required().validate(status)
      if (error) {
           return res.status(406).json({
@@ -446,6 +447,8 @@ const approvePetition = async (req, res) => {
                result = petition
                petition.status = status
                petition.approver = approver?.dataValues.id
+               petition.responseText = data?.responseText
+               petition.actionTime = new Date()
                await petition.save({ transaction });
                await Selection.update({
                     result: petition?.dataValues?.newTrack
@@ -462,6 +465,8 @@ const approvePetition = async (req, res) => {
                     {
                          status,
                          approver: approver?.dataValues.id,
+                         responseText: data?.responseText,
+                         actionTime: new Date()
                     },
                     {
                          where: { id: pid },

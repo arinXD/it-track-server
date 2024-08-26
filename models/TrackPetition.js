@@ -34,7 +34,9 @@ module.exports = (sequelize, DataTypes) => {
         approver: DataTypes.INTEGER,
         oldTrack: DataTypes.STRING,
         newTrack: DataTypes.STRING,
-        deletedAt: DataTypes.DATE
+        responseText: DataTypes.TEXT,
+        actionTime: DataTypes.DATE,
+        deletedAt: DataTypes.DATE,
     }, {
         sequelize,
         modelName: 'TrackPetition',

@@ -9,8 +9,15 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
-            teacherName: {
-                type: Sequelize.STRING
+            teacher_id: {
+                allowNull: false,
+                unique: true,
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'Teachers',
+                    key: 'id',
+                },
+                onDelete: 'CASCADE',
             },
             image: {
                 type: Sequelize.STRING

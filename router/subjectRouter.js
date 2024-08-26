@@ -50,18 +50,18 @@ router.get("/tracks/:track", isAuth, async (req, res) => {
                 track
             }
         });
-        let uniqueSubjects = subjects.filter((subject, index, self) =>
-            index !== 0 && self.findIndex(s => s?.dataValues?.title_en === subject?.dataValues?.title_en) === index
-        );
-        uniqueSubjects = uniqueSubjects.map(subject => {
-            if (subject?.dataValues?.title_en) {
-                subject.title_en = subject.dataValues.title_en.split(" ").map(word => capitalize(word)).join(" ")
-            }
-            return subject
-        })
+        // let uniqueSubjects = subjects.filter((subject, index, self) =>
+        //     index !== 0 && self.findIndex(s => s?.dataValues?.title_en === subject?.dataValues?.title_en) === index
+        // );
+        // uniqueSubjects = uniqueSubjects.map(subject => {
+        //     if (subject?.dataValues?.title_en) {
+        //         subject.title_en = subject.dataValues.title_en.split(" ").map(word => capitalize(word)).join(" ")
+        //     }
+        //     return subject
+        // })
         return res.status(200).json({
             ok: true,
-            data: uniqueSubjects
+            data: subjects
         });
     } catch (error) {
         console.error('Error fetching subjects:', error);
