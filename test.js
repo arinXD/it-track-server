@@ -4,4 +4,3 @@ const baseString = "awdlaw,fpmawd1a561wd68aw1d@aw-dp-_Ada+a-wd!awd,awd415641651a
 
 const encoded = base64encode(baseString);
 const decoded = base64decode(encoded); 
-

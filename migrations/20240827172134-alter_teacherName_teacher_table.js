@@ -3,17 +3,14 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
+        try {
+            await queryInterface.removeColumn('Teachers', 'teacherName')
+        } catch (error) {
+            console.error(error);
+        }
         await queryInterface.addColumn(
             'Teachers',
-            'email',
-            {
-                allowNull: false,
-                unique: true,
-                type: Sequelize.STRING
-            },)
-        await queryInterface.addColumn(
-            'Teachers',
-            'teacherName',
+            'name',
             {
                 allowNull: true,
                 unique: false,
@@ -21,7 +18,7 @@ module.exports = {
             },)
         await queryInterface.addColumn(
             'Teachers',
-            'prefix',
+            'surname',
             {
                 allowNull: true,
                 unique: false,
@@ -30,8 +27,7 @@ module.exports = {
     },
 
     async down(queryInterface, Sequelize) {
-        await queryInterface.removeColumn('Teachers', 'email');
-        await queryInterface.removeColumn('Teachers', 'teacherName')
-        await queryInterface.removeColumn('Teachers', 'prefix')
+        await queryInterface.removeColumn('Teachers', 'name')
+        await queryInterface.removeColumn('Teachers', 'surname')
     }
 };
