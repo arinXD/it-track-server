@@ -23,7 +23,7 @@ const app = express()
 
 const limiter = expressRateLimit({
     windowMs: 1 * 60 * 1000,
-    max: 500,
+    max: 1000,
     message: "Too many requests, try again later."
 })
 
@@ -38,6 +38,7 @@ app.use(cors({
     origin: [
         "https://it-track-client.vercel.app",
         "http://localhost:3000",
+        "http://localhost:3001",
     ]
 }))
 app.use(requestIp.mw()); // extract ip 
@@ -53,11 +54,9 @@ app.use(expressWinston.logger({
         };
     }
 }));
-app.use(express.json());
 app.use(cookieParser());
-app.use(express.urlencoded({
-    extended: false
-}));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: false }));
 app.use(logger('dev'));
 app.use(session({
     name: "it-track",

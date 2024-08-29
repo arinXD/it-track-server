@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const models = require('../models');
 const Student = models.Student
+const Teacher = models.Teacher
 const Selection = models.Selection
 const SelectionDetail = models.SelectionDetail
 const Program = models.Program
@@ -310,7 +311,6 @@ router.put("/restore/select", adminMiddleware, async (req, res) => {
 router.put("/:id", adminMiddleware, async (req, res) => {
     const stuid = req.params.id
     const stuData = req.body
-    console.log(stuData);
     try {
         await Student.update(stuData, {
             where: {
@@ -356,43 +356,70 @@ router.post("/", adminMiddleware, async (req, res) => {
 })
 
 router.post("/excel", adminMiddleware, async (req, res) => {
-
-    async function bulkUpsertStudents(studentsData) {
-        const existingStudents = await Student.findAll({
-            where: {
-                stu_id: studentsData.map(student => student.stu_id)
+    async function bulkUpsertStudents(arr) {
+        for (let index = 0; index < arr.length; index++) {
+            // studentcode
+            // studentname
+            // kkumail
+            // program
+            function getAcadYearFromStdID(studentCode) {
+                const currentYear = ((new Date().getFullYear()) + 543).toString();
+                const firstTwoDigits = currentYear.slice(0, 2);
+                const acadyear = `${firstTwoDigits}${studentCode.slice(0, 2)}`
+                return parseInt(acadyear)
             }
-        });
 
-        studentsData.forEach(async studentData => {
-            const existingStudent = existingStudents.find(s => s.stu_id === studentData.stu_id);
+            const studentData = arr[index];
+            const stu_id = studentData.studentcode
+            const email = studentData.kkumail
+            const titleRegex = /^(นาย|นาง|นางสาว)?\s*/;
+            const name = studentData?.studentname.replace(titleRegex, '').trim()
+            const [first_name, ...last_name] = name?.split(" ")
+            const program = String(studentData?.program?.split("-")[1]).toUpperCase()
+
+            const findStudent = await Student.findOne({
+                where: {
+                    email: email
+                }
+            });
+
             let upsertData = {}
-            if (existingStudent?.id) {
-                existingStudent.first_name = studentData.first_name;
-                existingStudent.last_name = studentData.last_name;
-                existingStudent.courses_type = studentData.courses_type;
-                existingStudent.program = studentData.program;
-                existingStudent.acadyear = studentData.acadyear;
-                existingStudent.status_code = studentData.status_code;
-
-                upsertData = existingStudent.dataValues
+            if (findStudent) {
+                upsertData = {
+                    id: findStudent?.dataValues?.id,
+                    first_name: first_name,
+                    last_name: [...last_name].join(" "),
+                    program: program,
+                }
+                await Student.update(upsertData, {
+                    where: { email: email }
+                })
             } else {
-                upsertData = studentData
+                upsertData = {
+                    stu_id: stu_id,
+                    email: email,
+                    first_name: first_name,
+                    last_name: [...last_name].join(" "),
+                    courses_type: "โครงการปกติ",
+                    program: program,
+                    acadyear: getAcadYearFromStdID(stu_id),
+                    status_code: 10,
+                }
+                await Student.create(upsertData)
             }
-            await Student.upsert(upsertData);
-        });
+        }
     }
 
-    let students = req.body
-    students = students.filter(row => row.stu_id)
-    students = students.map(student => {
-        if (student.status_code == null) {
-            student.status_code = 10
+    const data = req.body
+    const students = data.filter(row => {
+        if (
+            row["studentcode"] != null &&
+            row["studentname"] != null &&
+            row["kkumail"] != null &&
+            row["program"] != null
+        ) {
+            return row
         }
-        student.acadyear = getAcadYear(student.stu_id)
-        student.courses_type = getCourse(student.program)
-        student.program = getProgram(student.program)
-        return student
     })
     try {
         bulkUpsertStudents(students)
@@ -411,54 +438,183 @@ router.post("/excel", adminMiddleware, async (req, res) => {
 router.post("/enrollments/excel", adminMiddleware, async (req, res) => {
 
     async function bulkUpsertEnrollments(enrollments) {
-        enrollments.forEach(async enrollData => {
-            let existingEnroll
+        for (let index = 0; index < enrollments.length; index++) {
+            const enrollData = enrollments[index];
             try {
-                const subjectId = await findSubjectByCode(enrollData.subject_code)
-                if (!subjectId) return
-                const student = await Student.findOne({ where: { stu_id: enrollData.stu_id } })
-                if (student?.id == null) return
-                existingEnroll = await Enrollment.findOne({
+                // 1.หาหลักสูตร
+                // 2.หาอาจารย์
+                // 3.หานักศึกษา
+                // 4.หาวิชา
+                // 5.หาเกรด
+
+                // 1.หาหลักสูตร
+                // programname
+                function getCoursesType(program) {
+                    const regex = /[()]/g;
+                    let type
+                    try {
+                        type = program.split(" ")[1];
+                        if (type) {
+                            type = type.replace(regex, "");
+                        } else {
+                            type = "โครงการปกติ"
+                        }
+                    } catch (error) {
+                        type = ""
+                    }
+                    return type || "โครงการปกติ";
+                }
+                const rawProgram = enrollData.programname.split(" ")[0]
+                const findProgram = await Program.findOne({ where: { title_th: rawProgram } })
+                const program = findProgram ? findProgram?.dataValues?.program : "IT"
+                const coursesType = getCoursesType(enrollData.programname)
+
+                // 2.หาอาจารย์
+                // prefixname
+                // officername
+                // officersurname
+                // officermail
+                let advisor = {}
+                const { prefixname, officername, officersurname, officeremail } = enrollData
+                if (officeremail) {
+                    const findAdvisor = await Teacher.findOne({ where: { email: officeremail } })
+                    if (findAdvisor) {
+                        advisor = findAdvisor?.dataValues
+                    } else {
+                        const newAdvisor = await Teacher.create({
+                            email: officeremail,
+                            prefix: prefixname,
+                            name: officername,
+                            surname: officersurname
+                        })
+                        advisor = newAdvisor?.dataValues
+                    }
+                }
+
+                // 3.หานักศึกษา
+                // นักศึกษา
+                // "studentcode"] != null
+                // "studentname"] != null
+                // "studentsurname"] != null
+                // "kkumail"] != null
+                // studentstatus
+                function getAcadYear(studentCode) {
+                    const currentYear = ((new Date().getFullYear()) + 543).toString();
+                    const firstTwoDigits = currentYear.slice(0, 2);
+                    const acadyear = `${firstTwoDigits}${studentCode.slice(0, 2)}`
+                    return parseInt(acadyear)
+                }
+                const findStudent = await Student.findOne({
+                    where: { email: enrollData.kkumail }
+                })
+                let studentData = {}
+                if (findStudent) {
+                    studentData = {
+                        id: findStudent?.dataValues?.id,
+                        stu_id: findStudent?.dataValues?.stu_id,
+                        first_name: enrollData.studentname,
+                        last_name: enrollData.studentsurname,
+                        courses_type: coursesType,
+                        program: program,
+                        acadyear: getAcadYear(enrollData.studentcode),
+                        status_code: enrollData?.studentstatus ?? 10,
+                        advisor: advisor?.id,
+                    }
+
+                    await Student.update(studentData, {
+                        where: { id: findStudent?.id }
+                    })
+                } else {
+                    const createData = {
+                        stu_id: enrollData.studentcode,
+                        email: enrollData.kkumail,
+                        first_name: enrollData.studentname,
+                        last_name: enrollData.studentsurname,
+                        courses_type: coursesType,
+                        program: program,
+                        acadyear: getAcadYear(enrollData.studentcode),
+                        status_code: enrollData?.studentstatus || 10,
+                        advisor: advisor.id
+                    }
+                    const newStudent = await Student.create(createData);
+                    studentData = newStudent?.dataValues
+                }
+
+                // 4.หาวิชา
+                // coursecode
+                // coursename
+                // coursenameeng
+                // credittotal
+                const subjectId = await findSubjectByCode(enrollData?.coursecode)
+                let subjectData = {}
+                if (subjectId) {
+                    subjectData = {
+                        title_th: enrollData?.coursename,
+                        title_en: enrollData?.coursenameeng,
+                        credit: enrollData?.credittotal || 1
+                    }
+                    await Subject.update(subjectData, {
+                        where: { subject_id: subjectId }
+                    })
+                    subjectData.subject_id = subjectId
+                } else {
+                    const createData = {
+                        subject_code: enrollData.coursecode,
+                        title_th: enrollData?.coursename,
+                        title_en: enrollData?.coursenameeng,
+                        credit: enrollData?.credittotal || 1
+                    }
+                    const newSubject = await Subject.create(createData)
+                    subjectData = newSubject?.dataValues
+                }
+
+                // 5.หาเกรด (ต้องการ ID student, subject) studentData, subjectData
+                // gradeentry2
+                // acadyear
+                let upsertEnrollData = {
+                    stu_id: studentData.stu_id,
+                    subject_id: subjectData.subject_id,
+                    enroll_year: enrollData?.acadyear,
+                    grade: enrollData?.gradeentry2
+                }
+                const findEnroll = await Enrollment.findOne({
                     where: {
-                        stu_id: enrollData.stu_id,
-                        subject_id: subjectId,
-                        enroll_year: enrollData.enroll_year
+                        stu_id: studentData.stu_id,
+                        subject_id: subjectData.subject_id,
+                        enroll_year: enrollData?.acadyear
                     }
                 });
+                if (findEnroll) {
+                    upsertEnrollData.id = findEnroll?.dataValues?.id
+                }
+                await Enrollment.upsert(upsertEnrollData);
             } catch (error) {
+                console.error(error);
                 return
             }
-
-            let upsertData = {}
-
-            if (existingEnroll?.id) {
-                existingEnroll.grade = enrollData.grade;
-                upsertData = existingEnroll.dataValues
-            } else {
-                const subjectId = await findSubjectByCode(enrollData.subject_code)
-                upsertData = enrollData
-                upsertData.subject_id = subjectId
-                delete upsertData.subject_code
-            }
-            try {
-                if (enrollData.stu_id == "643020423-0") console.log(upsertData);
-                Enrollment.upsert(upsertData);
-            } catch (error) {
-                return
-            }
-        });
+        }
     }
 
     let enrollments = req.body
     enrollments = enrollments.filter(row => {
-        if (row.stu_id != null &&
-            row.subject_code != null &&
-            row.enroll_year != null
+        if (
+            // หลักสูตร
+            row["programname"] != null &&
+            // นักศึกษา
+            row["studentcode"] != null &&
+            row["studentname"] != null &&
+            row["studentsurname"] != null &&
+            row["kkumail"] != null &&
+            // วิชา
+            row["coursecode"] != null &&
+            row["coursename"] != null &&
+            row["coursenameeng"] != null &&
+            row["credittotal"] != null &&
+            row["acadyear"] != null
         ) return row
     })
     try {
         bulkUpsertEnrollments(enrollments)
-        console.log(enrollments.length);
     } catch (error) {
         return res.status(500).json({
             ok: false,
@@ -538,10 +694,7 @@ router.delete("/multiple/delete", adminMiddleware, async (req, res) => {
     }
 })
 router.delete("/multiple/delete/force", adminMiddleware, async (req, res) => {
-    const {
-        students
-    } = req.body
-    console.log(students);
+    const { students } = req.body
     try {
         for (const id of students) {
             await Student.destroy({

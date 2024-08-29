@@ -42,6 +42,7 @@ module.exports = (sequelize, DataTypes) => {
         acadyear: DataTypes.INTEGER,
         acadyear_desc: DataTypes.STRING,
         status_code: DataTypes.INTEGER,
+        advisor: DataTypes.INTEGER,
         daletedAt: DataTypes.DATE,
     }, {
         sequelize,
