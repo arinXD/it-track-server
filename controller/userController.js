@@ -16,6 +16,24 @@ const gradeOrder = {
      'A': 1, 'B+': 2, 'B': 3, 'C+': 4, 'C': 5, 'D+': 6, 'D': 7, 'F': 8
 };
 
+const getAllUsers = async (req, res) => {
+     try {
+          const users = await User.findAll({
+               order: [['createdAt', 'DESC'],]
+          })
+          return res.status(200).json({
+               ok: true,
+               data: users
+          })
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+
 async function getStudentGPA(stuid) {
      const gpa = await models.sequelize.query(`
           SELECT Students.stu_id AS stuid,
@@ -141,6 +159,28 @@ const getUserData = async (req, res) => {
      }
 }
 
+const updateUserRole = async (req, res) => {
+     const id = req.params.id
+     const role = req.params.role
+     try {
+          const users = await User.update({
+               role,
+          }, { where: { id } })
+          return res.status(200).json({
+               ok: true,
+               data: users
+          })
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+
 module.exports = {
-     getUserData
+     getUserData,
+     getAllUsers,
+     updateUserRole
 }
