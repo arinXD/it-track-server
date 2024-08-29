@@ -311,7 +311,6 @@ router.put("/restore/select", adminMiddleware, async (req, res) => {
 router.put("/:id", adminMiddleware, async (req, res) => {
     const stuid = req.params.id
     const stuData = req.body
-    console.log(stuData);
     try {
         await Student.update(stuData, {
             where: {
@@ -376,7 +375,7 @@ router.post("/excel", adminMiddleware, async (req, res) => {
             const titleRegex = /^(นาย|นาง|นางสาว)?\s*/;
             const name = studentData?.studentname.replace(titleRegex, '').trim()
             const [first_name, ...last_name] = name?.split(" ")
-            const program = String(studentData?.program?.split("-")[-1]).toLowerCase()
+            const program = String(studentData?.program?.split("-")[1]).toUpperCase()
 
             const findStudent = await Student.findOne({
                 where: {
@@ -392,6 +391,9 @@ router.post("/excel", adminMiddleware, async (req, res) => {
                     last_name: [...last_name].join(" "),
                     program: program,
                 }
+                await Student.update(upsertData, {
+                    where: { email: email }
+                })
             } else {
                 upsertData = {
                     stu_id: stu_id,
@@ -403,8 +405,8 @@ router.post("/excel", adminMiddleware, async (req, res) => {
                     acadyear: getAcadYearFromStdID(stu_id),
                     status_code: 10,
                 }
+                await Student.create(upsertData)
             }
-            await Student.upsert(upsertData);
         }
     }
 
@@ -420,8 +422,7 @@ router.post("/excel", adminMiddleware, async (req, res) => {
         }
     })
     try {
-        console.log(students.length);
-        // bulkUpsertStudents(students)
+        bulkUpsertStudents(students)
     } catch (error) {
         return res.status(500).json({
             ok: false,
@@ -613,8 +614,7 @@ router.post("/enrollments/excel", adminMiddleware, async (req, res) => {
         ) return row
     })
     try {
-        console.log(enrollments.length);
-        // bulkUpsertEnrollments(enrollments)
+        bulkUpsertEnrollments(enrollments)
     } catch (error) {
         return res.status(500).json({
             ok: false,
@@ -694,10 +694,7 @@ router.delete("/multiple/delete", adminMiddleware, async (req, res) => {
     }
 })
 router.delete("/multiple/delete/force", adminMiddleware, async (req, res) => {
-    const {
-        students
-    } = req.body
-    console.log(students);
+    const { students } = req.body
     try {
         for (const id of students) {
             await Student.destroy({
