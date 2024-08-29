@@ -17,6 +17,9 @@ module.exports = (sequelize, DataTypes) => {
       this.hasMany(models.Group, {
         foreignKey: 'category_id'
       });
+      this.hasMany(models.ConditionCategoryVerify, {
+        foreignKey: 'category_id'
+      });
       this.belongsToMany(models.Verify, {
         through: models.CategoryVerify,
         foreignKey: "category_id",

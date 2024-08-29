@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const models = require('../models');
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const isAdmin = require("../middleware/adminMiddleware");
 const isAuth = require('../middleware/authMiddleware');
 
@@ -28,14 +28,32 @@ const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 router.get("/:program/:acadyear", isAuth, async (req, res) => {
     const { program, acadyear } = req.params;
     try {
-        const data = await Verify.findOne({
+
+        const verify = await Verify.findOne({
             where: {
                 program,
                 acadyear: {
                     [Op.lte]: parseInt(acadyear)
                 }
             },
-            order: [['acadyear', 'DESC']],
+            attributes: ["id"],
+        });
+
+        if (!verify) {
+            return res.status(404).json({
+                ok: false,
+                message: "No records found."
+            });
+        }
+
+        const data = await Verify.findOne({
+            where: {
+                id: verify.id,
+                program,
+                acadyear: {
+                    [Op.lte]: parseInt(acadyear)
+                }
+            },
             include: [
                 {
                     model: Program,
@@ -50,6 +68,9 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                 },
                 {
                     model: SubjectVerify,
+                    where: {
+                        verify_id: verify.id,
+                    },
                     include: [
                         {
                             model: Subject,
@@ -75,6 +96,13 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                                                 }
                                             ]
                                         }
+                                        ,
+                                        {
+                                            model: Verify,
+                                            where: {
+                                                id: verify.id
+                                            },
+                                        }
                                     ]
                                 },
                                 {
@@ -92,6 +120,12 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                                                     ]
                                                 }
                                             ]
+                                        },
+                                        {
+                                            model: Verify,
+                                            where: {
+                                                id: verify.id
+                                            },
                                         }
                                     ]
                                 },
@@ -105,6 +139,12 @@ router.get("/:program/:acadyear", isAuth, async (req, res) => {
                                                     model: Categorie
                                                 }
                                             ]
+                                        },
+                                        {
+                                            model: Verify,
+                                            where: {
+                                                id: verify.id
+                                            },
                                         }
                                     ]
                                 },
@@ -234,27 +274,44 @@ router.post("/:verify_id/:stu_id", isAuth, async (req, res) => {
                 let category_subject_id = null;
 
                 if (type === 'group') {
-                    const groupSubject = await GroupSubject.findOne({
-                        where: { verify_id, subject_id: s.subject_id }
-                    });
-                    if (groupSubject) {
-                        group_subject_id = groupSubject.id;
+                    const subjectId = s.subject_id || s.id;
+                    if (subjectId) {
+                        const groupSubject = await GroupSubject.findOne({
+                            where: { verify_id, subject_id: subjectId }
+                        });
+                        if (groupSubject) {
+                            group_subject_id = groupSubject.id;
+                        }
+                    } else {
+                        console.error('No valid subject ID found for group:', s);
                     }
                 }
+
                 if (type === 'subgroup') {
-                    const subGroupSubject = await SubgroupSubject.findOne({
-                        where: { verify_id, subject_id: s.subject_id }
-                    });
-                    if (subGroupSubject) {
-                        sub_group_subject_id = subGroupSubject.id;
+                    const subjectId = s.subject_id || s.id;
+                    if (subjectId) {
+                        const subGroupSubject = await SubgroupSubject.findOne({
+                            where: { verify_id, subject_id: subjectId }
+                        });
+                        if (subGroupSubject) {
+                            sub_group_subject_id = subGroupSubject.id;
+                        }
+                    } else {
+                        console.error('No valid subject ID found for subgroup:', s);
                     }
                 }
+
                 if (type === 'semisubgroup') {
-                    const semiSubGroupSubject = await SemiSubgroupSubject.findOne({
-                        where: { verify_id, subject_id: s.subject_id }
-                    });
-                    if (semiSubGroupSubject) {
-                        semi_sub_group_subject_id = semiSubGroupSubject.id;
+                    const subjectId = s.subject_id || s.id;  // Use s.id as fallback
+                    if (subjectId) {  // Only proceed if we have a valid subject ID
+                        const semiSubGroupSubject = await SemiSubgroupSubject.findOne({
+                            where: { verify_id, subject_id: subjectId }
+                        });
+                        if (semiSubGroupSubject) {
+                            semi_sub_group_subject_id = semiSubGroupSubject.id;
+                        }
+                    } else {
+                        console.error('No valid subject ID found for semisubgroup:', s);
                     }
                 }
 
