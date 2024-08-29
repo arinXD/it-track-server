@@ -20,6 +20,6 @@ module.exports = {
     },
 
     async down(queryInterface, Sequelize) {
-        await queryInterface.removeConstraint('Students', 'advisor');
+        await queryInterface.removeColumn('Students', 'advisor');
     }
 };
