@@ -1,11 +1,21 @@
 'use strict';
-const {
-    Model
-} = require('sequelize');
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class SuggestionHistory extends Model {
         static associate(models) {
-            
+            this.belongsTo(models.User, {
+                foreignKey: 'user_id',
+                as: 'user'
+            });
+            this.hasMany(models.QuestionScore, {
+                foreignKey: 'suggestion_id',
+                sourceKey: 'id',
+                as: 'questionScores'
+            });
+            this.hasMany(models.AssessmentScore, { foreignKey: 'suggestion_id', sourceKey: 'id', as: 'assessmentScores' });
+            this.hasMany(models.CareerScore, { foreignKey: 'suggestion_id', sourceKey: 'id', as: 'careerScores' });
+            this.hasMany(models.TrackSummary, { foreignKey: 'suggestion_id', sourceKey: 'id', as: 'trackSummaries' });
+            this.hasMany(models.Recommendation, { foreignKey: 'suggestion_id', sourceKey: 'id', as: 'recommendations' });
         }
     }
     SuggestionHistory.init({

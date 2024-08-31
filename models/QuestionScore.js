@@ -4,7 +4,10 @@ const {
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class QuestionScore extends Model {
-        static associate(models) {}
+        static associate(models) {
+            this.belongsTo(models.SuggestionHistory, { foreignKey: 'suggestion_id', as: 'suggestionHistory' });
+            this.belongsTo(models.Track, { foreignKey: 'track', targetKey: 'track', as: 'trackInfo' });
+        }
     }
     QuestionScore.init({
         suggestion_id: DataTypes.INTEGER,
@@ -14,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
         isCorrect: DataTypes.BOOLEAN
     }, {
         sequelize,
-        modelName: 'questionScores',
+        modelName: 'QuestionScore',
         tableName: 'QuestionScores',
     });
     return QuestionScore;

@@ -3,7 +3,8 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class TrackSummary extends Model {
         static associate(models) {
-
+            this.belongsTo(models.SuggestionHistory, { foreignKey: 'suggestion_id', as: 'suggestionHistory' });
+            this.belongsTo(models.Track, { foreignKey: 'track', targetKey: 'track', as: 'trackInfo' });
         }
     }
     TrackSummary.init({
@@ -20,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
 
     }, {
         sequelize,
-        modelName: 'trackSummaries',
+        modelName: 'TrackSummary',
         tableName: 'TrackSummaries'
     });
     return TrackSummary;

@@ -3,7 +3,8 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Recommendation extends Model {
         static associate(models) {
-
+            this.belongsTo(models.SuggestionHistory, { foreignKey: 'suggestion_id', as: 'suggestionHistory' });
+            this.belongsTo(models.Track, { foreignKey: 'track', targetKey: 'track', as: 'trackInfo' });
         }
     }
     Recommendation.init({
@@ -13,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         descText: DataTypes.STRING,
     }, {
         sequelize,
-        modelName: 'recommendation',
+        modelName: 'Recommendation',
         tableName: 'Recommendations'
     });
     return Recommendation;

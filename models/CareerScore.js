@@ -5,7 +5,8 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class CareerScore extends Model {
         static associate(models) {
-
+            this.belongsTo(models.SuggestionHistory, { foreignKey: 'suggestion_id', as: 'suggestionHistory' });
+            this.belongsTo(models.Track, { foreignKey: 'track', targetKey: 'track', as: 'trackInfo' });
         }
     }
     CareerScore.init({
@@ -16,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
         score: DataTypes.INTEGER,
     }, {
         sequelize,
-        modelName: 'careersScores',
+        modelName: 'CareerScore',
         tableName: 'CareersScores'
     });
     return CareerScore;

@@ -48,10 +48,10 @@ module.exports = {
                 type: Sequelize.INTEGER
             },
             correctPercentage: {
-                type: Sequelize.INTEGER
+                type: Sequelize.FLOAT
             },
             summary: {
-                type: Sequelize.FLOAT
+                type: Sequelize.STRING
             },
             createdAt: {
                 allowNull: false,

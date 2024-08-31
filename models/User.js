@@ -5,6 +5,10 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class User extends Model {
         static associate(models) {
+            this.hasMany(models.SuggestionHistory, {
+                foreignKey: 'user_id',
+                as: 'suggestionHistories'
+            });
             this.hasOne(models.Student, {
                 foreignKey: "user_id"
             });
@@ -15,12 +19,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "user_id"
             });
             this.hasMany(models.TrackPetition, {
-                foreignKey: 'senderId',
-                sourceKey: 'id',
+                foreignKey: 'senderId', sourceKey: 'id',
             });
             this.hasMany(models.TrackPetition, {
-                foreignKey: 'approver',
-                sourceKey: 'id',
+                foreignKey: 'approver', sourceKey: 'id',
             });
         }
     }
