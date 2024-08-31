@@ -50,7 +50,7 @@ const getRole = (email) => {
     if (email.includes(studentEmail)) {
         role = "student"
         model = Student
-    } else if (email.includes(teacherEmail) || email === "rakuzanoat@gmail.com") {
+    } else if (email.includes(teacherEmail)) {
         role = "teacher"
         model = Teacher
     } else {

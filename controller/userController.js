@@ -3,6 +3,7 @@ const models = require('../models');
 const { QueryTypes } = require('sequelize');
 const User = models.User
 const Student = models.Student
+const Teacher = models.Teacher
 const Program = models.Program
 const Enrollment = models.Enrollment
 const Subject = models.Subject
@@ -161,14 +162,43 @@ const getUserData = async (req, res) => {
 
 const updateUserRole = async (req, res) => {
      const id = req.params.id
-     const role = req.params.role
+     const { role, email } = req.body
      try {
-          const users = await User.update({
+          if (role === "teacher") {
+               const findData = await Teacher.findOne({ where: { email } })
+               if (findData) {
+                    await Teacher.update({ user_id: id }, { where: { email: email } })
+               } else {
+                    await Teacher.create({ user_id: id, email: email, name: String(email).split("@")[0] })
+               }
+          } else {
+               await Teacher.update({ user_id: null }, { where: { email } })
+          }
+
+          await User.update({
                role,
           }, { where: { id } })
           return res.status(200).json({
                ok: true,
-               data: users
+          })
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+
+const deleteUser = async (req, res) => {
+     const id = req.params.id
+     try {
+          await User.destroy({
+               where: { id },
+               force: true
+          })
+          return res.status(200).json({
+               ok: true,
           })
      } catch (error) {
           console.error(error);
@@ -182,5 +212,6 @@ const updateUserRole = async (req, res) => {
 module.exports = {
      getUserData,
      getAllUsers,
-     updateUserRole
+     updateUserRole,
+     deleteUser
 }

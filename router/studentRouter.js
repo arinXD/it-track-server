@@ -766,4 +766,64 @@ router.get("/programs/:pid/acadyear/:acad", adminMiddleware, async (req, res) =>
     }
 })
 
+router.get("/programs/:pid/acadyear/:acad/advisor/:email", adminMiddleware, async (req, res) => {
+    const { pid, acad, email } = req.params;
+
+    if (!pid || !acad || !email) {
+        return res.status(400).json({
+            ok: false,
+            message: "Provide program id, academic year, and email."
+        });
+    }
+
+    const isAllPrograms = pid.toLowerCase() === 'all';
+
+    if (!isAllPrograms && !Number.isInteger(parseInt(acad))) {
+        return res.status(400).json({
+            ok: false,
+            message: "Academic year must be integer when a specific program is selected."
+        });
+    }
+
+    try {
+        const whereClause = {};
+        if (!isAllPrograms) {
+            whereClause.acadyear = acad;
+        }
+
+        const includeClause = [
+            {
+                model: Program,
+                where: isAllPrograms ? {} : { program: pid }
+            },
+            {
+                model: StudentStatus,
+            },
+            {
+                model: User,
+            },
+            {
+                model: Teacher,
+                where: { email }
+            },
+        ];
+
+        const students = await Student.findAll({
+            where: whereClause,
+            include: includeClause,
+        });
+
+        return res.status(200).json({
+            ok: true,
+            data: students
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
+
 module.exports = router

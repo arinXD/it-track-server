@@ -29,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'status_code',
                 targetKey: 'id',
             });
+            this.belongsTo(models.Teacher, {
+                foreignKey: 'advisor', 
+                targetKey: 'id'
+            });
         }
     }
     Student.init({
