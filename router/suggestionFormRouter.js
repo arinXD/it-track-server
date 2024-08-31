@@ -6,7 +6,8 @@ const { getForms, createForm, getAvailableForm, deleteMultiple,
      forceDeleteMultiple, getDeletedForms, availableForm,
      updateForm, getFormByID, insertQuestionsToForm, insertAssessmentsToForm,
      summaryAnswers,
-     getSummaryHistoryByEmail
+     getSummaryHistoryByEmail,
+     getSummaryHistoryDetailByID
 } = require('../controller/suggesFormController');
 
 // GET
@@ -15,6 +16,7 @@ router.get("/available", isAuth, getAvailableForm)
 router.get("/deleted", isAuth, getDeletedForms)
 router.get("/get-form/:id", isAdmin, getFormByID)
 router.get("/history/:email", isAuth, getSummaryHistoryByEmail)
+router.get("/history/detail/:id", isAuth, getSummaryHistoryDetailByID)
 
 // POST
 router.post("/", isAdmin, createForm)
