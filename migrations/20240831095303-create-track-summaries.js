@@ -1,0 +1,69 @@
+'use strict';
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+    async up(queryInterface, Sequelize) {
+        await queryInterface.createTable('TrackSummaries', {
+            id: {
+                allowNull: false,
+                autoIncrement: true,
+                primaryKey: true,
+                type: Sequelize.INTEGER
+            },
+            suggestion_id: {
+                allowNull: false,
+                unique: false,
+                type: Sequelize.INTEGER,
+                references: {
+                    model: 'SuggestionHistories',
+                    key: 'id',
+                },
+                onDelete: 'CASCADE',
+            },
+            track: {
+                allowNull: true,
+                defaultValue: null,
+                type: Sequelize.STRING,
+                references: {
+                    model: 'Tracks',
+                    key: 'track'
+                },
+                onDelete: 'SET NULL',
+            },
+            questionScore: {
+                type: Sequelize.INTEGER
+            },
+            assessmentScore: {
+                type: Sequelize.INTEGER
+            },
+            careerScore: {
+                type: Sequelize.INTEGER
+            },
+            totalScore: {
+                type: Sequelize.INTEGER
+            },
+            correctAnswers: {
+                type: Sequelize.INTEGER
+            },
+            totalQuestions: {
+                type: Sequelize.INTEGER
+            },
+            correctPercentage: {
+                type: Sequelize.INTEGER
+            },
+            summary: {
+                type: Sequelize.FLOAT
+            },
+            createdAt: {
+                allowNull: false,
+                type: Sequelize.DATE
+            },
+            updatedAt: {
+                allowNull: false,
+                type: Sequelize.DATE
+            }
+        });
+    },
+    async down(queryInterface, Sequelize) {
+        await queryInterface.dropTable('TrackSummaries');
+    }
+};

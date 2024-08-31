@@ -1,0 +1,51 @@
+{
+    "totalQuestionScore": 30,
+    "overallScore": 54,
+    "totalCorrectAnswers": 3,
+    "totalQuestions": 6,
+    "overallCorrectPercentage": "50.00",
+    "questionScores": [
+        {
+        "qId": 33,
+        "question": "BIT 10",
+        "track": "BIT",
+        "score": 0,
+        "isCorrect": false
+    }],
+    "assessmentScores": [
+        {
+            "assId": 22,
+            "question": "คำถามที่ 6",
+            "track": "Network",
+            "score": 5
+        }
+    ],
+    "careersScores": [
+        {
+            "name_th": "นักพัฒนาเว็ปไซต์",
+            "name_en": "Web Developer",
+            "track": "Web and Mobile",
+            "score": 5
+        }
+    ],
+    "trackSummaries": [
+        {
+            "track": "Web and Mobile",
+            "questionScore": 10,
+            "assessmentScore": 7,
+            "careerScore": 5,
+            "totalScore": 22,
+            "correctAnswers": 1,
+            "totalQuestions": 2,
+            "correctPercentage": "50.00%",
+            "summary": "คะแนนแบบทดสอบ 10 คะแนน, คะแนนแบบประเมิน 7 คะแนน, คะแนนความชอบ 5 คะแนน, ตอบคำถามถูก 1/2 ข้อ (50.00%)."
+        }
+    ],
+    "recommendation": [
+        {
+            "track": "Web and Mobile",
+            "recText": "คุณเหมาะสมมากกับแทร็ก Web and Mobile",
+            "descText": "คะแนนรวมของคุณคือ 22 คะแนน, คะแนนแบบทดสอบ 10 คะแนน, คะแนนแบบประเมิน 7 คะแนน, คะแนนความชอบ 5 คะแนน, ตอบคำถามถูก 1/2 ข้อ (50.00%)."
+        }
+    ]
+}
