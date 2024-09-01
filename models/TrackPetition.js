@@ -1,10 +1,8 @@
 'use strict';
-const {
-    Model
-} = require('sequelize');
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class TrackPetition extends Model {
-
+        // Relation
         static associate(models) {
             this.belongsTo(models.User, {
                 foreignKey: 'senderId',
@@ -43,5 +41,32 @@ module.exports = (sequelize, DataTypes) => {
         paranoid: true,
         deletedAt: 'deletedAt',
     });
+
+    const createNotification = petition => {
+        console.log(petition);
+        if (petition.changed('status')) {
+            const status = petition.status;
+            let text = "";
+            if (status === 1) {
+                text = "คำร้องย้ายแทร็กของคุณได้รับการอนุมัติแล้ว";
+            } else if (status === 2) {
+                text = "คำร้องย้ายแทร็กของคุณถูกปฏิเสธ";
+            }
+
+            if (text) {
+                sequelize.models.Notification.create({
+                    userId: petition.senderId,
+                    text,
+                    destination: `/petition/request/${petition.id}`,
+                    isRead: false
+                });
+            }
+        }
+    }
+
+    TrackPetition.afterUpdate(petition => {
+        createNotification(petition)
+    })
+
     return TrackPetition;
 };

@@ -24,6 +24,9 @@ module.exports = (sequelize, DataTypes) => {
             this.hasMany(models.TrackPetition, {
                 foreignKey: 'approver', sourceKey: 'id',
             });
+            this.hasMany(models.Notification, {
+                foreignKey: 'userId', sourceKey: 'id',
+            });
         }
     }
     User.init({

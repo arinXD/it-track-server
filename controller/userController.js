@@ -1,6 +1,6 @@
 const Joi = require('joi');
 const models = require('../models');
-const { QueryTypes } = require('sequelize');
+const { QueryTypes, Op } = require('sequelize');
 const User = models.User
 const Student = models.Student
 const Teacher = models.Teacher
@@ -8,6 +8,7 @@ const Program = models.Program
 const Enrollment = models.Enrollment
 const Subject = models.Subject
 const Selection = models.Selection
+const TeacherTrack = models.TeacherTrack
 
 const userAttr = ["email", "role", "sign_in_type", "createdAt"]
 const studentAttr = ["stu_id", "first_name", "last_name", "courses_type"]
@@ -213,5 +214,5 @@ module.exports = {
      getUserData,
      getAllUsers,
      updateUserRole,
-     deleteUser
+     deleteUser,
 }
