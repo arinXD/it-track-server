@@ -63,24 +63,28 @@ const signInCredentials = async (req, res, next) => {
     try {
         const { email, password } = req.body;
         const { role, model } = getRole(email)
-        const user = await User.findOne({
+
+        const user = model ? await User.findOne({
             where: { email },
             include: {
                 model
             }
-        });
+        }) :
+            await User.findOne({
+                where: { email },
+            });
 
         if (!user) {
             return res.status(401).json({
                 ok: false,
-                message: "อีเมลผู้ใช้ไม่ถูกต้อง"
+                message: "Email doesn't exist."
             });
         }
 
         if (!(user.verification)) {
             return res.status(400).json({
                 ok: false,
-                message: "อีเมลของคุณยังไม่ถูกยืนยัน กรุณาตรวจสอบ inbox อีเมล"
+                message: "Verify your email. Check your inbox."
             });
         }
         const match = await bcrypt.compare(password, user.password);
@@ -92,15 +96,17 @@ const signInCredentials = async (req, res, next) => {
                 child = user[modelName]
                 child = child.dataValues
             }
-            const name = child?.first_name && child?.last_name ? `${child?.first_name} ${child?.last_name}` : undefined
+            const name = child?.first_name && child?.last_name ? `${child?.first_name} ${child?.last_name}` : email.split("@")[0]
             const userData = {
                 email,
                 name,
-                image: user.image,
-                role,
+                image: user.image || "",
+                role: user.role,
                 verification: user.verification,
                 ...child
             }
+            console.log(userData);
+
             return res.status(200).json({
                 ok: true,
                 user: userData,
@@ -109,7 +115,7 @@ const signInCredentials = async (req, res, next) => {
         } else {
             return res.status(401).json({
                 ok: false,
-                message: "รหัสผ่านไม่ถูกต้อง"
+                message: "Password is incorrect."
             });
         }
     } catch (err) {

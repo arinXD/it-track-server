@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const bcrypt = require("bcryptjs");
 const models = require('../models');
 const { QueryTypes, Op } = require('sequelize');
 const User = models.User
@@ -16,6 +17,102 @@ const studentAttr = ["stu_id", "first_name", "last_name", "courses_type"]
 const emailSchema = Joi.string().email().required()
 const gradeOrder = {
      'A': 1, 'B+': 2, 'B': 3, 'C+': 4, 'C': 5, 'D+': 6, 'D': 7, 'F': 8
+};
+
+function getAcadYear(studentCode) {
+     const currentYear = ((new Date().getFullYear()) + 543).toString();
+     const firstTwoDigits = currentYear.slice(0, 2);
+     const acadyear = `${firstTwoDigits}${studentCode.slice(0, 2)}`
+     return parseInt(acadyear)
+}
+
+const createUser = async (req, res) => {
+     const { role, email, password, ...otherData } = req.body;
+     const t = await User.sequelize.transaction();
+
+     try {
+          const createUSerData = {
+               email,
+               role,
+               verification: true,
+               sign_in_type: 'credentials',
+          }
+          let user = {}
+          if (role === "admin") {
+               const hashedPassword = await bcrypt.hash(password, 10)
+               createUSerData.password = hashedPassword
+               const createdUser = await User.create(createUSerData, { transaction: t });
+               user = createdUser?.dataValues
+          }
+
+          switch (role) {
+               case 'admin':
+                    break;
+               case 'teacher':
+                    const { prefix, name, surname, track } = otherData;
+                    const teacher = await Teacher.create({
+                         email,
+                         prefix,
+                         name,
+                         surname,
+                    }, { transaction: t });
+
+                    if (track) {
+                         await TeacherTrack.create({
+                              teacher_id: teacher.id,
+                              track,
+                         }, { transaction: t });
+                    }
+                    break;
+               case 'student':
+                    const { stu_id, first_name, last_name, courses_type, program } = otherData;
+                    await Student.create({
+                         stu_id,
+                         email,
+                         first_name,
+                         last_name,
+                         courses_type,
+                         program,
+                         acadyear: getAcadYear(stu_id),
+                         status_code: 10
+                    }, { transaction: t });
+                    break;
+               default:
+                    throw new Error('Invalid role');
+          }
+
+          await t.commit();
+
+          return res.status(201).json({
+               message: 'User created successfully',
+               user: {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+               }
+          });
+     } catch (error) {
+          await t.rollback();
+
+          console.error('Error creating user:', error);
+
+          if (error.name === 'SequelizeUniqueConstraintError') {
+               if (error.errors && error.errors.length > 0) {
+                    const constraintError = error.errors[0];
+                    if (constraintError.path === 'email') {
+                         return res.status(400).json({ message: 'อีเมลนี้ถูกใช้งานแล้ว' });
+                    } else if (constraintError.path === 'stu_id') {
+                         return res.status(400).json({ message: 'รหัสนักศึกษานี้ถูกใช้งานแล้ว' });
+                    }
+               }
+               return res.status(400).json({ message: 'ข้อมูลนี้ถูกใช้งานแล้ว' });
+          }
+
+          return res.status(500).json({
+               message: 'Error creating user',
+               error: error.message
+          });
+     }
 };
 
 const getAllUsers = async (req, res) => {
@@ -215,4 +312,5 @@ module.exports = {
      getAllUsers,
      updateUserRole,
      deleteUser,
+     createUser
 }
