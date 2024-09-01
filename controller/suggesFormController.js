@@ -810,17 +810,19 @@ const summaryAnswers = async (req, res) => {
                          summary: `คะแนนแบบทดสอบ ${scores.questionScore} คะแนน, คะแนนแบบประเมิน ${scores.assessmentScore} คะแนน, คะแนนความชอบ ${scores.careerScore} คะแนน, ตอบคำถามถูก ${scores.correctAnswers}/${scores.totalQuestions} ข้อ (${correctPercentage}%).`
                     };
 
-                    // Store TrackSummary
-                    await TrackSummary.create({
-                         suggestion_id: suggestionHistory.id,
-                         ...summary
-                    }, { transaction: t });
-
                     return summary;
                }));
 
                const sortedTracks = trackSummaries.sort((a, b) => b.totalScore - a.totalScore);
                const topTracks = sortedTracks.slice(0, 3);
+
+               topTracks.map(async sum => {
+                    await TrackSummary.create({
+                         suggestion_id: suggestionHistory.id,
+                         ...sum
+                    }, { transaction: t });
+               })
+
                const recommendation = await Promise.all(topTracks.map(async (track, index) => {
                     let strength = index === 0 ? "เหมาะสมมาก" : index === 1 ? "ค่อนข้างเหมาะสม" : "ทำได้ดี";
                     const rec = {
@@ -1035,7 +1037,29 @@ const getSummaryHistoryDetailByID = async (req, res) => {
           console.error(error);
           return res.status(500).json({
                ok: false,
-               message: "Server error while fetching summary history."
+               message: "Server error while fetching summary history"
+          });
+     }
+}
+
+const deleteHistoryByID = async (req, res) => {
+     const ids = req.body
+     try {
+          for (let index = 0; index < ids.length; index++) {
+               const id = ids[index];
+               await SuggestionHistory.destroy({
+                    where: { id },
+               });
+          }
+          return res.status(200).json({
+               ok: true,
+               message: "Summary histories deleted successfully"
+          });
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error while deleting summary history"
           });
      }
 }
@@ -1054,5 +1078,6 @@ module.exports = {
      forceDeleteMultiple,
      summaryAnswers,
      getSummaryHistoryByEmail,
-     getSummaryHistoryDetailByID
+     getSummaryHistoryDetailByID,
+     deleteHistoryByID
 }

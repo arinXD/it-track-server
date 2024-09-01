@@ -88,6 +88,9 @@ const sequelize = new Sequelize(
 },
 )
 
+// CRON JOB 
+require('./cron-noti');
+
 app.listen(port, async () => {
     try {
         await sequelize.sync()

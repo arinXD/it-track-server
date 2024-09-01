@@ -7,7 +7,8 @@ const { getForms, createForm, getAvailableForm, deleteMultiple,
      updateForm, getFormByID, insertQuestionsToForm, insertAssessmentsToForm,
      summaryAnswers,
      getSummaryHistoryByEmail,
-     getSummaryHistoryDetailByID
+     getSummaryHistoryDetailByID,
+     deleteHistoryByID
 } = require('../controller/suggesFormController');
 
 // GET
@@ -31,6 +32,7 @@ router.put("/:id/available", isAdmin, availableForm)
 // DELETE
 router.delete("/multiple", isAdmin, deleteMultiple)
 router.delete("/multiple/force", isAdmin, forceDeleteMultiple)
+router.delete("/history/multiple", isAuth, deleteHistoryByID)
 
 
 module.exports = router
