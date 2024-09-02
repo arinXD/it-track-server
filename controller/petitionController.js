@@ -262,30 +262,30 @@ const sendPetition = async (req, res) => {
                     value.senderId = user?.dataValues.id
                     const createdPetition = await TrackPetition.create(value);
 
-                    const teacherIT = await User.findAll({
-                         where: {
-                              role: {
-                                   [Op.or]: ["teacher", "admin"]
-                              }
-                         },
-                         include: [
-                              {
-                                   model: Teacher,
-                                   attributes: ["prefix", "name", "surname"],
-                                   where: {
-                                        user_id: {
-                                             [Op.ne]: null
-                                        },
-                                   },
-                                   include: [
-                                        {
-                                             model: TeacherTrack,
-                                             required: true,
-                                        }
-                                   ]
-                              }
-                         ]
-                    })
+                    // const teacherIT = await User.findAll({
+                    //      where: {
+                    //           role: {
+                    //                [Op.or]: ["teacher", "admin"]
+                    //           }
+                    //      },
+                    //      include: [
+                    //           {
+                    //                model: Teacher,
+                    //                attributes: ["prefix", "name", "surname"],
+                    //                where: {
+                    //                     user_id: {
+                    //                          [Op.ne]: null
+                    //                     },
+                    //                },
+                    //                include: [
+                    //                     {
+                    //                          model: TeacherTrack,
+                    //                          required: true,
+                    //                     }
+                    //                ]
+                    //           }
+                    //      ]
+                    // })
 
                     const admin = await User.findAll({
                          where: {
@@ -297,15 +297,6 @@ const sendPetition = async (req, res) => {
                     const stdlname = `${user?.dataValues?.Student?.dataValues?.last_name}`
                     const pid = createdPetition?.dataValues?.id
 
-                    for (let index = 0; index < teacherIT.length; index++) {
-                         const mod = teacherIT[index];
-                         await Notification.create({
-                              userId: mod?.dataValues?.id,
-                              text: `${stdfname} ${stdlname} ส่งคำร้องย้ายแทร็ก`,
-                              destination: `/admin/petitions/all/${pid}`,
-                              isRead: false
-                         })
-                    }
                     for (let index = 0; index < admin.length; index++) {
                          const mod = admin[index];
                          await Notification.create({

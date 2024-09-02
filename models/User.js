@@ -9,6 +9,9 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'user_id',
                 as: 'suggestionHistories'
             });
+            this.hasOne(models.Admin, {
+                foreignKey: "user_id"
+            });
             this.hasOne(models.Student, {
                 foreignKey: "user_id"
             });
