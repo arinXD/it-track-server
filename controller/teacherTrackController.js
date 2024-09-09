@@ -48,7 +48,6 @@ const getTeachersByTrack = async (req, res) => {
 };
 
 const getTeachersNotInTrack = async (req, res) => {
-     console.log("dawd");
      try {
           const data = await Teacher.findAll({
                attributes: ["id", "user_id", "email", "prefix", "name", "surname"],
@@ -82,7 +81,7 @@ const createOrUpdateTeacher = async (req, res) => {
      const insertData = req.body;
      const existProfessor = await TeacherTrack.findOne({
           where: {
-               teacherName: insertData.teacherName
+               teacher_id: insertData.teacher_id
           }
      });
      let upsertData = existProfessor && Object.keys(existProfessor).length > 0
@@ -103,7 +102,7 @@ const createOrUpdateTeacher = async (req, res) => {
                message: "เพิ่มข้อมูลสำเร็จ"
           });
      } catch (error) {
-          console.log(req.fileName);
+          console.log(error);
           const filePath = path.join(__dirname, `../public/images/teachers/${req.fileName}`);
           if (fs.existsSync(filePath)) {
                fs.unlinkSync(filePath);
@@ -118,11 +117,10 @@ const createOrUpdateTeacher = async (req, res) => {
 const updateTeacherForm = async (req, res) => {
      const tid = req.params.tid;
      const image = `${getHostname()}/images/teachers/${req.fileName}`;
-     const { teacherName } = req.body;
      try {
           const teacherData = await TeacherTrack.findOne({
                where: {
-                    id: tid
+                    teacher_id: tid
                }
           });
           let oldFilePath;
@@ -131,14 +129,13 @@ const updateTeacherForm = async (req, res) => {
                oldFilePath = path.join(__dirname, `../public/images/teachers/${oldFileName}`);
           }
           teacherData.image = image;
-          teacherData.teacherName = teacherName;
           await teacherData.save();
           if (oldFilePath && fs.existsSync(oldFilePath)) {
                fs.unlinkSync(oldFilePath);
           }
           return res.status(200).json({
                ok: true,
-               message: "เพิ่มข้อมูลสำเร็จ"
+               message: "แก้ไขข้อมูลสำเร็จ"
           });
      } catch (error) {
           console.log(req.fileName);
@@ -149,7 +146,7 @@ const updateTeacherForm = async (req, res) => {
           }
           return res.status(401).json({
                ok: false,
-               message: "เพิ่มข้อมูลไม่สำเร็จ"
+               message: "แก้ไขข้อมูลไม่สำเร็จ"
           });
      }
 };
@@ -179,12 +176,19 @@ const deleteTeachers = async (req, res) => {
      const teacherId = req.body;
      try {
           for (const tid of teacherId) {
-               await TeacherTrack.destroy({
+               const teacherData = await TeacherTrack.findOne({
                     where: {
                          id: tid
-                    },
-                    force: true
+                    }
                });
+               if (teacherData && Object.keys(teacherData).length > 0 && teacherData.dataValues.image) {
+                    const oldFileName = teacherData.dataValues.image.split("/").pop();
+                    const oldFilePath = path.join(__dirname, `../public/images/teachers/${oldFileName}`);
+                    if (fs.existsSync(oldFilePath)) {
+                         fs.unlinkSync(oldFilePath);
+                    }
+               }
+               await teacherData.destroy();
           }
           return res.status(200).json({
                ok: true,

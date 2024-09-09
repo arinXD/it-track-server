@@ -90,6 +90,7 @@ const updateNews = async (req, res) => {
 
           res.status(404).json({ message: 'News not found' });
      } catch (error) {
+          console.error(error);
           res.status(500).json({ message: "Error updating news", error: error.message });
      }
 }

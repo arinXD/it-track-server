@@ -117,6 +117,7 @@ const enrollmentRouter = require('./router/enrollmentRouter');
 const studentStatusRouter = require('./router/studentStatusRouter');
 const trackSubjectRouter = require('./router/trackSubjectRouter');
 const teacherTrackRouter = require('./router/teacherTrackRouter');
+const advisorRouter = require('./router/advisorRouter');
 const careerRouter = require('./router/careerRouter');
 const suggestionFormRouter = require('./router/suggestionFormRouter');
 const questionBankRouter = require('./router/questionBankRouter');
@@ -185,6 +186,7 @@ app.use('/api/verifies/approve', verifySelectionTeacherRouter);
 app.use('/api/condition', conditionVerifyRouter);
 app.use('/api/statuses', isAdmin, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)
+app.use('/api/advisors', advisorRouter)
 app.use('/api/careers', careerRouter)
 app.use('/api/suggestion-forms', suggestionFormRouter)
 app.use('/api/questions', questionBankRouter)
