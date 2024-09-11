@@ -49,19 +49,51 @@ const createUser = async (req, res) => {
                case 'admin':
                     break;
                case 'teacher':
-                    const { prefix, name, surname, track } = otherData;
-                    const teacher = await Teacher.create({
-                         email,
-                         prefix,
-                         name,
-                         surname,
-                    }, { transaction: t });
+                    const { id, prefix, name, surname, track } = otherData;
 
-                    if (track) {
-                         await TeacherTrack.create({
-                              teacher_id: teacher.id,
-                              track,
+                    // แทรกไอดีมาแก้ไขข้อมูล
+                    if (id) {
+                         await Teacher.update({
+                              email,
+                              prefix,
+                              name,
+                              surname,
+                         }, { where: { id } }, { transaction: t });
+
+                         const ttrack = await TeacherTrack.findOne({ where: { teacher_id: id } })
+
+                         if (track) {
+                              if (ttrack) {
+                                   await TeacherTrack.update({ track },
+                                        { where: { teacher_id: id } },
+                                        { transaction: t });
+                              } else {
+                                   await TeacherTrack.create({
+                                        teacher_id: id,
+                                        track,
+                                   }, { transaction: t });
+                              }
+                         } else {
+                              await TeacherTrack.update({ track: null },
+                                   { where: { teacher_id: id } },
+                                   { transaction: t });
+
+                         }
+                    }
+                    // สร้างใหม่
+                    else {
+                         const teacher = await Teacher.create({
+                              email,
+                              prefix,
+                              name,
+                              surname,
                          }, { transaction: t });
+                         if (track) {
+                              await TeacherTrack.create({
+                                   teacher_id: teacher.id,
+                                   track,
+                              }, { transaction: t });
+                         }
                     }
                     break;
                case 'student':
@@ -190,6 +222,16 @@ const getUserData = async (req, res) => {
                     email
                },
                include: [
+                    {
+                         model: Teacher,
+                         attributes: ["id", "prefix", "name", "surname"],
+                         include: [
+                              {
+                                   model: TeacherTrack,
+                                   attributes: ["track"],
+                              },
+                         ]
+                    },
                     {
                          model: Student,
                          attributes: studentAttr,

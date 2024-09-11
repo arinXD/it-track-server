@@ -19,6 +19,7 @@ const Recommendation = models.Recommendation
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const Joi = require('joi');
+const { sleep } = require('../utils/sleep');
 
 const formAttr = ["id", "title", "desc"]
 const questionAttr = ["id", "question", "isMultipleChoice", "desc"]
@@ -666,9 +667,7 @@ const forceDeleteMultiple = async (req, res) => {
           })
      }
 }
-const sleep = (milliseconds) => {
-     return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
+
 const summaryAnswers = async (req, res) => {
      await sleep(2000)
      const answers = req.body;

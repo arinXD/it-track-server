@@ -38,14 +38,13 @@ app.use(cors({
     origin: [
         "https://it-track-client.vercel.app",
         "http://localhost:3000",
-        "http://localhost:3001",
     ]
 }))
-app.use(requestIp.mw()); // extract ip 
+app.use(requestIp.mw());
 app.use(expressWinston.logger({
     winstonInstance: winstonLogger,
     statusLevels: true,
-    meta: true, // meta data about the request
+    meta: true,
     expressFormat: false,
     colorize: false,
     dynamicMeta: (req, res) => {
@@ -126,6 +125,7 @@ const petitionRouter = require('./router/petitionRouter');
 const selectionRouter = require('./router/selectionRouter');
 const newsRouter = require('./router/newsRouter');
 const notificationRouter = require('./router/notificationRouter');
+const teacherRouter = require('./router/teacherRouter');
 
 //  subject router
 const subjectRouter = require('./router/subjectRouter');
@@ -145,7 +145,6 @@ const conditionVerifyRouter = require('./router/conditionVerifyRouter')
 const verifySelectionTeacherRouter = require('./router/verifySelectionTeacherRouter')
 
 // middleware
-const isAuth = require("./middleware/authMiddleware")
 const isAdmin = require("./middleware/adminMiddleware");
 
 //--------------------
@@ -160,7 +159,6 @@ app.get('/', async (req, res, next) => {
         req.headers['x-real-ip'] ||
         req.headers['x-forwarded-for'] ||
         req.socket.remoteAddress || '';
-    const publicIP = req.publicIP
     return res.json({
         message: 'IT Track by IT64',
         IPAddress,
@@ -195,6 +193,7 @@ app.use('/api/petitions', petitionRouter)
 app.use('/api/selections', selectionRouter)
 app.use('/api/news', newsRouter)
 app.use('/api/notifications', notificationRouter)
+app.use('/api/teachers', teacherRouter)
 
 app.get("/api/get-token", async (req, res) => {
     const token = randomBytes(16).toString("hex")

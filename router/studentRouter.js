@@ -13,10 +13,10 @@ const Subject = models.Subject
 const Track = models.Track
 const adminMiddleware = require("../middleware/adminMiddleware");
 const { Op } = require('sequelize');
-const { getAcadYear, getCourse, getProgram } = require('../utils/student');
 const { findSubjectByCode } = require('../utils/subject');
 const isAuth = require('../middleware/authMiddleware');
 const validateStudent = require('../middleware/validateStudent');
+const { sleep } = require('../utils/sleep');
 
 router.get("/:stuid", validateStudent, async (req, res) => {
     const stuid = req.params.stuid
