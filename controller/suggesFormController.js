@@ -8,9 +8,18 @@ const FormQuestion = models.FormQuestion
 const FormCareer = models.FormCareer
 const Career = models.Career
 const Track = models.Track
+const User = models.User
+const SuggestionHistory = models.SuggestionHistory
+const QuestionScore = models.QuestionScore
+const AssessmentScore = models.AssessmentScore
+const CareerScore = models.CareerScore
+const TrackSummary = models.TrackSummary
+const Recommendation = models.Recommendation
+
 const { sequelize } = require('../models');
 const { Op } = require('sequelize');
 const Joi = require('joi');
+const { sleep } = require('../utils/sleep');
 
 const formAttr = ["id", "title", "desc"]
 const questionAttr = ["id", "question", "isMultipleChoice", "desc"]
@@ -658,13 +667,15 @@ const forceDeleteMultiple = async (req, res) => {
           })
      }
 }
-const sleep = (milliseconds) => {
-     return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
+
 const summaryAnswers = async (req, res) => {
      await sleep(2000)
      const answers = req.body;
+     const email = req.params.email;
      try {
+          const userId = await User.findOne({
+               where: { email },
+          })
           const { error, value } = answerSchema.validate(answers);
           if (error) {
                return res.status(400).json({
@@ -673,128 +684,199 @@ const summaryAnswers = async (req, res) => {
                });
           }
 
-          const tracks = await Track.findAll();
-          const trackScores = tracks.reduce((acc, track) => {
-               acc[track.track] = {
-                    questionScore: 0,
-                    assessmentScore: 0,
-                    careerScore: 0,
-                    correctAnswers: 0,
-                    totalQuestions: 0
-               };
-               return acc;
-          }, {});
+          const result = await sequelize.transaction(async (t) => {
+               const suggestionHistory = await SuggestionHistory.create({
+                    user_id: userId?.dataValues?.id,
+                    totalQuestionScore: 0,
+                    overallScore: 0,
+                    totalCorrectAnswers: 0,
+                    totalQuestions: 0,
+                    overallCorrectPercentage: 0,
+               }, { transaction: t });
 
-          const questionScores = await Promise.all(value.questions.map(async (q) => {
-               const question = await QuestionBank.findByPk(q.qId);
-               const correctAnswer = await Answer.findOne({
-                    where: { questionId: q.qId, isCorrect: true }
-               });
-               const isCorrect = correctAnswer && correctAnswer?.dataValues?.id === q.aId;
-               const score = isCorrect ? 10 : 0;
+               const tracks = await Track.findAll({ transaction: t });
+               const trackScores = tracks.reduce((acc, track) => {
+                    acc[track.track] = {
+                         questionScore: 0,
+                         assessmentScore: 0,
+                         careerScore: 0,
+                         correctAnswers: 0,
+                         totalQuestions: 0
+                    };
+                    return acc;
+               }, {});
 
-               if (question && question?.dataValues?.track) {
-                    const track = question?.dataValues?.track;
-                    trackScores[track].questionScore += score;
-                    trackScores[track].totalQuestions += 1;
-                    if (isCorrect) {
-                         trackScores[track].correctAnswers += 1;
+               // Process question scores
+               const questionScores = await Promise.all(value.questions.map(async (q) => {
+                    const question = await QuestionBank.findByPk(q.qId, { transaction: t });
+                    const correctAnswer = await Answer.findOne({
+                         where: { questionId: q.qId, isCorrect: true },
+                         transaction: t
+                    });
+                    const isCorrect = correctAnswer && correctAnswer?.dataValues?.id === q.aId;
+                    const score = isCorrect ? 10 : 0;
+
+                    if (question && question?.dataValues?.track) {
+                         const track = question?.dataValues?.track;
+                         trackScores[track].questionScore += score;
+                         trackScores[track].totalQuestions += 1;
+                         if (isCorrect) {
+                              trackScores[track].correctAnswers += 1;
+                         }
                     }
-               }
 
-               return {
-                    qId: q.qId,
-                    question: question?.dataValues?.question,
-                    track: question ? question?.dataValues?.track : null,
-                    score: score,
-                    isCorrect: isCorrect
-               };
-          }));
+                    // Store QuestionScore
+                    await QuestionScore.create({
+                         suggestion_id: suggestionHistory.id,
+                         question: question?.dataValues?.question,
+                         track: question ? question?.dataValues?.track : null,
+                         score: score,
+                         isCorrect: isCorrect
+                    }, { transaction: t });
 
-          const assessmentScores = await Promise.all(value.assessments.map(async (a) => {
-               const assessment = await AssessmentQuestionBank.findByPk(a.assId);
-               const score = [5, 4, 3, 2, 1, 0][a.index] || 0;
+                    return {
+                         qId: q.qId,
+                         question: question?.dataValues?.question,
+                         track: question ? question?.dataValues?.track : null,
+                         score: score,
+                         isCorrect: isCorrect
+                    };
+               }));
 
-               if (assessment && assessment?.dataValues?.track) {
-                    trackScores[assessment?.dataValues?.track].assessmentScore += score;
-               }
+               // Process assessment scores
+               const assessmentScores = await Promise.all(value.assessments.map(async (a) => {
+                    const assessment = await AssessmentQuestionBank.findByPk(a.assId, { transaction: t });
+                    const score = [5, 4, 3, 2, 1, 0][a.index] || 0;
 
-               return {
-                    assId: a.assId,
-                    question: assessment?.dataValues?.question,
-                    track: assessment ? assessment?.dataValues?.track : null,
-                    score: score
-               };
-          }));
+                    if (assessment && assessment?.dataValues?.track) {
+                         trackScores[assessment?.dataValues?.track].assessmentScore += score;
+                    }
 
-          const careersScores = await Promise.all(value.careers.map(async (careerId) => {
-               const career = await Career.findByPk(careerId);
-               if (career && career?.dataValues?.track) {
-                    trackScores[career?.dataValues?.track].careerScore += 5;
-               }
-               return {
-                    name_th: career?.dataValues?.name_th,
-                    name_en: career?.dataValues?.name_en,
-                    track: career?.dataValues?.track || null,
-                    score: 5
-               };
-          }));
+                    // Store AssessmentScore
+                    await AssessmentScore.create({
+                         suggestion_id: suggestionHistory.id,
+                         question: assessment?.dataValues?.question,
+                         track: assessment ? assessment?.dataValues?.track : null,
+                         score: score
+                    }, { transaction: t });
 
-          const trackSummaries = Object.entries(trackScores).map(([track, scores]) => {
-               const correctPercentage = scores.totalQuestions > 0
-                    ? (scores.correctAnswers / scores.totalQuestions * 100).toFixed(2)
+                    return {
+                         assId: a.assId,
+                         question: assessment?.dataValues?.question,
+                         track: assessment ? assessment?.dataValues?.track : null,
+                         score: score
+                    };
+               }));
+
+               // Process career scores
+               const careersScores = await Promise.all(value.careers.map(async (careerId) => {
+                    const career = await Career.findByPk(careerId, { transaction: t });
+                    if (career && career?.dataValues?.track) {
+                         trackScores[career?.dataValues?.track].careerScore += 5;
+                    }
+
+                    // Store CareerScore
+                    await CareerScore.create({
+                         suggestion_id: suggestionHistory.id,
+                         name_th: career?.dataValues?.name_th,
+                         name_en: career?.dataValues?.name_en,
+                         track: career?.dataValues?.track || null,
+                         score: 5
+                    }, { transaction: t });
+
+                    return {
+                         name_th: career?.dataValues?.name_th,
+                         name_en: career?.dataValues?.name_en,
+                         track: career?.dataValues?.track || null,
+                         score: 5
+                    };
+               }));
+
+               // Process track summaries
+               const trackSummaries = await Promise.all(Object.entries(trackScores).map(async ([track, scores]) => {
+                    const correctPercentage = scores.totalQuestions > 0
+                         ? (scores.correctAnswers / scores.totalQuestions * 100).toFixed(2)
+                         : 0;
+                    const summary = {
+                         track,
+                         questionScore: scores.questionScore,
+                         assessmentScore: scores.assessmentScore,
+                         careerScore: scores.careerScore,
+                         totalScore: scores.questionScore + scores.assessmentScore + scores.careerScore,
+                         correctAnswers: scores.correctAnswers,
+                         totalQuestions: scores.totalQuestions,
+                         correctPercentage: parseFloat(correctPercentage),
+                         summary: `คะแนนแบบทดสอบ ${scores.questionScore} คะแนน, คะแนนแบบประเมิน ${scores.assessmentScore} คะแนน, คะแนนความชอบ ${scores.careerScore} คะแนน, ตอบคำถามถูก ${scores.correctAnswers}/${scores.totalQuestions} ข้อ (${correctPercentage}%).`
+                    };
+
+                    return summary;
+               }));
+
+               const sortedTracks = trackSummaries.sort((a, b) => b.totalScore - a.totalScore);
+               const topTracks = sortedTracks.slice(0, 3);
+
+               topTracks.map(async sum => {
+                    await TrackSummary.create({
+                         suggestion_id: suggestionHistory.id,
+                         ...sum
+                    }, { transaction: t });
+               })
+
+               const recommendation = await Promise.all(topTracks.map(async (track, index) => {
+                    let strength = index === 0 ? "เหมาะสมมาก" : index === 1 ? "ค่อนข้างเหมาะสม" : "ทำได้ดี";
+                    const rec = {
+                         track: track.track,
+                         recText: `คุณ${strength}กับแทร็ก ${track.track}`,
+                         descText: `คะแนนรวมของคุณคือ ${track.totalScore} คะแนน, ${track.summary}`
+                    };
+
+                    // Store Recommendation
+                    await Recommendation.create({
+                         suggestion_id: suggestionHistory.id,
+                         ...rec
+                    }, { transaction: t });
+
+                    return rec;
+               }));
+
+               const totalQuestionScore = questionScores.reduce((sum, q) => sum + q.score, 0);
+               const totalAssessmentScore = assessmentScores.reduce((sum, a) => sum + a.score, 0);
+               const totalCareerScore = Object.values(trackScores).reduce((sum, scores) => sum + scores.careerScore, 0);
+               const overallScore = totalQuestionScore + totalAssessmentScore + totalCareerScore;
+
+               const totalCorrectAnswers = Object.values(trackScores).reduce((sum, scores) => sum + scores.correctAnswers, 0);
+               const totalQuestions = Object.values(trackScores).reduce((sum, scores) => sum + scores.totalQuestions, 0);
+               const overallCorrectPercentage = totalQuestions > 0
+                    ? parseFloat((totalCorrectAnswers / totalQuestions * 100).toFixed(2))
                     : 0;
+
+               // Update SuggestionHistory
+               await suggestionHistory.update({
+                    totalQuestionScore,
+                    overallScore,
+                    totalCorrectAnswers,
+                    totalQuestions,
+                    overallCorrectPercentage
+               }, { transaction: t });
+
                return {
-                    track,
-                    questionScore: scores.questionScore,
-                    assessmentScore: scores.assessmentScore,
-                    careerScore: scores.careerScore,
-                    totalScore: scores.questionScore + scores.assessmentScore + scores.careerScore,
-                    correctAnswers: scores.correctAnswers,
-                    totalQuestions: scores.totalQuestions,
-                    correctPercentage: `${correctPercentage}%`,
-                    summary: `คะแนนแบบทดสอบ ${scores.questionScore} คะแนน, คะแนนแบบประเมิน ${scores.assessmentScore} คะแนน, คะแนนความชอบ ${scores.careerScore} คะแนน, ตอบคำถามถูก ${scores.correctAnswers}/${scores.totalQuestions} ข้อ (${correctPercentage}%).`
-               };
-          });
-          const sortedTracks = trackSummaries.sort((a, b) => b.totalScore - a.totalScore);
-          const topTracks = sortedTracks.slice(0, 3);
-          const recommendation = topTracks.map((track, index) => {
-               let strength = index === 0 ? "เหมาะสมมาก" : index === 1 ? "ค่อนข้างเหมาะสม" : "ทำได้ดี";
-               return {
-                    track: track.track,
-                    recText: `คุณ${strength}กับแทร็ก ${track.track}`,
-                    descText: `คะแนนรวมของคุณคือ ${track.totalScore} คะแนน, ${track.summary}`
-               }
-          });
-
-          const totalQuestionScore = questionScores.reduce((sum, q) => sum + q.score, 0);
-          const totalAssessmentScore = assessmentScores.reduce((sum, a) => sum + a.score, 0);
-          const totalCareerScore = Object.values(trackScores).reduce((sum, scores) => sum + scores.careerScore, 0);
-          const overallScore = totalQuestionScore + totalAssessmentScore + totalCareerScore;
-
-          const totalCorrectAnswers = Object.values(trackScores).reduce((sum, scores) => sum + scores.correctAnswers, 0);
-          const totalQuestions = Object.values(trackScores).reduce((sum, scores) => sum + scores.totalQuestions, 0);
-          const overallCorrectPercentage = totalQuestions > 0
-               ? (totalCorrectAnswers / totalQuestions * 100).toFixed(2)
-               : 0;
-
-          return res.status(200).json({
-               ok: true,
-               data: {
                     questionScores,
                     assessmentScores,
                     trackSummaries,
                     careersScores,
                     totalQuestionScore,
-                    // totalAssessmentScore,
-                    // totalCareerScore,
                     overallScore,
                     totalCorrectAnswers,
                     totalQuestions,
                     overallCorrectPercentage,
                     recommendation
-               },
-               message: "Answer summary processed successfully"
+               };
+          });
+
+          return res.status(200).json({
+               ok: true,
+               data: result,
+               message: "Answer summary processed and stored successfully"
           });
      } catch (error) {
           console.error(error);
@@ -804,6 +886,182 @@ const summaryAnswers = async (req, res) => {
           });
      }
 };
+
+const getSummaryHistoryByEmail = async (req, res) => {
+     try {
+          const { email } = req.params;
+          const user = await User.findOne({
+               where: { email },
+          });
+          if (!user) {
+               return res.status(404).json({
+                    ok: false,
+                    message: "User not found"
+               });
+          }
+
+          const summaryHistories = await SuggestionHistory.findAll({
+               where: { user_id: user?.dataValues?.id },
+               include: [
+                    {
+                         model: QuestionScore,
+                         as: 'questionScores',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    },
+                    {
+                         model: AssessmentScore,
+                         as: 'assessmentScores',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    },
+                    {
+                         model: CareerScore,
+                         as: 'careerScores',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    },
+                    {
+                         model: TrackSummary,
+                         as: 'trackSummaries',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    },
+                    {
+                         model: Recommendation,
+                         as: 'recommendations',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    }
+               ],
+               order: [['createdAt', 'DESC']]
+          });
+
+          const processedHistories = summaryHistories.map(history => ({
+               id: history?.dataValues?.id,
+               createdAt: history?.dataValues?.createdAt,
+               totalQuestionScore: history?.dataValues?.totalQuestionScore,
+               overallScore: history?.dataValues?.overallScore,
+               totalCorrectAnswers: history?.dataValues?.totalCorrectAnswers,
+               totalQuestions: history?.dataValues?.totalQuestions,
+               overallCorrectPercentage: history?.dataValues?.overallCorrectPercentage,
+               questionScores: history?.dataValues?.questionScores.map(qs => ({
+                    question: qs?.dataValues?.question,
+                    track: qs?.dataValues?.track,
+                    score: qs?.dataValues?.score,
+                    isCorrect: qs?.dataValues?.isCorrect
+               })),
+               assessmentScores: history?.dataValues?.assessmentScores.map(as => ({
+                    question: as?.dataValues?.question,
+                    track: as?.dataValues?.track,
+                    score: as?.dataValues?.score
+               })),
+               careerScores: history?.dataValues?.careerScores.map(cs => ({
+                    name_th: cs?.dataValues?.name_th,
+                    name_en: cs?.dataValues?.name_en,
+                    track: cs?.dataValues?.track,
+                    score: cs?.dataValues?.score
+               })),
+               trackSummaries: history?.dataValues?.trackSummaries.map(ts => ({
+                    track: ts?.dataValues?.track,
+                    questionScore: ts?.dataValues?.questionScore,
+                    assessmentScore: ts?.dataValues?.assessmentScore,
+                    careerScore: ts?.dataValues?.careerScore,
+                    totalScore: ts?.dataValues?.totalScore,
+                    correctAnswers: ts?.dataValues?.correctAnswers,
+                    totalQuestions: ts?.dataValues?.totalQuestions,
+                    correctPercentage: ts?.dataValues?.correctPercentage,
+                    summary: ts?.dataValues?.summary
+               })),
+               recommendations: history?.dataValues?.recommendations.map(r => ({
+                    track: r?.dataValues?.track,
+                    recText: r?.dataValues?.recText,
+                    descText: r?.dataValues?.descText
+               }))
+          }));
+
+          return res.status(200).json({
+               ok: true,
+               data: processedHistories,
+               message: "Summary history retrieved successfully"
+          });
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error while fetching summary history."
+          });
+     }
+};
+
+const getSummaryHistoryDetailByID = async (req, res) => {
+     const id = req.params.id
+     try {
+          const data = await SuggestionHistory.findOne({
+               where: { id },
+               include: [
+                    {
+                         model: QuestionScore,
+                         as: 'questionScores',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    },
+                    {
+                         model: AssessmentScore,
+                         as: 'assessmentScores',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    },
+                    {
+                         model: CareerScore,
+                         as: 'careerScores',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    },
+                    {
+                         model: TrackSummary,
+                         as: 'trackSummaries',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    },
+                    {
+                         model: Recommendation,
+                         as: 'recommendations',
+                         include: [{ model: Track, as: 'trackInfo' }]
+                    }
+               ],
+               order: [['createdAt', 'DESC']]
+          });
+          data.dataValues.careersScores = data.careerScores
+          data.dataValues.recommendation = data.recommendations
+          delete data.dataValues.careerScores
+          delete data.dataValues.recommendations
+          return res.status(200).json({
+               ok: true,
+               data,
+               message: "Summary history retrieved successfully"
+          });
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error while fetching summary history"
+          });
+     }
+}
+
+const deleteHistoryByID = async (req, res) => {
+     const ids = req.body
+     try {
+          for (let index = 0; index < ids.length; index++) {
+               const id = ids[index];
+               await SuggestionHistory.destroy({
+                    where: { id },
+               });
+          }
+          return res.status(200).json({
+               ok: true,
+               message: "Summary histories deleted successfully"
+          });
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error while deleting summary history"
+          });
+     }
+}
 
 module.exports = {
      getForms,
@@ -818,4 +1076,7 @@ module.exports = {
      deleteMultiple,
      forceDeleteMultiple,
      summaryAnswers,
+     getSummaryHistoryByEmail,
+     getSummaryHistoryDetailByID,
+     deleteHistoryByID
 }

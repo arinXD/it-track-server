@@ -1,12 +1,15 @@
 const Joi = require('joi');
+const bcrypt = require("bcryptjs");
 const models = require('../models');
-const { QueryTypes } = require('sequelize');
+const { QueryTypes, Op } = require('sequelize');
 const User = models.User
 const Student = models.Student
+const Teacher = models.Teacher
 const Program = models.Program
 const Enrollment = models.Enrollment
 const Subject = models.Subject
 const Selection = models.Selection
+const TeacherTrack = models.TeacherTrack
 
 const userAttr = ["email", "role", "sign_in_type", "createdAt"]
 const studentAttr = ["stu_id", "first_name", "last_name", "courses_type"]
@@ -14,6 +17,134 @@ const studentAttr = ["stu_id", "first_name", "last_name", "courses_type"]
 const emailSchema = Joi.string().email().required()
 const gradeOrder = {
      'A': 1, 'B+': 2, 'B': 3, 'C+': 4, 'C': 5, 'D+': 6, 'D': 7, 'F': 8
+};
+
+function getAcadYear(studentCode) {
+     const currentYear = ((new Date().getFullYear()) + 543).toString();
+     const firstTwoDigits = currentYear.slice(0, 2);
+     const acadyear = `${firstTwoDigits}${studentCode.slice(0, 2)}`
+     return parseInt(acadyear)
+}
+
+const createUser = async (req, res) => {
+     const { role, email, password, ...otherData } = req.body;
+     const t = await User.sequelize.transaction();
+
+     try {
+          const createUSerData = {
+               email,
+               role,
+               verification: true,
+               sign_in_type: 'credentials',
+          }
+          let user = {}
+          if (role === "admin") {
+               const hashedPassword = await bcrypt.hash(password, 10)
+               createUSerData.password = hashedPassword
+               const createdUser = await User.create(createUSerData, { transaction: t });
+               user = createdUser?.dataValues
+          }
+
+          switch (role) {
+               case 'admin':
+                    break;
+               case 'teacher':
+                    const { id, prefix, name, surname, track } = otherData;
+
+                    // แทรกไอดีมาแก้ไขข้อมูล
+                    if (id) {
+                         await Teacher.update({
+                              email,
+                              prefix,
+                              name,
+                              surname,
+                         }, { where: { id } }, { transaction: t });
+
+                         const ttrack = await TeacherTrack.findOne({ where: { teacher_id: id } })
+
+                         if (track) {
+                              if (ttrack) {
+                                   await TeacherTrack.update({ track },
+                                        { where: { teacher_id: id } },
+                                        { transaction: t });
+                              } else {
+                                   await TeacherTrack.create({
+                                        teacher_id: id,
+                                        track,
+                                   }, { transaction: t });
+                              }
+                         } else {
+                              await TeacherTrack.update({ track: null },
+                                   { where: { teacher_id: id } },
+                                   { transaction: t });
+
+                         }
+                    }
+                    // สร้างใหม่
+                    else {
+                         const teacher = await Teacher.create({
+                              email,
+                              prefix,
+                              name,
+                              surname,
+                         }, { transaction: t });
+                         if (track) {
+                              await TeacherTrack.create({
+                                   teacher_id: teacher.id,
+                                   track,
+                              }, { transaction: t });
+                         }
+                    }
+                    break;
+               case 'student':
+                    const { stu_id, first_name, last_name, courses_type, program } = otherData;
+                    await Student.create({
+                         stu_id,
+                         email,
+                         first_name,
+                         last_name,
+                         courses_type,
+                         program,
+                         acadyear: getAcadYear(stu_id),
+                         status_code: 10
+                    }, { transaction: t });
+                    break;
+               default:
+                    throw new Error('Invalid role');
+          }
+
+          await t.commit();
+
+          return res.status(201).json({
+               message: 'User created successfully',
+               user: {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+               }
+          });
+     } catch (error) {
+          await t.rollback();
+
+          console.error('Error creating user:', error);
+
+          if (error.name === 'SequelizeUniqueConstraintError') {
+               if (error.errors && error.errors.length > 0) {
+                    const constraintError = error.errors[0];
+                    if (constraintError.path === 'email') {
+                         return res.status(400).json({ message: 'อีเมลนี้ถูกใช้งานแล้ว' });
+                    } else if (constraintError.path === 'stu_id') {
+                         return res.status(400).json({ message: 'รหัสนักศึกษานี้ถูกใช้งานแล้ว' });
+                    }
+               }
+               return res.status(400).json({ message: 'ข้อมูลนี้ถูกใช้งานแล้ว' });
+          }
+
+          return res.status(500).json({
+               message: 'Error creating user',
+               error: error.message
+          });
+     }
 };
 
 const getAllUsers = async (req, res) => {
@@ -92,6 +223,16 @@ const getUserData = async (req, res) => {
                },
                include: [
                     {
+                         model: Teacher,
+                         attributes: ["id", "prefix", "name", "surname"],
+                         include: [
+                              {
+                                   model: TeacherTrack,
+                                   attributes: ["track"],
+                              },
+                         ]
+                    },
+                    {
                          model: Student,
                          attributes: studentAttr,
                          include: [
@@ -161,14 +302,43 @@ const getUserData = async (req, res) => {
 
 const updateUserRole = async (req, res) => {
      const id = req.params.id
-     const role = req.params.role
+     const { role, email } = req.body
      try {
-          const users = await User.update({
+          if (role === "teacher") {
+               const findData = await Teacher.findOne({ where: { email } })
+               if (findData) {
+                    await Teacher.update({ user_id: id }, { where: { email: email } })
+               } else {
+                    await Teacher.create({ user_id: id, email: email, name: String(email).split("@")[0] })
+               }
+          } else {
+               await Teacher.update({ user_id: null }, { where: { email } })
+          }
+
+          await User.update({
                role,
           }, { where: { id } })
           return res.status(200).json({
                ok: true,
-               data: users
+          })
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+
+const deleteUser = async (req, res) => {
+     const id = req.params.id
+     try {
+          await User.destroy({
+               where: { id },
+               force: true
+          })
+          return res.status(200).json({
+               ok: true,
           })
      } catch (error) {
           console.error(error);
@@ -182,5 +352,7 @@ const updateUserRole = async (req, res) => {
 module.exports = {
      getUserData,
      getAllUsers,
-     updateUserRole
+     updateUserRole,
+     deleteUser,
+     createUser
 }

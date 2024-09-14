@@ -38,14 +38,13 @@ app.use(cors({
     origin: [
         "https://it-track-client.vercel.app",
         "http://localhost:3000",
-        "http://localhost:3001",
     ]
 }))
-app.use(requestIp.mw()); // extract ip 
+app.use(requestIp.mw());
 app.use(expressWinston.logger({
     winstonInstance: winstonLogger,
     statusLevels: true,
-    meta: true, // meta data about the request
+    meta: true,
     expressFormat: false,
     colorize: false,
     dynamicMeta: (req, res) => {
@@ -88,6 +87,9 @@ const sequelize = new Sequelize(
 },
 )
 
+// CRON JOB 
+require('./cron-noti');
+
 app.listen(port, async () => {
     try {
         await sequelize.sync()
@@ -114,6 +116,7 @@ const enrollmentRouter = require('./router/enrollmentRouter');
 const studentStatusRouter = require('./router/studentStatusRouter');
 const trackSubjectRouter = require('./router/trackSubjectRouter');
 const teacherTrackRouter = require('./router/teacherTrackRouter');
+const advisorRouter = require('./router/advisorRouter');
 const careerRouter = require('./router/careerRouter');
 const suggestionFormRouter = require('./router/suggestionFormRouter');
 const questionBankRouter = require('./router/questionBankRouter');
@@ -121,6 +124,8 @@ const assessmentRouter = require('./router/assessmentRouter');
 const petitionRouter = require('./router/petitionRouter');
 const selectionRouter = require('./router/selectionRouter');
 const newsRouter = require('./router/newsRouter');
+const notificationRouter = require('./router/notificationRouter');
+const teacherRouter = require('./router/teacherRouter');
 
 //  subject router
 const subjectRouter = require('./router/subjectRouter');
@@ -140,7 +145,6 @@ const conditionVerifyRouter = require('./router/conditionVerifyRouter')
 const verifySelectionTeacherRouter = require('./router/verifySelectionTeacherRouter')
 
 // middleware
-const isAuth = require("./middleware/authMiddleware")
 const isAdmin = require("./middleware/adminMiddleware");
 
 //--------------------
@@ -155,7 +159,6 @@ app.get('/', async (req, res, next) => {
         req.headers['x-real-ip'] ||
         req.headers['x-forwarded-for'] ||
         req.socket.remoteAddress || '';
-    const publicIP = req.publicIP
     return res.json({
         message: 'IT Track by IT64',
         IPAddress,
@@ -181,6 +184,7 @@ app.use('/api/verifies/approve', verifySelectionTeacherRouter);
 app.use('/api/condition', conditionVerifyRouter);
 app.use('/api/statuses', isAdmin, studentStatusRouter);
 app.use('/api/teachers/tracks', teacherTrackRouter)
+app.use('/api/advisors', advisorRouter)
 app.use('/api/careers', careerRouter)
 app.use('/api/suggestion-forms', suggestionFormRouter)
 app.use('/api/questions', questionBankRouter)
@@ -188,6 +192,8 @@ app.use('/api/assessments', assessmentRouter)
 app.use('/api/petitions', petitionRouter)
 app.use('/api/selections', selectionRouter)
 app.use('/api/news', newsRouter)
+app.use('/api/notifications', notificationRouter)
+app.use('/api/teachers', teacherRouter)
 
 app.get("/api/get-token", async (req, res) => {
     const token = randomBytes(16).toString("hex")

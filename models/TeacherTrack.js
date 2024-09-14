@@ -5,6 +5,10 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class TeacherTrack extends Model {
         static associate(models) {
+            this.belongsTo(models.Teacher, {
+                foreignKey: 'teacher_id',
+                targetKey: 'id',
+            });
             this.belongsTo(models.Track, {
                 foreignKey: 'track',
                 targetKey: 'track',
@@ -12,8 +16,9 @@ module.exports = (sequelize, DataTypes) => {
         }
     }
     TeacherTrack.init({
-        teacherName: DataTypes.STRING,
-        image: DataTypes.STRING
+        teacher_id: DataTypes.INTEGER,
+        image: DataTypes.STRING,
+        track: DataTypes.STRING,
     }, {
         sequelize,
         modelName: 'TeacherTrack',

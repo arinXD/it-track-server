@@ -5,10 +5,16 @@ const {
 module.exports = (sequelize, DataTypes) => {
     class Teacher extends Model {
         static associate(models) {
-            // define association here
             this.belongsTo(models.User, {
-                foreignKey: 'user_id', // Specify the correct foreign key
-                targetKey: 'id', // Specify the target key in the Student model
+                foreignKey: 'user_id',
+                targetKey: 'id',
+            });
+            this.hasMany(models.Student, {
+                foreignKey: 'advisor',
+                sourceKey: 'id',
+            });
+            this.hasOne(models.TeacherTrack, {
+                foreignKey: "teacher_id"
             });
         }
     }

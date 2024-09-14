@@ -7,32 +7,40 @@ module.exports = (sequelize, DataTypes) => {
 
         static associate(models) {
             this.hasMany(models.Selection, {
-                foreignKey: 'result',
-                sourceKey: 'track',
+                foreignKey: 'result', sourceKey: 'track',
             });
             this.hasMany(models.TeacherTrack, {
-                foreignKey: 'track',
-                sourceKey: 'track',
+                foreignKey: 'track', sourceKey: 'track',
             });
             this.hasMany(models.Subject, {
-                foreignKey: 'track',
-                sourceKey: 'track',
+                foreignKey: 'track', sourceKey: 'track',
             });
             this.hasMany(models.Career, {
-                foreignKey: 'track',
-                sourceKey: 'track',
+                foreignKey: 'track', sourceKey: 'track',
             });
             this.hasMany(models.QuestionBank, {
-                foreignKey: 'track',
-                sourceKey: 'track',
+                foreignKey: 'track', sourceKey: 'track',
             });
             this.hasMany(models.TrackPetition, {
-                foreignKey: 'approver',
-                sourceKey: 'track',
+                foreignKey: 'approver', sourceKey: 'track',
             });
             this.hasMany(models.TrackPetition, {
-                foreignKey: 'oldTrack',
-                sourceKey: 'track',
+                foreignKey: 'oldTrack', sourceKey: 'track',
+            });
+            this.hasMany(models.QuestionScore, {
+                foreignKey: 'track', sourceKey: 'track', as: 'questionScores'
+            });
+            this.hasMany(models.AssessmentScore, {
+                foreignKey: 'track', sourceKey: 'track', as: 'assessmentScores'
+            });
+            this.hasMany(models.CareerScore, {
+                foreignKey: 'track', sourceKey: 'track', as: 'careerScores'
+            });
+            this.hasMany(models.TrackSummary, {
+                foreignKey: 'track', sourceKey: 'track', as: 'trackSummaries'
+            });
+            this.hasMany(models.Recommendation, {
+                foreignKey: 'track', sourceKey: 'track', as: 'recommendations'
             });
         }
     }

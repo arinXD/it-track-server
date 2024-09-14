@@ -31,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
             });
             this.belongsTo(models.Teacher, {
                 foreignKey: 'advisor', 
-                targetKey: 'id',
+                targetKey: 'id'
             });
         }
     }

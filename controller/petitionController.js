@@ -1,11 +1,13 @@
 const { Op } = require('sequelize');
 const models = require('../models');
 const { sequelize } = models;
+const Notification = models.Notification
 const TrackPetition = models.TrackPetition
 const User = models.User
 const Track = models.Track
 const Student = models.Student
 const Teacher = models.Teacher
+const TeacherTrack = models.TeacherTrack
 const Selection = models.Selection
 const Joi = require('joi');
 
@@ -23,7 +25,7 @@ const updatePetition = Joi.object({
 const petitionStatus = Joi.string().valid('all', 'approved', 'rejected').required()
 
 const userAttr = ["id", "email", "image"]
-const petitionAttr = ["id", "title", "detail", "status", "oldTrack", "newTrack", "responseText", "createdAt","actionTime",]
+const petitionAttr = ["id", "title", "detail", "status", "oldTrack", "newTrack", "responseText", "createdAt", "actionTime",]
 const studentAttr = ["stu_id", "email", "first_name", "last_name", "courses_type", "program", "acadyear"]
 
 const getPetitionByStatus = async (req, res) => {
@@ -259,6 +261,52 @@ const sendPetition = async (req, res) => {
                if (trackSelected) {
                     value.senderId = user?.dataValues.id
                     const createdPetition = await TrackPetition.create(value);
+
+                    // const teacherIT = await User.findAll({
+                    //      where: {
+                    //           role: {
+                    //                [Op.or]: ["teacher", "admin"]
+                    //           }
+                    //      },
+                    //      include: [
+                    //           {
+                    //                model: Teacher,
+                    //                attributes: ["prefix", "name", "surname"],
+                    //                where: {
+                    //                     user_id: {
+                    //                          [Op.ne]: null
+                    //                     },
+                    //                },
+                    //                include: [
+                    //                     {
+                    //                          model: TeacherTrack,
+                    //                          required: true,
+                    //                     }
+                    //                ]
+                    //           }
+                    //      ]
+                    // })
+
+                    const admin = await User.findAll({
+                         where: {
+                              role: "admin"
+                         },
+                    })
+
+                    const stdfname = `${user?.dataValues?.Student?.dataValues?.first_name}`
+                    const stdlname = `${user?.dataValues?.Student?.dataValues?.last_name}`
+                    const pid = createdPetition?.dataValues?.id
+
+                    for (let index = 0; index < admin.length; index++) {
+                         const mod = admin[index];
+                         await Notification.create({
+                              userId: mod?.dataValues?.id,
+                              text: `${stdfname} ${stdlname} ส่งคำร้องย้ายแทร็ก`,
+                              destination: `/admin/petitions/all/${pid}`,
+                              isRead: false
+                         })
+                    }
+
                     return res.status(200).json({
                          ok: true,
                          data: createdPetition
@@ -393,18 +441,22 @@ const approvePetition = async (req, res) => {
      const { pid, email, status } = req.params;
      const data = req.body
      const { error } = Joi.number().valid(1, 2).required().validate(status)
+
      if (error) {
           return res.status(406).json({
                ok: false,
                message: `${error.details[0].message}`
           });
      }
+
+     // สถานะ
      const statuses = {
           "1": "ยืนยันคำร้องย้ายแทร็ก",
           "2": "ปฏิเสธคำร้องย้ายแทร็ก"
      }
 
      try {
+          // หาคนตอบรับ
           const approver = await User.findOne({
                where: { email },
                attributes: ["id"]
@@ -417,27 +469,32 @@ const approvePetition = async (req, res) => {
                });
           }
 
-          let result
-          // approved petition
+          // หาคำร้อง
+          const petition = await TrackPetition.findOne({
+               where: { id: pid },
+               include: [
+                    {
+                         model: User,
+                         attributes: userAttr,
+                         as: 'Sender',
+                         required: false,
+                         include: [
+                              {
+                                   model: Student,
+                                   attributes: ["stu_id"]
+                              }
+                         ]
+                    },
+               ],
+          })
+
+          let senderId = petition?.dataValues?.senderId
+          let text = ""
+
+          // ตอบรับ
           if (status == "1") {
+               text = "คำร้องย้ายแทร็กของคุณได้รับการอนุมัติแล้ว";
                const transaction = await sequelize.transaction();
-               const petition = await TrackPetition.findOne({
-                    where: { id: pid },
-                    include: [
-                         {
-                              model: User,
-                              attributes: userAttr,
-                              as: 'Sender',
-                              required: false,
-                              include: [
-                                   {
-                                        model: Student,
-                                        attributes: ["stu_id"]
-                                   }
-                              ]
-                         },
-                    ],
-               })
                if (petition?.dataValues?.status !== 0) {
                     return res.status(406).json({
                          ok: false,
@@ -459,8 +516,9 @@ const approvePetition = async (req, res) => {
                }, { transaction })
                await transaction.commit()
           }
-          // rejected petition 
+          // ปฎิเสธ
           else {
+               text = "คำร้องย้ายแทร็กของคุณถูกปฏิเสธ";
                const updateCount = await TrackPetition.update(
                     {
                          status,
@@ -480,6 +538,12 @@ const approvePetition = async (req, res) => {
                     });
                }
           }
+          Notification.create({
+               userId: senderId,
+               text,
+               destination: `/petition/request/${petition?.dataValues?.id}`,
+               isRead: false
+          })
 
           return res.status(200).json({
                ok: true,
