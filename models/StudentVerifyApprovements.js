@@ -10,11 +10,19 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      this.belongsTo(models.StudentVerify, {
+        foreignKey: 'student_verify_id',
+        targetKey: 'id',
+      });
+      this.belongsTo(models.User, {
+        foreignKey: 'approver',
+        targetKey: 'id',
+      });
     }
   }
   StudentVerifyApprovements.init({
-    
+    approver_time: DataTypes.DATE,
+    desc: DataTypes.TEXT
   }, {
     sequelize,
     modelName: 'StudentVerifyApprovements',

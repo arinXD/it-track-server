@@ -23,12 +23,40 @@ const Track = models.Track
 const CategoryVerify = models.CategoryVerify
 const SemiSubgroupSubject = models.SemiSubgroupSubject
 const SemiSubGroup = models.SemiSubGroup
+const Teacher = models.Teacher
+const User = models.User
+const StudentVerifyApprovements = models.StudentVerifyApprovements
 
-router.get("/", isAdmin, async (req, res) => {
+router.get("/teacher", isAdmin, async (req, res) => {
     try {
         const verify = await StudentVerify.findAll({
-            include:[{
-                model: Student
+            include: [{
+                model: Student,
+                include: [
+                    {
+                        model: Teacher,
+                    }
+                ]
+            }]
+        });
+        return res.status(200).json({
+            ok: true,
+            data: verify
+        });
+    } catch (error) {
+        console.error('Error fetching verify:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/admin", isAdmin, async (req, res) => {
+    try {
+        const verify = await StudentVerify.findAll({
+            include: [{
+                model: Student,
             }]
         });
         return res.status(200).json({
@@ -235,6 +263,8 @@ router.get("/:stu_id", isAdmin, async (req, res) => {
                 },
                 {
                     model: Student
+                }, {
+                    model: StudentVerifyApprovements
                 }
             ]
         });
@@ -253,9 +283,12 @@ router.get("/:stu_id", isAdmin, async (req, res) => {
     }
 });
 
-
-router.post("/status/:stu_id", isAuth, async (req, res) => {
+router.post("/status/:stu_id", isAdmin, async (req, res) => {
     const { stu_id } = req.params;
+    const {
+        desc,
+        approver
+    } = req.body;
 
     try {
         const studentVerify = await StudentVerify.findOne({
@@ -274,8 +307,155 @@ router.post("/status/:stu_id", isAuth, async (req, res) => {
         // Update status from 1 to 2
         if (studentVerify.status === 1) {
             await studentVerify.update({ status: 2 });
+
+            const newvfData = {
+                student_verify_id: studentVerify.id,
+                approver_time: new Date(),
+                approver: approver,
+                desc: desc || null,
+            };
+
+            await StudentVerifyApprovements.create(newvfData);
         }
 
+        return res.status(201).json({
+            ok: true,
+            message: "Status updated successfully."
+        });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
+
+router.get("/calldescall/:email/:stu_id", isAdmin, async (req, res) => {
+    const { stu_id, email } = req.params;
+
+    try {
+
+        const emailAdmin = await User.findOne({
+            where: {
+                email,
+            },
+        });
+
+        const studentVerify = await StudentVerify.findOne({
+            where: {
+                stu_id,
+            },
+        });
+
+        const verify = await StudentVerifyApprovements.findOne({
+            where: {
+                approver: emailAdmin.id,
+                student_verify_id: studentVerify.id
+            },
+            include: [{
+                model: User,
+                include: [{
+                    model: Teacher
+                }]
+            }]
+        });
+        return res.status(200).json({
+            ok: true,
+            data: verify
+        });
+    } catch (error) {
+        console.error('Error fetching verify:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.get("/calldescall/:stu_id", isAdmin, async (req, res) => {
+    const { stu_id } = req.params;
+
+    try {
+        const studentVerify = await StudentVerify.findOne({
+            where: {
+                stu_id,
+            },
+        });
+
+        const verify = await StudentVerifyApprovements.findAll({
+            where: {
+                student_verify_id: studentVerify.id
+            },
+            include: [{
+                model: User,
+                include: [{
+                    model: Teacher
+                }]
+            }]
+        });
+        return res.status(200).json({
+            ok: true,
+            data: verify
+        });
+    } catch (error) {
+        console.error('Error fetching verify:', error);
+        return res.status(500).json({
+            ok: false,
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+router.post("/status/admin/:email/:stu_id", isAdmin, async (req, res) => {
+    const { stu_id, email } = req.params;
+    const {
+        desc,
+        approver
+    } = req.body;
+
+    try {
+
+        const emailAdmin = await User.findOne({
+            where: {
+                email,
+            },
+        });
+
+        const studentVerify = await StudentVerify.findOne({
+            where: {
+                stu_id,
+            },
+        });
+
+        if (!studentVerify) {
+            return res.status(404).json({
+                ok: false,
+                message: "StudentVerify record not found."
+            });
+        }
+
+        if (!emailAdmin) {
+            return res.status(404).json({
+                ok: false,
+                message: "email Admin record not found."
+            });
+        }
+
+        // Update status from 1 to 2
+        if (studentVerify.status === 2) {
+            await studentVerify.update({ status: 3 });
+
+            const newvfData = {
+                student_verify_id: studentVerify.id,
+                approver_time: new Date(),
+                approver: emailAdmin.id,
+                desc: desc || null,
+            };
+
+            await StudentVerifyApprovements.create(newvfData);
+        }
 
         return res.status(201).json({
             ok: true,

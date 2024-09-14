@@ -22,6 +22,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'approver',
                 sourceKey: 'id',
             });
+            this.hasMany(models.StudentVerifyApprovements, {
+                foreignKey: 'approver',
+                sourceKey: 'id',
+            });
         }
     }
     User.init({
