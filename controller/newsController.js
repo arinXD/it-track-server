@@ -24,9 +24,9 @@ const getAllPublishedNews = async (req, res) => {
                     published: true
                }
           });
-          res.status(200).json(news);
+          return res.status(200).json(news);
      } catch (error) {
-          res.status(500).json({ message: "Error fetching news", error: error.message });
+          return res.status(500).json({ message: "Error fetching news", error: error.message });
      }
 }
 const getAllNews = async (req, res) => {
@@ -42,9 +42,9 @@ const getAllNews = async (req, res) => {
           const news = await models.News.findAll({
                order: [['createdAt', 'DESC']],
           });
-          res.status(200).json(news);
+          return res.status(200).json(news);
      } catch (error) {
-          res.status(500).json({ message: "Error fetching news", error: error.message });
+          return res.status(500).json({ message: "Error fetching news", error: error.message });
      }
 }
 
@@ -61,7 +61,20 @@ const createNews = async (req, res) => {
                image: `${getHostname()}/${image}`
           });
 
-          res.status(201).json(news);
+          return res.status(201).json(news);
+     } catch (error) {
+          console.log(error);
+          return res.status(500).json({ message: "Error creating news", error: error.message });
+     }
+}
+const uploadImage = async (req, res) => {
+     try {
+          const image = req.file ? `images/news/${req.body.fileName}` : null;
+          const imageUrl = `${getHostname()}/${image}`
+          res.status(201).json({
+               ok: true,
+               imageUrl
+          });
      } catch (error) {
           console.log(error);
           res.status(500).json({ message: "Error creating news", error: error.message });
@@ -69,11 +82,13 @@ const createNews = async (req, res) => {
 }
 
 const updateNews = async (req, res) => {
+
      try {
           const { id } = req.params;
           const { title, desc, detail, published } = req.body;
+          console.log(detail);
 
-          let updateData = { title, desc, detail, published };
+          let updateData = { title, desc, detail: detail[0], published };
 
           if (req.file) {
                updateData.image = `${getHostname()}/images/news/${req.body.fileName}`;
@@ -88,10 +103,10 @@ const updateNews = async (req, res) => {
                return res.status(200).json(updatedNews);
           }
 
-          res.status(404).json({ message: 'News not found' });
+          return res.status(404).json({ message: 'News not found' });
      } catch (error) {
           console.error(error);
-          res.status(500).json({ message: "Error updating news", error: error.message });
+          return res.status(500).json({ message: "Error updating news", error: error.message });
      }
 }
 
@@ -112,9 +127,9 @@ const publishNews = async (req, res) => {
                }
           }
 
-          res.status(404).json({ message: 'News not found' });
+          return res.status(404).json({ message: 'News not found' });
      } catch (error) {
-          res.status(500).json({ message: "Error updating news", error: error.message });
+          return res.status(500).json({ message: "Error updating news", error: error.message });
      }
 };
 
@@ -147,9 +162,9 @@ const deleteMultipleNews = async (req, res) => {
                where: { id: ids }
           });
 
-          res.status(200).json({ message: `${deleted} news items and their associated images deleted successfully` });
+          return res.status(200).json({ message: `${deleted} news items and their associated images deleted successfully` });
      } catch (error) {
-          res.status(500).json({ message: "Error deleting news", error: error.message });
+          return res.status(500).json({ message: "Error deleting news", error: error.message });
      }
 }
 
@@ -158,6 +173,7 @@ module.exports = {
      getAllPublishedNews,
      getAllNews,
      createNews,
+     uploadImage,
      updateNews,
      publishNews,
      deleteMultipleNews,
