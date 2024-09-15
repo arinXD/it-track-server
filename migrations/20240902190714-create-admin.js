@@ -20,6 +20,15 @@ module.exports = {
                 },
                 onDelete: 'SET NULL',
             },
+            email: {
+                allowNull: true,
+                unique: true,
+                defaultValue: null,
+                type: Sequelize.STRING
+            },
+            prefix: {
+                type: Sequelize.STRING
+            },
             name: {
                 type: Sequelize.STRING
             },
