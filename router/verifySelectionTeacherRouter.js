@@ -283,55 +283,6 @@ router.get("/:stu_id", isAdmin, async (req, res) => {
     }
 });
 
-router.post("/status/:stu_id", isAdmin, async (req, res) => {
-    const { stu_id } = req.params;
-    const {
-        desc,
-        approver
-    } = req.body;
-
-    try {
-        const studentVerify = await StudentVerify.findOne({
-            where: {
-                stu_id,
-            },
-        });
-
-        if (!studentVerify) {
-            return res.status(404).json({
-                ok: false,
-                message: "StudentVerify record not found."
-            });
-        }
-
-        // Update status from 1 to 2
-        if (studentVerify.status === 1) {
-            await studentVerify.update({ status: 2 });
-
-            const newvfData = {
-                student_verify_id: studentVerify.id,
-                approver_time: new Date(),
-                approver: approver,
-                desc: desc || null,
-            };
-
-            await StudentVerifyApprovements.create(newvfData);
-        }
-
-        return res.status(201).json({
-            ok: true,
-            message: "Status updated successfully."
-        });
-
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({
-            ok: false,
-            message: "Server error."
-        });
-    }
-});
-
 router.get("/calldescall/:email/:stu_id", isAdmin, async (req, res) => {
     const { stu_id, email } = req.params;
 
@@ -408,6 +359,61 @@ router.get("/calldescall/:stu_id", isAdmin, async (req, res) => {
     }
 });
 
+router.post("/status/:email/:stu_id", isAdmin, async (req, res) => {
+    const { stu_id, email } = req.params;
+    const {
+        desc,
+    } = req.body;
+
+    try {
+
+        const emails = await User.findOne({
+            where: {
+                email,
+            },
+        });
+
+        const studentVerify = await StudentVerify.findOne({
+            where: {
+                stu_id,
+            },
+        });
+
+        if (!studentVerify) {
+            return res.status(404).json({
+                ok: false,
+                message: "StudentVerify record not found."
+            });
+        }
+
+        // Update status from 1 to 2
+        if (studentVerify.status === 1) {
+            await studentVerify.update({ status: 2 });
+
+            const newvfData = {
+                student_verify_id: studentVerify.id,
+                approver_time: new Date(),
+                approver: emails.id,
+                desc: desc || null,
+            };
+
+            await StudentVerifyApprovements.create(newvfData);
+        }
+
+        return res.status(201).json({
+            ok: true,
+            message: "Status updated successfully."
+        });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
+
 router.post("/status/admin/:email/:stu_id", isAdmin, async (req, res) => {
     const { stu_id, email } = req.params;
     const {
@@ -471,6 +477,122 @@ router.post("/status/admin/:email/:stu_id", isAdmin, async (req, res) => {
     }
 });
 
+router.post("/status/reject/:email/:stu_id", isAdmin, async (req, res) => {
+    const { stu_id, email } = req.params;
+    const {
+        desc,
+    } = req.body;
+
+    try {
+
+        const emails = await User.findOne({
+            where: {
+                email,
+            },
+        });
+
+        const studentVerify = await StudentVerify.findOne({
+            where: {
+                stu_id,
+            },
+        });
+
+        if (!studentVerify) {
+            return res.status(404).json({
+                ok: false,
+                message: "StudentVerify record not found."
+            });
+        }
+
+        // Update status from 1 to 2
+        if (studentVerify.status === 1) {
+            await studentVerify.update({ status: 0 });
+
+            const newvfData = {
+                student_verify_id: studentVerify.id,
+                approver_time: new Date(),
+                approver: emails.id,
+                desc: desc || null,
+            };
+
+            await StudentVerifyApprovements.create(newvfData);
+        }
+
+        return res.status(201).json({
+            ok: true,
+            message: "Status updated successfully."
+        });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
+
+router.post("/status/admin/reject/:email/:stu_id", isAdmin, async (req, res) => {
+    const { stu_id, email } = req.params;
+    const {
+        desc,
+        approver
+    } = req.body;
+
+    try {
+
+        const emailAdmin = await User.findOne({
+            where: {
+                email,
+            },
+        });
+
+        const studentVerify = await StudentVerify.findOne({
+            where: {
+                stu_id,
+            },
+        });
+
+        if (!studentVerify) {
+            return res.status(404).json({
+                ok: false,
+                message: "StudentVerify record not found."
+            });
+        }
+
+        if (!emailAdmin) {
+            return res.status(404).json({
+                ok: false,
+                message: "email Admin record not found."
+            });
+        }
+
+        if (studentVerify.status === 2) {
+            await studentVerify.update({ status: 0 });
+
+            const newvfData = {
+                student_verify_id: studentVerify.id,
+                approver_time: new Date(),
+                approver: emailAdmin.id,
+                desc: desc || null,
+            };
+
+            await StudentVerifyApprovements.create(newvfData);
+        }
+
+        return res.status(201).json({
+            ok: true,
+            message: "Status updated successfully."
+        });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        });
+    }
+});
 
 
 module.exports = router;
