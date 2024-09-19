@@ -256,6 +256,11 @@ const getUserData = async (req, res) => {
                          attributes: studentAttr,
                          include: [
                               {
+                                   model: Teacher,
+                                   as: "Advisor",
+                                   attributes: ["id", "prefix", "name", "surname"],
+                              },
+                              {
                                    model: Selection,
                                    attributes: ["result"],
                               },
