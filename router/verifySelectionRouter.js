@@ -615,39 +615,19 @@ router.post("/again/:verify_id/:stu_id", isAuth, async (req, res) => {
             });
         }
 
-        let sv = await StudentVerify.findOne({
-            where: { verify_id, stu_id }
+        const [sv, created] = await StudentVerify.upsert({
+            verify_id, stu_id, term, cum_laude, acadyear, status
         });
-
-        if (!sv) {
-            sv = await StudentVerify.create({
-                verify_id, stu_id, term, cum_laude, acadyear, status
-            });
-        }
 
         const svds = await StudentVerify.findOne({
             where: { verify_id, stu_id }
         });
 
-        await StudentItVerifyGrade.destroy({
-            where: { stu_id }
-        });
-
-        await StudentVerifyApprovements.destroy({
-            where: { student_verify_id: svds.id }
-        });
-
-        await StudentVerifyDetail.destroy({
-            where: { student_verify_id: svds.id }
-        });
-
-        await StudentCategoryVerify.destroy({
-            where: { student_verify_id: svds.id }
-        });
-
-        await StudentVerify.destroy({
-            where: { stu_id }
-        });
+        // Clear existing related records
+        await StudentItVerifyGrade.destroy({ where: { stu_id } });
+        await StudentVerifyApprovements.destroy({ where: { student_verify_id: svds.id } });
+        await StudentVerifyDetail.destroy({ where: { student_verify_id: svds.id } });
+        await StudentCategoryVerify.destroy({ where: { student_verify_id: svds.id } });
         
 
         for (const sc of studentcategory) {
