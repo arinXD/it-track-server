@@ -5,6 +5,7 @@ const { QueryTypes, Op } = require('sequelize');
 const User = models.User
 const Student = models.Student
 const Teacher = models.Teacher
+const Admin = models.Admin
 const Program = models.Program
 const Enrollment = models.Enrollment
 const Subject = models.Subject
@@ -28,28 +29,46 @@ function getAcadYear(studentCode) {
 
 const createUser = async (req, res) => {
      const { role, email, password, ...otherData } = req.body;
+     const { id, prefix, name, surname } = otherData;
      const t = await User.sequelize.transaction();
 
      try {
-          const createUSerData = {
-               email,
-               role,
-               verification: true,
-               sign_in_type: 'credentials',
-          }
-          let user = {}
-          if (role === "admin") {
-               const hashedPassword = await bcrypt.hash(password, 10)
-               createUSerData.password = hashedPassword
-               const createdUser = await User.create(createUSerData, { transaction: t });
-               user = createdUser?.dataValues
-          }
-
           switch (role) {
                case 'admin':
+                    // แทรกไอดีมาแก้ไขข้อมูล
+                    if (id) {
+                         await Admin.update({
+                              email,
+                              prefix,
+                              name,
+                              surname,
+                         }, { where: { id } }, { transaction: t });
+                    }
+                    // สร้างใหม่
+                    else {
+                         const createAdminData = {
+                              email,
+                              role,
+                              verification: true,
+                              sign_in_type: 'credentials',
+                         }
+                         const hashedPassword = await bcrypt.hash(password, 10)
+                         createAdminData.password = hashedPassword
+                         const createdUser = await User.create(createAdminData, { transaction: t });
+                         const user_id = createdUser.dataValues.id
+
+                         await Admin.create({
+                              user_id,
+                              email,
+                              prefix,
+                              name,
+                              surname,
+                         }, { transaction: t })
+                    }
                     break;
+
                case 'teacher':
-                    const { id, prefix, name, surname, track } = otherData;
+                    const { track } = otherData;
 
                     // แทรกไอดีมาแก้ไขข้อมูล
                     if (id) {
@@ -88,6 +107,7 @@ const createUser = async (req, res) => {
                               name,
                               surname,
                          }, { transaction: t });
+
                          if (track) {
                               await TeacherTrack.create({
                                    teacher_id: teacher.id,
@@ -117,11 +137,6 @@ const createUser = async (req, res) => {
 
           return res.status(201).json({
                message: 'User created successfully',
-               user: {
-                    id: user.id,
-                    email: user.email,
-                    role: user.role,
-               }
           });
      } catch (error) {
           await t.rollback();
@@ -223,6 +238,10 @@ const getUserData = async (req, res) => {
                },
                include: [
                     {
+                         model: Admin,
+                         attributes: ["id", "prefix", "name", "surname"],
+                    },
+                    {
                          model: Teacher,
                          attributes: ["id", "prefix", "name", "surname"],
                          include: [
@@ -307,12 +326,34 @@ const updateUserRole = async (req, res) => {
           if (role === "teacher") {
                const findData = await Teacher.findOne({ where: { email } })
                if (findData) {
-                    await Teacher.update({ user_id: id }, { where: { email: email } })
+                    await Teacher.update({
+                         user_id: id
+                    }, { where: { email: email } })
                } else {
-                    await Teacher.create({ user_id: id, email: email, name: String(email).split("@")[0] })
+                    await Teacher.create({
+                         user_id: id,
+                         email: email,
+                         name: String(email).split("@")[0]
+                    })
                }
+               await Admin.update({ user_id: null }, { where: { email } })
+          } else if (role === "admin") {
+               const findData = await Admin.findOne({ where: { email } })
+               if (findData) {
+                    await Admin.update({
+                         user_id: id
+                    }, { where: { email: email } })
+               } else {
+                    await Admin.create({
+                         user_id: id,
+                         email: email,
+                         name: String(email).split("@")[0]
+                    })
+               }
+               await Teacher.update({ user_id: null }, { where: { email } })
           } else {
                await Teacher.update({ user_id: null }, { where: { email } })
+               await Admin.update({ user_id: null }, { where: { email } })
           }
 
           await User.update({

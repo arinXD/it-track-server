@@ -5,6 +5,7 @@ const models = require('../models');
 const User = models.User
 const Student = models.Student
 const Teacher = models.Teacher
+const Admin = models.Admin
 const EmailVerify = models.EmailVerify
 const { hostname } = require("../api/hostname");
 const { mailSender } = require("./mailSender");
@@ -96,7 +97,15 @@ const signInCredentials = async (req, res, next) => {
                 child = user[modelName]
                 child = child.dataValues
             }
-            const name = child?.first_name && child?.last_name ? `${child?.first_name} ${child?.last_name}` : email.split("@")[0]
+
+            // ทำไมมันมาออกท่านี้วะ ตอนแรกไม่ได้กะว่าแอดมินกับอาจารย์จะมีชื่อนามสกุล TT
+            let name = ""
+            if (role === "student") {
+                name = child?.first_name && child?.last_name ? `${child?.first_name} ${child?.last_name}` : email.split("@")[0]
+            } else {
+                name = child?.name && child?.surname ? `${child?.name} ${child?.surname}` : email.split("@")[0]
+            }
+
             const userData = {
                 email,
                 name,
@@ -105,7 +114,6 @@ const signInCredentials = async (req, res, next) => {
                 verification: user.verification,
                 ...child
             }
-            console.log(userData);
 
             return res.status(200).json({
                 ok: true,
@@ -188,14 +196,28 @@ const signInGoogle = async (req, res, next) => {
                     child = { ...childData?.dataValues }
                     child.stu_id = child.stu_id || null
                 }
-                // อาจารย์
+                // เจ้าหน้าที่หรืออาจารย์
                 else {
-                    const childData = await model.findOne({ where: { email: userEmail } })
-                    if (childData) {
-                        await model.update({ user_id: user.id }, { where: { email: userEmail } })
-                        child = { ...childData?.dataValues }
+                    const findTeacher = await Teacher.findOne({ where: { email: userEmail } })
+                    if (findTeacher) {
+                        await Teacher.update({
+                            user_id: user.id
+                        }, { where: { email: userEmail } })
+                        child = { ...findTeacher?.dataValues }
                     } else {
-                        child = await model.create({ user_id: user.id, email: userEmail })
+                        const findAdmin = await Admin.findOne({ where: { email: userEmail } })
+                        if (!findAdmin) {
+                            child = await Admin.create({
+                                user_id: user.id,
+                                email: userEmail,
+                                name: String(userEmail).split("@")[0]
+                            })
+                        } else {
+                            await Admin.update({
+                                user_id: user.id
+                            }, { where: { email: userEmail } })
+                            child = { ...findAdmin?.dataValues }
+                        }
                     }
                 }
             }
@@ -212,7 +234,9 @@ const signInGoogle = async (req, res, next) => {
         else {
             const { sign_in_type } = findUser
             if (sign_in_type == "google") {
+
                 await User.update({ image }, { where: { email: userEmail } })
+
                 let child = {}
                 if (model) {
                     if (!(findUser.role === "user")) {
@@ -233,7 +257,6 @@ const signInGoogle = async (req, res, next) => {
                     .header('Content-Type', 'application/json; charset=utf-8')
                     .json({
                         ok: false,
-                        // message: "อีเมลนี้ได้ทำการเข้าสมัครสมาชิกแล้ว กรุณาเข้าสู่ระบบโดยใช้อีเมลและรหัสผ่าน"
                         message: "This email has been already create. Please sign in."
                     })
             }
