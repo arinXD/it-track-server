@@ -804,6 +804,7 @@ router.get("/programs/:pid/acadyear/:acad/advisor/:email", adminMiddleware, asyn
             },
             {
                 model: Teacher,
+                as: "Advisor",
                 where: { email }
             },
         ];
