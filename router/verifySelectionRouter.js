@@ -207,9 +207,9 @@ router.get("/grade/confirm/:stu_id", isAuth, async (req, res) => {
         });
 
         if (!studentVerify) {
-            return res.status(404).json({
-                ok: false,
-                message: "StudentVerify record not found."
+            return res.status(200).json({
+                ok: true,
+                data: {} // Return an empty data object
             });
         }
 
@@ -372,10 +372,9 @@ router.get("/grade/confirm/:stu_id", isAuth, async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
+        return res.status(200).json({
             ok: false,
-            message: "Server error."
+            data: {} // Return an empty object
         });
     }
 });
@@ -407,12 +406,19 @@ router.get("/grade/it/:stu_id", isAuth, async (req, res) => {
 router.get("/status/verify/:stu_id", isAuth, async (req, res) => {
     const stu_id = req.params.stu_id;
     try {
-
         const studentVerify = await StudentVerify.findOne({
             where: {
                 stu_id,
             },
         });
+
+        // If student is not found, return empty data without an error
+        if (!studentVerify) {
+            return res.status(200).json({
+                ok: true,
+                data: [], // Return empty data array
+            });
+        }
 
         const verify = await StudentVerifyApprovements.findAll({
             where: {
@@ -421,19 +427,21 @@ router.get("/status/verify/:stu_id", isAuth, async (req, res) => {
             include: [{
                 model: User,
                 include: [{
-                    model: Teacher
-                }]
-            }]
+                    model: Teacher,
+                }],
+            }],
         });
+
         return res.status(200).json({
             ok: true,
-            data: verify
+            data: verify,
         });
     } catch (error) {
+        // Log the error only for debugging purposes, if necessary
         console.error('Error fetching verify:', error);
-        return res.status(500).json({
+        return res.status(200).json({ // Return 200 with empty data in case of error
             ok: false,
-            error: 'Internal Server Error'
+            data: [], // Return empty data array
         });
     }
 });
@@ -628,7 +636,7 @@ router.post("/again/:verify_id/:stu_id", isAuth, async (req, res) => {
         await StudentVerifyApprovements.destroy({ where: { student_verify_id: svds.id } });
         await StudentVerifyDetail.destroy({ where: { student_verify_id: svds.id } });
         await StudentCategoryVerify.destroy({ where: { student_verify_id: svds.id } });
-        
+
 
         for (const sc of studentcategory) {
             const { category_id, verifySubj } = sc;
