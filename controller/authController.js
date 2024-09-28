@@ -160,7 +160,23 @@ const signInGoogle = async (req, res, next) => {
     }
 
     //  หาโรลของผู้ใช้
-    const { role, model } = getRole(userEmail)
+    const { role: userRole, model: userModel } = getRole(userEmail)
+    const findAdmin = await Admin.findOne({where:{email: userEmail}})
+    const findTeacher = await Teacher.findOne({where:{email: userEmail}})
+
+    let role
+    let model
+    if(findAdmin){
+        role = "admin"
+        model = Admin
+    }else if(findTeacher){
+        role = "teacher"
+        model = Teacher
+    }else{
+        role = userRole
+        model = userModel
+    }
+
     const findUser = model ?
         await User.findOne({
             where: { email: userEmail },
