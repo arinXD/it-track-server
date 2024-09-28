@@ -35,6 +35,7 @@ router.get("/teacher", isAdmin, async (req, res) => {
                 include: [
                     {
                         model: Teacher,
+                        as: 'Advisor'  // Using the alias set in the Student model
                     }
                 ]
             }]
@@ -308,7 +309,7 @@ router.get("/calldescall/:email/:stu_id", isAdmin, async (req, res) => {
             include: [{
                 model: User,
                 include: [{
-                    model: Teacher
+                    model: Teacher,
                 }]
             }]
         });
@@ -342,7 +343,7 @@ router.get("/calldescall/:stu_id", isAdmin, async (req, res) => {
             include: [{
                 model: User,
                 include: [{
-                    model: Teacher
+                    model: Teacher,
                 }]
             }]
         });
