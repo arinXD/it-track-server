@@ -610,8 +610,9 @@ router.delete("/semisubgroup/:id/:verify_id", adminMiddleware, async (req, res) 
 });
 
 
-router.delete("/category/:id", adminMiddleware, async (req, res) => {
+router.delete("/category/:id/:verify_id", adminMiddleware, async (req, res) => {
     const id = req.params.id;
+    const { verify_id } = req.params;
     try {
         const category = await CategoryVerify.findOne({
             where: { category_id: id },
@@ -633,7 +634,7 @@ router.delete("/category/:id", adminMiddleware, async (req, res) => {
         const category_title = category.Categorie.category_title;
 
         await CategoryVerify.destroy({
-            where: { id: category_id }
+            where: { id: category_id, verify_id }
         });
 
         return res.status(200).json({
@@ -648,6 +649,7 @@ router.delete("/category/:id", adminMiddleware, async (req, res) => {
         });
     }
 });
+
 
 
 
