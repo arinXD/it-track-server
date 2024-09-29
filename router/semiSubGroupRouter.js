@@ -86,4 +86,25 @@ router.post("/", isAdmin, async (req, res) => {
     }
 });
 
+router.delete("/:id", isAdmin, async (req, res) => {
+    const id = req.params.id
+    try {
+        await SemiSubGroup.destroy({
+            where: {
+                id
+            }
+        })
+        return res.status(200).json({
+            ok: true,
+            message: "ลบกลุ่มรองวิชาสำเร็จ"
+        })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            ok: false,
+            message: "Server error."
+        })
+    }
+})
+
 module.exports = router

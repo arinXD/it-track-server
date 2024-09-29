@@ -6,7 +6,10 @@ const { Op } = require('sequelize');
 const SubGroup = models.SubGroup
 const Group = models.Group
 
-router.get("/", async (req, res) => {
+const isAdmin = require("../middleware/adminMiddleware");
+const isAuth = require('../middleware/authMiddleware');
+
+router.get("/",isAdmin, async (req, res) => {
     try {
         const categories = await Categorie.findAll({
             include: [
@@ -184,10 +187,9 @@ router.get("/:id", async (req, res) => {
             data: category
         });
     } catch (error) {
-        console.error('Error fetching category:', error);
         return res.status(500).json({
-            ok: false,
-            error: 'Internal Server Error'
+            ok: true,
+            error: {}
         });
     }
 });
