@@ -17,6 +17,9 @@ const Track = models.Track
 const CategoryVerify = models.CategoryVerify
 const SemiSubGroup = models.SemiSubGroup
 const SemiSubgroupSubject = models.SemiSubgroupSubject
+const ConditionVerify = models.ConditionVerify
+const ConditionSubgroupVerify = models.ConditionSubgroupVerify
+const ConditionCategoryVerify = models.ConditionCategoryVerify
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
@@ -646,6 +649,67 @@ router.delete("/category/:id/:verify_id", adminMiddleware, async (req, res) => {
         return res.status(500).json({
             ok: false,
             message: "Server error."
+        });
+    }
+});
+
+router.delete("/:id", adminMiddleware, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Find the Verify record and include related models for foreign key constraint checking
+        const verify = await Verify.findByPk(id, {
+            include: [
+                { model: SubjectVerify },
+                { model: ConditionVerify },
+                { model: ConditionSubgroupVerify },
+                { model: CategoryVerify },
+                { model: ConditionCategoryVerify },
+                { model: GroupSubject },
+                { model: SemiSubgroupSubject },
+                { model: SubgroupSubject },
+            ],
+        });
+
+        if (!verify) {
+            return res.status(404).json({
+                ok: false,
+                message: 'ไม่พบแบบฟอร์มที่ต้องการลบ',
+            });
+        }
+
+        // Check for associated records and prevent deletion if any exist
+        const hasAssociatedRecords = [
+            verify.SubjectVerifies.length,
+            verify.ConditionVerifies.length,
+            verify.ConditionSubgroupVerifies.length,
+            verify.CategoryVerifies.length,
+            verify.ConditionCategoryVerifies.length,
+            verify.GroupSubjects.length,
+            verify.SemiSubgroupSubjects.length,
+            verify.SubgroupSubjects.length,
+        ].some((count) => count > 0);
+
+        if (hasAssociatedRecords) {
+            return res.status(400).json({
+                ok: false,
+                message: 'ไม่สามารถลบได้ กรุณาลบข้อมูลที่เกี่ยวข้องก่อน',
+            });
+        }
+
+        // Proceed with deletion if no related records exist
+        await Verify.destroy({ where: { id } });
+
+        return res.status(200).json({
+            ok: true,
+            message: "ลบแบบฟอร์มสำเร็จ",
+        });
+
+    } catch (error) {
+        console.error("Delete Verify Error:", error);
+        return res.status(500).json({
+            ok: false,
+            message: "เกิดข้อผิดพลาดจากเซิร์ฟเวอร์",
         });
     }
 });

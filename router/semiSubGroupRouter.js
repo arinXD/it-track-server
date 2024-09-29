@@ -38,7 +38,7 @@ router.get("/", isAdmin, async (req, res) => {
     }
 })
 
-router.get("/checkDuplicate/:title", async (req, res) => {
+router.get("/checkDuplicate/:title", isAdmin,  async (req, res) => {
     try {
         const { title } = req.params;
         const semi = await SemiSubGroup.findOne({

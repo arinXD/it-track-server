@@ -3,11 +3,27 @@ const router = express.Router();
 const models = require('../models');
 const SubGroup = models.SubGroup
 const SemiSubGroup = models.SemiSubGroup
+const Group = models.Group
+const Categorie = models.Categorie
 const { Op } = require('sequelize');
 
-router.get("/", async (req, res) => {
+const isAdmin = require("../middleware/adminMiddleware");
+const isAuth = require('../middleware/authMiddleware');
+
+router.get("/", isAdmin, async (req, res) => {
     try {
-        const subgroups = await SubGroup.findAll();
+        const subgroups = await SubGroup.findAll({
+            include: [
+                {
+                    model: Group,
+                    include: [
+                        {
+                            model: Categorie,
+                        }
+                    ]
+                }
+            ]
+        });
         return res.status(200).json({
             ok: true,
             data: subgroups
@@ -43,15 +59,25 @@ router.get("/:subgroupId/semisubgroups", async (req, res) => {
 });
 
 
-router.get("/getrestore", async (req, res) => {
+router.get("/getrestore", isAdmin, async (req, res) => {
     try {
         const deletedSubGroup = await SubGroup.findAll({
-            paranoid:false,
+            paranoid: false,
             where: {
-                deletedAt: { 
-                    [Op.not]: null 
+                deletedAt: {
+                    [Op.not]: null
                 }
-            }
+            },
+            include: [
+                {
+                    model: Group,
+                    include: [
+                        {
+                            model: Categorie,
+                        }
+                    ]
+                }
+            ]
         });
 
         return res.status(200).json({
@@ -67,11 +93,11 @@ router.get("/getrestore", async (req, res) => {
     }
 });
 
-router.post("/restoreSubGroup/:id", async (req, res) => {
+router.post("/restoreSubGroup/:id", isAdmin, async (req, res) => {
     try {
         const subgroupCodeId = req.params.id;
 
-        const subgroupCategorie= await SubGroup.findOne({
+        const subgroupCategorie = await SubGroup.findOne({
             where: {
                 id: subgroupCodeId,
                 deletedAt: { [Op.not]: null }
@@ -101,9 +127,9 @@ router.post("/restoreSubGroup/:id", async (req, res) => {
     }
 });
 
-router.post("/insertSubGroup", async (req, res) => {
+router.post("/insertSubGroup", isAdmin, async (req, res) => {
     try {
-        const { sub_group_title, group_id  } = req.body;
+        const { sub_group_title, group_id } = req.body;
 
         const newSubGroup = await SubGroup.create({
             sub_group_title: sub_group_title,
@@ -123,7 +149,7 @@ router.post("/insertSubGroup", async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", isAdmin, async (req, res) => {
     try {
         const subgroupId = req.params.id;
         const subgroup = await SubGroup.findByPk(subgroupId);
@@ -149,10 +175,10 @@ router.get("/:id", async (req, res) => {
 });
 
 
-router.post("/updateSubGroup/:id", async (req, res) => {
+router.post("/updateSubGroup/:id", isAdmin, async (req, res) => {
     try {
         const subgroupId = req.params.id;
-        const { sub_group_title, group_id  } = req.body;
+        const { sub_group_title, group_id } = req.body;
 
         if (!sub_group_title) {
             return res.status(400).json({
@@ -189,7 +215,7 @@ router.post("/updateSubGroup/:id", async (req, res) => {
     }
 });
 
-router.delete("/deleteSubGroup/:id", async (req, res) => {
+router.delete("/deleteSubGroup/:id", isAdmin, async (req, res) => {
     try {
         const subgroupId = req.params.id;
 

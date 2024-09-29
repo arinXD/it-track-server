@@ -3,11 +3,22 @@ const router = express.Router();
 const models = require('../models');
 const Group = models.Group
 const SubGroup = models.SubGroup
+const Categorie = models.Categorie
 const { Op } = require('sequelize');
 
-router.get("/", async (req, res) => {
+const isAdmin = require("../middleware/adminMiddleware");
+const isAuth = require('../middleware/authMiddleware');
+
+router.get("/", isAdmin, async (req, res) => {
+    { }
     try {
-        const groups = await Group.findAll();
+        const groups = await Group.findAll({
+            include: [
+                {
+                    model: Categorie,
+                }
+            ]
+        });
         return res.status(200).json({
             ok: true,
             data: groups
@@ -42,15 +53,21 @@ router.get("/:groupId/subgroups", async (req, res) => {
     }
 });
 
-router.get("/getrestore", async (req, res) => {
+router.get("/getrestore", isAdmin, async (req, res) => {
     try {
         const deletedGroup = await Group.findAll({
-            paranoid:false,
+            paranoid: false,
             where: {
-                deletedAt: { 
-                    [Op.not]: null 
+                deletedAt: {
+                    [Op.not]: null
                 }
-            }
+                
+            },
+            include: [
+                {
+                    model: Categorie,
+                }
+            ]
         });
 
         return res.status(200).json({
@@ -66,11 +83,11 @@ router.get("/getrestore", async (req, res) => {
     }
 });
 
-router.post("/restoreGroup/:id", async (req, res) => {
+router.post("/restoreGroup/:id", isAdmin, async (req, res) => {
     try {
         const groupCodeId = req.params.id;
 
-        const groupCategorie= await Group.findOne({
+        const groupCategorie = await Group.findOne({
             where: {
                 id: groupCodeId,
                 deletedAt: { [Op.not]: null }
@@ -100,9 +117,9 @@ router.post("/restoreGroup/:id", async (req, res) => {
     }
 });
 
-router.post("/insertGroup", async (req, res) => {
+router.post("/insertGroup", isAdmin, async (req, res) => {
     try {
-        const { group_title, category_id  } = req.body;
+        const { group_title, category_id } = req.body;
 
         const newGroup = await Group.create({
             group_title: group_title,
@@ -122,8 +139,7 @@ router.post("/insertGroup", async (req, res) => {
     }
 });
 
-router.get("/:id", async (req, res) => {
-    console.log("test");
+router.get("/:id", isAdmin, async (req, res) => {
     try {
         const groupId = req.params.id;
         const group = await Group.findByPk(groupId);
@@ -189,7 +205,7 @@ router.post("/updateGroup/:id", async (req, res) => {
     }
 });
 
-router.delete("/deleteGroup/:id", async (req, res) => {
+router.delete("/deleteGroup/:id", isAdmin, async (req, res) => {
     try {
         const groupId = req.params.id;
 
