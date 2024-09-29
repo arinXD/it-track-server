@@ -6,7 +6,10 @@ const { Op } = require('sequelize');
 const SubGroup = models.SubGroup
 const Group = models.Group
 
-router.get("/", async (req, res) => {
+const isAdmin = require("../middleware/adminMiddleware");
+const isAuth = require('../middleware/authMiddleware');
+
+router.get("/", isAdmin, async (req, res) => {
     try {
         const categories = await Categorie.findAll({
             include: [
@@ -59,7 +62,7 @@ router.get("/:categoryId/groups", async (req, res) => {
     }
 });
 
-router.get("/getrestore", async (req, res) => {
+router.get("/getrestore", isAdmin, async (req, res) => {
     try {
         const deletedCategories = await Categorie.findAll({
             paranoid: false,
@@ -83,7 +86,7 @@ router.get("/getrestore", async (req, res) => {
     }
 });
 
-router.post("/restoreCategorie/:id", async (req, res) => {
+router.post("/restoreCategorie/:id", isAdmin, async (req, res) => {
     try {
         const categorieCodeId = req.params.id;
 
@@ -117,7 +120,7 @@ router.post("/restoreCategorie/:id", async (req, res) => {
     }
 });
 
-router.get("/checkDuplicate/:title", async (req, res) => {
+router.get("/checkDuplicate/:title", isAdmin,  async (req, res) => {
     try {
         const { title } = req.params;
         const category = await Categorie.findOne({
@@ -145,7 +148,7 @@ router.get("/checkDuplicate/:title", async (req, res) => {
     }
 });
 
-router.post("/insertCategory", async (req, res) => {
+router.post("/insertCategory", isAdmin, async (req, res) => {
     try {
         const { category_title } = req.body;
 
@@ -167,14 +170,14 @@ router.post("/insertCategory", async (req, res) => {
 });
 
 // Get a specific category by ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", isAdmin, async (req, res) => {
     try {
         const categoryId = req.params.id;
         const category = await Categorie.findByPk(categoryId);
 
         if (!category) {
             return res.status(404).json({
-                ok: false,
+                ok: true,
                 error: 'Category not found'
             });
         }
@@ -184,16 +187,15 @@ router.get("/:id", async (req, res) => {
             data: category
         });
     } catch (error) {
-        console.error('Error fetching category:', error);
         return res.status(500).json({
-            ok: false,
-            error: 'Internal Server Error'
+            ok: true,
+            error: {}
         });
     }
 });
 
 // Update a specific category by ID
-router.put("/updateCategory/:id", async (req, res) => {
+router.put("/updateCategory/:id", isAdmin, async (req, res) => {
     try {
         const categoryId = req.params.id;
         const { category_title } = req.body;
@@ -202,7 +204,7 @@ router.put("/updateCategory/:id", async (req, res) => {
 
         if (!existingCategory) {
             return res.status(404).json({
-                ok: false,
+                ok: true,
                 error: 'Category not found'
             });
         }
@@ -225,7 +227,7 @@ router.put("/updateCategory/:id", async (req, res) => {
     }
 });
 
-router.delete("/deleteCategory/:id", async (req, res) => {
+router.delete("/deleteCategory/:id", isAdmin, async (req, res) => {
     try {
         const categoryId = req.params.id;
 
@@ -237,7 +239,7 @@ router.delete("/deleteCategory/:id", async (req, res) => {
 
         if (result === 0) {
             return res.status(404).json({
-                ok: false,
+                ok: true,
                 error: 'Category not found'
             });
         }
@@ -254,40 +256,6 @@ router.delete("/deleteCategory/:id", async (req, res) => {
         });
     }
 });
-
-
-router.delete('/selected', async (req, res) => {
-    const { categoriesArr = [] } = req.body;
-    try {
-        let delCategorie = []
-        for (const categories of categoriesArr) {
-            delCategorie.push(categories)
-            await Categorie.destroy({
-                where: {
-                    id: categories
-                },
-                force: true
-            });
-        }
-        if (delCategorie.length == 0) {
-            return res.status(200).json({
-                ok: true,
-                message: "ไม่มีหมวดหมู่ที่ถูกลบ"
-            })
-        } else {
-            return res.status(200).json({
-                ok: true,
-                message: `ลบหมวดหมู่ ${delCategorie.join(", ")} เรียบร้อย`
-            })
-        }
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({
-            ok: false,
-            message: "Server error."
-        })
-    }
-})
 
 
 module.exports = router;

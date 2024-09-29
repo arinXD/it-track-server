@@ -26,6 +26,7 @@ const SemiSubGroup = models.SemiSubGroup
 const Teacher = models.Teacher
 const User = models.User
 const StudentVerifyApprovements = models.StudentVerifyApprovements
+const StudentStatus = models.StudentStatus
 
 router.get("/teacher", isAdmin, async (req, res) => {
     try {
@@ -36,7 +37,10 @@ router.get("/teacher", isAdmin, async (req, res) => {
                     {
                         model: Teacher,
                         as: 'Advisor'  // Using the alias set in the Student model
-                    }
+                    },
+                    {
+                        model: StudentStatus,
+                    },
                 ]
             }]
         });
@@ -58,6 +62,11 @@ router.get("/admin", isAdmin, async (req, res) => {
         const verify = await StudentVerify.findAll({
             include: [{
                 model: Student,
+                include: [
+                    {
+                        model: StudentStatus,
+                    },
+                ]
             }]
         });
         return res.status(200).json({

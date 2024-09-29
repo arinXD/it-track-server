@@ -64,8 +64,6 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Verify',
-    paranoid: true,
-    deletedAt: 'deletedAt',
   });
   return Verify;
 };
