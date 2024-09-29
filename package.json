@@ -37,7 +37,6 @@
     "express-session": "^1.17.3",
     "express-slow-down": "^2.0.3",
     "express-winston": "^4.2.0",
-    "it-track-server": "file:",
     "joi": "^17.13.3",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
