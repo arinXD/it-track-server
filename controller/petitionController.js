@@ -7,6 +7,7 @@ const User = models.User
 const Track = models.Track
 const Student = models.Student
 const Teacher = models.Teacher
+const Admin = models.Admin
 const TeacherTrack = models.TeacherTrack
 const Selection = models.Selection
 const Joi = require('joi');
@@ -119,7 +120,10 @@ const getPetitionById = async (req, res) => {
                          include: [
                               {
                                    model: Teacher,
-                              }
+                              },
+                              {
+                                   model: Admin,
+                              },
                          ]
                     },
                ]
