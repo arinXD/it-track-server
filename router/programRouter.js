@@ -4,7 +4,10 @@ const models = require('../models');
 const Program = models.Program
 const { Op } = require('sequelize');
 
-router.get("/", async (req, res) => {
+const isAdmin = require("../middleware/adminMiddleware");
+const isAuth = require('../middleware/authMiddleware');
+
+router.get("/", isAdmin, async (req, res) => {
     try {
         const programs = await Program.findAll();
         return res.status(200).json({
@@ -20,13 +23,13 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.get("/getrestore", async (req, res) => {
+router.get("/getrestore", isAdmin, async (req, res) => {
     try {
         const deletedProgram = await Program.findAll({
-            paranoid:false,
+            paranoid: false,
             where: {
-                deletedAt: { 
-                    [Op.not]: null 
+                deletedAt: {
+                    [Op.not]: null
                 }
             }
         });
@@ -44,7 +47,7 @@ router.get("/getrestore", async (req, res) => {
     }
 });
 
-router.post("/restorePrograms/:program", async (req, res) => {
+router.post("/restorePrograms/:program", isAdmin, async (req, res) => {
     try {
         const programId = req.params.program;
 
@@ -78,9 +81,9 @@ router.post("/restorePrograms/:program", async (req, res) => {
     }
 });
 
-router.post("/insertProgram", async (req, res) => {
+router.post("/insertProgram", isAdmin, async (req, res) => {
     try {
-        const { program,title_en ,title_th} = req.body;
+        const { program, title_en, title_th } = req.body;
 
         const newProgram = await Program.create({
             program: program,
@@ -101,7 +104,7 @@ router.post("/insertProgram", async (req, res) => {
     }
 });
 
-router.get("/:program", async (req, res) => {
+router.get("/:program", isAdmin, async (req, res) => {
     try {
         const programId = req.params.program;
         const program = await Program.findOne({ where: { program: programId } });
@@ -126,10 +129,10 @@ router.get("/:program", async (req, res) => {
     }
 });
 
-router.put("/updateProgram/:program", async (req, res) => {
+router.put("/updateProgram/:program", isAdmin, async (req, res) => {
     try {
         const programId = req.params.program;
-        const { title_en,title_th } = req.body;
+        const { title_en, title_th } = req.body;
 
         const existingProgram = await Program.findByPk(programId);
 
@@ -159,7 +162,7 @@ router.put("/updateProgram/:program", async (req, res) => {
     }
 });
 
-router.delete("/deleteProgram/:program", async (req, res) => {
+router.delete("/deleteProgram/:program", isAdmin, async (req, res) => {
     try {
         const program = req.params.program;
 

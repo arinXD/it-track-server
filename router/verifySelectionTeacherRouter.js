@@ -27,6 +27,7 @@ const Teacher = models.Teacher
 const User = models.User
 const StudentVerifyApprovements = models.StudentVerifyApprovements
 const StudentStatus = models.StudentStatus
+const Admin = models.Admin
 
 router.get("/teacher", isAdmin, async (req, res) => {
     try {
@@ -317,9 +318,14 @@ router.get("/calldescall/:email/:stu_id", isAdmin, async (req, res) => {
             },
             include: [{
                 model: User,
-                include: [{
-                    model: Teacher,
-                }]
+                include: [
+                    {
+                        model: Teacher,
+                    },
+                    {
+                        model: Admin,
+                    },
+                ]
             }]
         });
         return res.status(200).json({
@@ -351,9 +357,14 @@ router.get("/calldescall/:stu_id", isAdmin, async (req, res) => {
             },
             include: [{
                 model: User,
-                include: [{
-                    model: Teacher,
-                }]
+                include: [
+                    {
+                        model: Teacher,
+                    },
+                    {
+                        model: Admin,
+                    },
+                ]
             }]
         });
         return res.status(200).json({

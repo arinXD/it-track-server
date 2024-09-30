@@ -240,7 +240,7 @@ router.get("/track/selection", isAdmin, async (req, res) => {
     }
 })
 
-router.post("/insertSubject", async (req, res) => {
+router.post("/insertSubject", isAdmin, async (req, res) => {
     try {
         const {
             // semester,
@@ -283,7 +283,7 @@ router.post("/insertSubject", async (req, res) => {
 });
 
 
-router.post("/insertSubjectsFromExcel", async (req, res) => {
+router.post("/insertSubjectsFromExcel", isAdmin, async (req, res) => {
     try {
         const subjects = req.body;
         const insertedSubjects = [];
@@ -317,7 +317,7 @@ router.post("/insertSubjectsFromExcel", async (req, res) => {
 });
 
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", isAdmin, async (req, res) => {
     try {
         const subjectId = req.params.id;
         const subject = await Subject.findOne({
@@ -347,7 +347,7 @@ router.get("/:id", async (req, res) => {
 });
 
 
-router.post("/updateSubject/:id", async (req, res) => {
+router.post("/updateSubject/:id", isAdmin, async (req, res) => {
     try {
         const subjectId = req.params.id;
         const {
@@ -393,7 +393,7 @@ router.post("/updateSubject/:id", async (req, res) => {
     }
 });
 
-router.get("/getSubjectByCode/:subject_code", async (req, res) => {
+router.get("/getSubjectByCode/:subject_code", isAdmin, async (req, res) => {
     try {
         const { subject_code } = req.params;
 
@@ -425,10 +425,7 @@ router.get("/getSubjectByCode/:subject_code", async (req, res) => {
     }
 });
 
-
-
-
-router.delete("/deleteSubject/:subject_id", async (req, res) => {
+router.delete("/deleteSubject/:subject_id", isAdmin, async (req, res) => {
     try {
         const subjectId = req.params.subject_id;
 
