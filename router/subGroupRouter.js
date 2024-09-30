@@ -37,7 +37,7 @@ router.get("/", isAdmin, async (req, res) => {
     }
 });
 
-router.get("/:subgroupId/semisubgroups", async (req, res) => {
+router.get("/:subgroupId/semisubgroups", isAdmin, async (req, res) => {
     try {
         const subgroupId = req.params.subgroupId;
         const subgroup = await SemiSubGroup.findAll({

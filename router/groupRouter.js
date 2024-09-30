@@ -32,7 +32,7 @@ router.get("/", isAdmin, async (req, res) => {
     }
 });
 
-router.get("/:groupId/subgroups", async (req, res) => {
+router.get("/:groupId/subgroups", isAdmin, async (req, res) => {
     try {
         const groupId = req.params.groupId;
         const subgroups = await SubGroup.findAll({
