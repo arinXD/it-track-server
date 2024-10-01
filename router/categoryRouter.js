@@ -36,7 +36,7 @@ router.get("/", isAdmin, async (req, res) => {
     }
 });
 
-router.get("/:categoryId/groups", async (req, res) => {
+router.get("/:categoryId/groups", isAdmin, async (req, res) => {
     try {
         const categoryId = req.params.categoryId;
         const groups = await Group.findAll({

@@ -26,6 +26,7 @@ const SemiSubGroup = models.SemiSubGroup
 const StudentVerifyApprovements = models.StudentVerifyApprovements
 const Teacher = models.Teacher
 const User = models.User
+const Admin = models.Admin
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
@@ -426,9 +427,14 @@ router.get("/status/verify/:stu_id", isAuth, async (req, res) => {
             },
             include: [{
                 model: User,
-                include: [{
-                    model: Teacher,
-                }],
+                include: [
+                    {
+                        model: Teacher,
+                    },
+                    {
+                        model: Admin,
+                    },
+                ]
             }],
         });
 
