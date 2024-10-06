@@ -3,7 +3,8 @@ const router = express.Router();
 const isAdmin = require('../middleware/adminMiddleware');
 const isAuth = require('../middleware/authMiddleware');
 const { getAllQuestion, createQuestion, getQuestionsNotInForm,
-     getQuestionsInForm } = require('../controller/questionBankController');
+     getQuestionsInForm, 
+     deleteQuestion} = require('../controller/questionBankController');
 
 // GET
 router.get("/", isAuth, getAllQuestion)
@@ -13,6 +14,8 @@ router.get("/not-in-form/:id", isAdmin, getQuestionsNotInForm)
 // POST
 router.post("/", isAdmin, createQuestion)
 
+// DELETE
+router.delete("/:id", isAdmin, deleteQuestion)
 
 
 module.exports = router
