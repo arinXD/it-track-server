@@ -669,7 +669,6 @@ const forceDeleteMultiple = async (req, res) => {
 }
 
 const summaryAnswers = async (req, res) => {
-     await sleep(2000)
      const answers = req.body;
      const email = req.params.email;
      try {
@@ -683,7 +682,8 @@ const summaryAnswers = async (req, res) => {
                     message: `Validation error: ${error.details[0].message}`
                });
           }
-
+          await sleep(2000)
+          
           const result = await sequelize.transaction(async (t) => {
                const suggestionHistory = await SuggestionHistory.create({
                     user_id: userId?.dataValues?.id,
@@ -806,7 +806,7 @@ const summaryAnswers = async (req, res) => {
                          correctAnswers: scores.correctAnswers,
                          totalQuestions: scores.totalQuestions,
                          correctPercentage: parseFloat(correctPercentage),
-                         summary: `คะแนนแบบทดสอบ ${scores.questionScore} คะแนน, คะแนนแบบประเมิน ${scores.assessmentScore} คะแนน, คะแนนความชอบ ${scores.careerScore} คะแนน, ตอบคำถามถูก ${scores.correctAnswers}/${scores.totalQuestions} ข้อ (${correctPercentage}%).`
+                         summary: `คะแนนแบบทดสอบ ${scores.questionScore} คะแนน, คะแนนแบบประเมิน ${scores.assessmentScore} คะแนน, คะแนนความชอบ ${scores.careerScore} คะแนน`
                     };
 
                     return summary;

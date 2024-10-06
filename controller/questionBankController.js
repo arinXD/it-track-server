@@ -154,9 +154,29 @@ const createQuestion = async (req, res) => {
           })
      }
 }
+const deleteQuestion = async (req, res) => {
+     const id = req.params.id
+     try {
+          await QuestionBank.destroy({
+               where: { id },
+               force: true
+          })
+          return res.status(200).json({
+               ok: true,
+               message: "ลบคำถามสำเร็จ"
+          })
+     } catch (error) {
+          console.log(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
 module.exports = {
      getAllQuestion,
      getQuestionsNotInForm,
      getQuestionsInForm,
      createQuestion,
+     deleteQuestion
 }
