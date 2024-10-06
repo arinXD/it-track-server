@@ -457,13 +457,6 @@ router.post("/:verify_id/:stu_id", isAuth, async (req, res) => {
     const { term, cum_laude, acadyear, status, subjects, tracksubject, studentcategory } = req.body;
 
     try {
-        if (!Array.isArray(subjects)) {
-            return res.status(400).json({
-                ok: false,
-                message: "Subjects must be an array."
-            });
-        }
-
 
         let sv = await StudentVerify.findOne({
             where: { verify_id, stu_id }

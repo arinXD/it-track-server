@@ -28,6 +28,7 @@ const User = models.User
 const StudentVerifyApprovements = models.StudentVerifyApprovements
 const StudentStatus = models.StudentStatus
 const Admin = models.Admin
+const Selection = models.Selection
 
 router.get("/teacher", isAdmin, async (req, res) => {
     try {
@@ -273,8 +274,14 @@ router.get("/:stu_id", isAdmin, async (req, res) => {
                     ]
                 },
                 {
-                    model: Student
-                }, {
+                    model: Student,
+                    include: [
+                        {
+                            model: Selection
+                        }
+                    ]
+                },
+                {
                     model: StudentVerifyApprovements
                 }
             ]
