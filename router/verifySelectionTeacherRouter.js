@@ -277,7 +277,10 @@ router.get("/:stu_id", isAdmin, async (req, res) => {
                     model: Student,
                     include: [
                         {
-                            model: Selection
+                            model: Selection,
+                            include:[{
+                                model: Track,
+                            }]
                         }
                     ]
                 },
