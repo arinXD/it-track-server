@@ -613,10 +613,13 @@ router.delete("/semisubgroup/:id/:verify_id", adminMiddleware, async (req, res) 
 });
 
 
-router.delete("/category/:id/:verify_id", adminMiddleware, async (req, res) => {
-    const id = req.params.id;
+router.delete("/category/:verify_id/:id", adminMiddleware, async (req, res) => {
+    const id = req.params.id; // category_id
     const { verify_id } = req.params;
     try {
+        console.log(`Attempting to delete category with ID: ${id} and verify ID: ${verify_id}`);
+        
+        // Find the category with the provided category_id
         const category = await CategoryVerify.findOne({
             where: { category_id: id },
             include: [
@@ -627,19 +630,33 @@ router.delete("/category/:id/:verify_id", adminMiddleware, async (req, res) => {
         });
 
         if (!category) {
+            console.log(`Category with ID: ${id} not found.`);
             return res.status(404).json({
                 ok: false,
                 message: "Category not found."
             });
         }
 
-        const category_id = category.id;
+        const category_id = category.category_id; // Make sure to use category_id, not category.id
         const category_title = category.Categorie.category_title;
 
-        await CategoryVerify.destroy({
-            where: { id: category_id, verify_id }
+        console.log(`Found category with ID: ${category_id}, Title: ${category_title}. Proceeding with deletion...`);
+
+        // Force delete (bypassing soft deletes if applicable)
+        const deleteResult = await CategoryVerify.destroy({
+            where: { verify_id, category_id },
+            force: true // Force deletion even if soft delete is enabled
         });
 
+        if (deleteResult === 0) {
+            console.log(`Failed to delete category with ID: ${category_id} and verify ID: ${verify_id}`);
+            return res.status(400).json({
+                ok: false,
+                message: "Failed to delete category."
+            });
+        }
+
+        console.log(`Successfully deleted category with ID: ${category_id}`);
         return res.status(200).json({
             ok: true,
             message: `ลบหมวดหมู่วิชา ${category_title} สำเร็จ`
@@ -652,6 +669,7 @@ router.delete("/category/:id/:verify_id", adminMiddleware, async (req, res) => {
         });
     }
 });
+
 
 router.delete("/:id", adminMiddleware, async (req, res) => {
     const { id } = req.params;
