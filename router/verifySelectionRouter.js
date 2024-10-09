@@ -27,6 +27,7 @@ const StudentVerifyApprovements = models.StudentVerifyApprovements
 const Teacher = models.Teacher
 const User = models.User
 const Admin = models.Admin
+const Notification = models.Notification
 
 const subjectAttr = ["subject_code", "title_th", "title_en", "credit"]
 
@@ -595,6 +596,40 @@ router.post("/:verify_id/:stu_id", isAuth, async (req, res) => {
             });
         }
 
+        const studentRecord = await Student.findOne({
+            where: { stu_id: stu_id },
+            include: {
+                model: Teacher,
+                as: 'Advisor', // Use the alias defined in your association
+                attributes: ['id', 'user_id'], // Specify to return both id and user_id of the Teacher
+            },
+        });
+
+        // Check if the student exists
+        if (!studentRecord) {
+            return res.status(404).json({
+                ok: false,
+                message: "Student not found."
+            });
+        }
+
+        // Get the Teacher's user_id if available
+        const userId = studentRecord?.Advisor ? studentRecord?.Advisor?.user_id : null;
+        const stdfname = studentRecord?.first_name; 
+        const stdlname = studentRecord?.last_name;
+        const program = studentRecord?.program;
+        const courses_type = studentRecord?.courses_type;
+
+        if (userId) {
+            await Notification.create({
+                userId: userId, // Use the userId from Teacher
+                text: `${stdfname} ${stdlname} ${program} ${courses_type} ส่งคำร้องขอตรวจสอบจบ`,
+                destination: `/admin/verify-selection/${stu_id}`,
+                isRead: false,
+            });
+        } else {
+            console.error("No advisor found for this student.");
+        }
 
         return res.status(201).json({
             ok: true,
@@ -752,6 +787,41 @@ router.post("/again/:verify_id/:stu_id", isAuth, async (req, res) => {
                 subject_id: subtrack.subject_id,
                 grade: subtrack.grade,
             });
+        }
+
+        const studentRecord = await Student.findOne({
+            where: { stu_id: stu_id },
+            include: {
+                model: Teacher,
+                as: 'Advisor', // Use the alias defined in your association
+                attributes: ['id', 'user_id'], // Specify to return both id and user_id of the Teacher
+            },
+        });
+
+        // Check if the student exists
+        if (!studentRecord) {
+            return res.status(404).json({
+                ok: false,
+                message: "Student not found."
+            });
+        }
+
+        // Get the Teacher's user_id if available
+        const userId = studentRecord?.Advisor ? studentRecord?.Advisor?.user_id : null;
+        const stdfname = studentRecord?.first_name; 
+        const stdlname = studentRecord?.last_name;
+        const program = studentRecord?.program;
+        const courses_type = studentRecord?.courses_type;
+
+        if (userId) {
+            await Notification.create({
+                userId: userId, // Use the userId from Teacher
+                text: `${stdfname} ${stdlname} ${program} ${courses_type} ส่งคำร้องขอตรวจสอบจบอีกครั้ง`,
+                destination: `/admin/verify-selection/${stu_id}`,
+                isRead: false,
+            });
+        } else {
+            console.error("No advisor found for this student.");
         }
 
 

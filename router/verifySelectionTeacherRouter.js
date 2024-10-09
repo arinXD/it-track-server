@@ -29,6 +29,7 @@ const StudentVerifyApprovements = models.StudentVerifyApprovements
 const StudentStatus = models.StudentStatus
 const Admin = models.Admin
 const Selection = models.Selection
+const Notification = models.Notification
 
 router.get("/teacher", isAdmin, async (req, res) => {
     try {
@@ -278,7 +279,7 @@ router.get("/:stu_id", isAdmin, async (req, res) => {
                     include: [
                         {
                             model: Selection,
-                            include:[{
+                            include: [{
                                 model: Track,
                             }]
                         }
@@ -402,6 +403,9 @@ router.post("/status/:email/:stu_id", isAdmin, async (req, res) => {
             where: {
                 email,
             },
+            include: {
+                model: Teacher,
+            },
         });
 
         const studentVerify = await StudentVerify.findOne({
@@ -431,6 +435,49 @@ router.post("/status/:email/:stu_id", isAdmin, async (req, res) => {
             await StudentVerifyApprovements.create(newvfData);
         }
 
+        const studentRecord = await Student.findOne({
+            where: { stu_id: stu_id },
+        });
+
+        // Check if the student exists
+        if (!studentRecord) {
+            return res.status(404).json({
+                ok: false,
+                message: "Student not found."
+            });
+        }
+
+        // Get the Teacher's user_id if available
+        const prefix = emails?.Teacher?.prefix;
+        const name = emails?.Teacher?.name;
+        const surname = emails?.Teacher?.surname;
+
+        Notification.create({
+            userId: studentRecord?.user_id,
+            text: `ได้รับการอนุมัติจากอาจารย์ที่ปรึกษา ${prefix} ${name} ${surname}`,
+            destination: `/student/verify`,
+            isRead: false,
+        });
+
+        //////////////////////////////////////////////////////////////////////////////
+
+        const admin = await User.findAll({
+            where: {
+                role: "admin"
+            },
+        })
+
+        for (let index = 0; index < admin.length; index++) {
+            const mod = admin[index];
+            await Notification.create({
+                userId: mod?.dataValues?.id,
+                text: `${studentRecord?.first_name} ${studentRecord?.last_name} ได้รับการอนุมัติจากอาจารย์ที่ปรึกษา`,
+                destination: `/admin/verify-selection/${stu_id}`,
+                isRead: false
+            })
+        }
+
+
         return res.status(201).json({
             ok: true,
             message: "Status updated successfully."
@@ -457,6 +504,9 @@ router.post("/status/admin/:email/:stu_id", isAdmin, async (req, res) => {
         const emailAdmin = await User.findOne({
             where: {
                 email,
+            },
+            include: {
+                model: Admin,
             },
         });
 
@@ -494,6 +544,30 @@ router.post("/status/admin/:email/:stu_id", isAdmin, async (req, res) => {
             await StudentVerifyApprovements.create(newvfData);
         }
 
+        const studentRecord = await Student.findOne({
+            where: { stu_id: stu_id },
+        });
+
+        // Check if the student exists
+        if (!studentRecord) {
+            return res.status(404).json({
+                ok: false,
+                message: "Student not found."
+            });
+        }
+
+        // Get the Teacher's user_id if available
+        const prefix = emailAdmin?.Admin?.prefix;
+        const name = emailAdmin?.Admin?.name;
+        const surname = emailAdmin?.Admin?.surname;
+
+        Notification.create({
+            userId: studentRecord?.user_id,
+            text: `ได้รับการอนุมัติจากเจ้าหน้าที่ ${prefix} ${name} ${surname}`,
+            destination: `/student/verify`,
+            isRead: false,
+        });
+
         return res.status(201).json({
             ok: true,
             message: "Status updated successfully."
@@ -519,6 +593,9 @@ router.post("/status/reject/:email/:stu_id", isAdmin, async (req, res) => {
         const emails = await User.findOne({
             where: {
                 email,
+            },
+            include: {
+                model: Teacher,
             },
         });
 
@@ -549,6 +626,30 @@ router.post("/status/reject/:email/:stu_id", isAdmin, async (req, res) => {
             await StudentVerifyApprovements.create(newvfData);
         }
 
+        const studentRecord = await Student.findOne({
+            where: { stu_id: stu_id },
+        });
+
+        // Check if the student exists
+        if (!studentRecord) {
+            return res.status(404).json({
+                ok: false,
+                message: "Student not found."
+            });
+        }
+
+        // Get the Teacher's user_id if available
+        const prefix = emails?.Teacher?.prefix;
+        const name = emails?.Teacher?.name;
+        const surname = emails?.Teacher?.surname;
+
+        Notification.create({
+            userId: studentRecord?.user_id,
+            text: `ไม่อนุมัติจากอาจารย์ที่ปรึกษา ${prefix} ${name} ${surname}`,
+            destination: `/student/verify`,
+            isRead: false,
+        });
+
         return res.status(201).json({
             ok: true,
             message: "Status updated successfully."
@@ -575,6 +676,9 @@ router.post("/status/admin/reject/:email/:stu_id", isAdmin, async (req, res) => 
         const emailAdmin = await User.findOne({
             where: {
                 email,
+            },
+            include: {
+                model: Admin,
             },
         });
 
@@ -610,6 +714,30 @@ router.post("/status/admin/reject/:email/:stu_id", isAdmin, async (req, res) => 
 
             await StudentVerifyApprovements.create(newvfData);
         }
+
+        const studentRecord = await Student.findOne({
+            where: { stu_id: stu_id },
+        });
+
+        // Check if the student exists
+        if (!studentRecord) {
+            return res.status(404).json({
+                ok: false,
+                message: "Student not found."
+            });
+        }
+
+        // Get the Teacher's user_id if available
+        const prefix = emailAdmin?.Admin?.prefix;
+        const name = emailAdmin?.Admin?.name;
+        const surname = emailAdmin?.Admin?.surname;
+
+        Notification.create({
+            userId: studentRecord?.user_id,
+            text: `ไม่อนุมัติจากเจ้าหน้าที่ ${prefix} ${name} ${surname}`,
+            destination: `/student/verify`,
+            isRead: false,
+        });
 
         return res.status(201).json({
             ok: true,
