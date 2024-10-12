@@ -284,7 +284,7 @@ async function checkEquals(values) {
           inequalityInfo.type = "ข้อ"
      }
      else if (!Object.values(requireTrackA).every(v => v === Object.values(requireTrackA)[0])) {
-          message = "แบบประเมินในแต่ละแทร็กไม่เท่ากัน";
+          message = "ความชอบในแต่ละแทร็กไม่เท่ากัน";
           inequalityInfo.items = analyzeInequality(requireTrackA);
           inequalityInfo.type = "ข้อ"
      }

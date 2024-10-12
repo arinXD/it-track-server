@@ -1,7 +1,8 @@
 const express = require('express');
 const isAdmin = require('../middleware/adminMiddleware');
 const {
-     getAllAssessments, createAssessment, getAssessmentsInForm, getAssessmentsNotInForm
+     getAllAssessments, createAssessment, getAssessmentsInForm, getAssessmentsNotInForm,
+     deleteAssessments
 } = require('../controller/assessmentController');
 const router = express.Router();
 
@@ -12,5 +13,8 @@ router.get("/not-in-form/:id", isAdmin, getAssessmentsNotInForm)
 
 // POST
 router.post("/", isAdmin, createAssessment)
+
+// DELETE
+router.delete("/:id", isAdmin, deleteAssessments)
 
 module.exports = router
