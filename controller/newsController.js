@@ -150,7 +150,7 @@ const deleteMultipleNews = async (req, res) => {
           newsToDelete.forEach(news => {
                if (news.image) {
                     const fileName = news?.image?.split('/')?.pop()
-                    if (fileName !== "default_track_select.jpeg") {
+                    if (fileName !== "default_track_select.png") {
                          const filePath = path.join(__dirname, `../public/images/news/${fileName}`);
                          if (fs.existsSync(filePath)) {
                               fs.unlinkSync(filePath);

@@ -712,7 +712,7 @@ const createTrackSelection = async (req, res) => {
                 desc,
                 detail,
                 published: true,
-                image: `${getHostname()}/images/news/default_track_select.jpeg`
+                image: `${getHostname()}/images/news/default_track_select.png`
             });
 
             return res.status(201).json({
