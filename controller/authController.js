@@ -9,6 +9,7 @@ const Admin = models.Admin
 const EmailVerify = models.EmailVerify
 const { hostname } = require("../api/hostname");
 const { mailSender } = require("./mailSender");
+const { Op } = require("sequelize");
 require("dotenv").config();
 
 const sendEmailVerification = async ({ id, email }) => {
@@ -60,6 +61,7 @@ const getRole = (email) => {
     }
     return { role, model }
 }
+
 const signInCredentials = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -161,18 +163,32 @@ const signInGoogle = async (req, res, next) => {
 
     //  หาโรลของผู้ใช้
     const { role: userRole, model: userModel } = getRole(userEmail)
-    const findAdmin = await Admin.findOne({where:{email: userEmail}})
-    const findTeacher = await Teacher.findOne({where:{email: userEmail}})
+    const findAdmin = await Admin.findOne({
+        where: {
+            email: userEmail,
+            user_id: {
+                [Op.ne]: null
+            }
+        }
+    })
+    const findTeacher = await Teacher.findOne({
+        where: {
+            email: userEmail,
+            user_id: {
+                [Op.ne]: null
+            }
+        }
+    })
 
     let role
     let model
-    if(findAdmin){
+    if (findAdmin) {
         role = "admin"
         model = Admin
-    }else if(findTeacher){
+    } else if (findTeacher) {
         role = "teacher"
         model = Teacher
-    }else{
+    } else {
         role = userRole
         model = userModel
     }

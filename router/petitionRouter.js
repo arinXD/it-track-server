@@ -4,13 +4,14 @@ const router = express.Router();
 const { getPetitionByEmail, sendPetition, editPetition,
      softDeletePetition, deletePetition, getDeletedPetitionByEmail,
      retrievePetition, getPetitionByStatus, approvePetition, 
-     getPetitionById} = require('../controller/petitionController');
+     getPetitionById, hasSendPetition} = require('../controller/petitionController');
 
 // get
 router.get("/approves/:status", getPetitionByStatus)
 router.get("/:id", getPetitionById)
 router.get("/users/:email", getPetitionByEmail)
 router.get("/users/:email/retrieve", getDeletedPetitionByEmail)
+router.get("/users/:email/has-send", hasSendPetition)
 
 // post
 router.post("/", sendPetition)

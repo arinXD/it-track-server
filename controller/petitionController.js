@@ -26,7 +26,7 @@ const updatePetition = Joi.object({
 const petitionStatus = Joi.string().valid('all', 'approved', 'rejected').required()
 
 const userAttr = ["id", "email", "image"]
-const petitionAttr = ["id", "title", "detail", "status", "oldTrack", "newTrack", "responseText", "createdAt", "actionTime",]
+const petitionAttr = ["id", "title", "detail", "status", "oldTrack", "newTrack", "responseText", "createdAt", "actionTime", "deletedAt"]
 const studentAttr = ["stu_id", "email", "first_name", "last_name", "courses_type", "program", "acadyear"]
 
 const getPetitionByStatus = async (req, res) => {
@@ -562,6 +562,42 @@ const approvePetition = async (req, res) => {
      }
 };
 
+const hasSendPetition = async (req, res) => {
+     const email = req.params.email
+     try {
+          const petition = (await TrackPetition.findOne({
+               attributes: ["id"],
+               order: [
+                    ["id", "desc"]
+               ],
+               include: [
+                    {
+                         model: User,
+                         attributes: userAttr,
+                         as: 'Sender',
+                         where: {
+                              email: email
+                         },
+                         attributes: ['email']
+                    },
+               ]
+          }))?.dataValues
+
+          return res.status(200).json({
+               ok: true,
+               data: {
+                    hasSend: petition && Object.keys(petition).length > 0 ? true : false
+               }
+          })
+     } catch (error) {
+          console.log(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+}
+
 module.exports = {
      getPetitionById,
      getPetitionByStatus,
@@ -572,5 +608,6 @@ module.exports = {
      softDeletePetition,
      deletePetition,
      retrievePetition,
-     approvePetition
+     approvePetition,
+     hasSendPetition
 }
