@@ -329,16 +329,22 @@ router.post("/subgroup", adminMiddleware, async (req, res) => {
                 where: { subject_id, verify_id }
             });
 
-            if (subgroupSubject) {
-                subgroupSubject.sub_group_id = sub_group_id;
-                await subgroupSubject.save();
-            } else {
-                subgroupSubject = await SubgroupSubject.create({
-                    verify_id,
-                    subject_id,
-                    sub_group_id
-                });
-            }
+            // if (subgroupSubject) {
+            //     subgroupSubject.sub_group_id = sub_group_id;
+            //     await subgroupSubject.save();
+            // } else {
+            //     subgroupSubject = await SubgroupSubject.create({
+            //         verify_id,
+            //         subject_id,
+            //         sub_group_id
+            //     });
+            // }
+
+            SubgroupSubject.create({
+                verify_id,
+                subject_id,
+                sub_group_id
+            });
 
             const existingSubjectVerify = await SubjectVerify.findOne({
                 where: { subject_id, verify_id }
@@ -408,16 +414,22 @@ router.post("/semisubgroup", adminMiddleware, async (req, res) => {
                 where: { subject_id, verify_id }
             });
 
-            if (semisubgroupSubject) {
-                semisubgroupSubject.semi_sub_group_id = semi_sub_group_id;
-                await semisubgroupSubject.save();
-            } else {
-                semisubgroupSubject = await SemiSubgroupSubject.create({
-                    verify_id,
-                    subject_id,
-                    semi_sub_group_id
-                });
-            }
+            // if (semisubgroupSubject) {
+            //     semisubgroupSubject.semi_sub_group_id = semi_sub_group_id;
+            //     await semisubgroupSubject.save();
+            // } else {
+            //     semisubgroupSubject = await SemiSubgroupSubject.create({
+            //         verify_id,
+            //         subject_id,
+            //         semi_sub_group_id
+            //     });
+            // }
+
+            SemiSubgroupSubject.create({
+                verify_id,
+                subject_id,
+                semi_sub_group_id
+            });
 
             const existingSubjectVerify = await SubjectVerify.findOne({
                 where: { subject_id, verify_id }
@@ -618,7 +630,7 @@ router.delete("/category/:verify_id/:id", adminMiddleware, async (req, res) => {
     const { verify_id } = req.params;
     try {
         console.log(`Attempting to delete category with ID: ${id} and verify ID: ${verify_id}`);
-        
+
         // Find the category with the provided category_id
         const category = await CategoryVerify.findOne({
             where: { category_id: id },
