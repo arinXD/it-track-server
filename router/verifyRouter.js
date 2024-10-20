@@ -645,7 +645,6 @@ router.delete("/category/:verify_id/:id", adminMiddleware, async (req, res) => {
         // Force delete (bypassing soft deletes if applicable)
         const deleteResult = await CategoryVerify.destroy({
             where: { verify_id, category_id },
-            force: true // Force deletion even if soft delete is enabled
         });
 
         if (deleteResult === 0) {
