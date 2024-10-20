@@ -16,7 +16,6 @@ const { Op } = require('sequelize');
 const { findSubjectByCode } = require('../utils/subject');
 const isAuth = require('../middleware/authMiddleware');
 const validateStudent = require('../middleware/validateStudent');
-const { sleep } = require('../utils/sleep');
 
 router.get("/:stuid", validateStudent, async (req, res) => {
     const stuid = req.params.stuid
