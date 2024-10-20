@@ -144,14 +144,24 @@ const forceRemoveTracks = async (req, res) => {
                     },
                     force: true
                })
-               let filePath = path.join(__dirname, `../public/images/tracks/coverImg/coverImg_${track?.toLowerCase()}.png`)
-               if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath)
+               const fileEx = ["png", "jpg", "jpeg"]
+               let filePaths = fileEx.map(fx => path.join(__dirname, `../public/images/tracks/coverImg/coverImg_${track?.toLowerCase()}.${fx}`))
+               for (let index = 0; index < filePaths.length; index++) {
+                    const filePath = filePaths[index];
+                    if (fs.existsSync(filePath)) {
+                         fs.unlinkSync(filePath)
+                         break
+                    }
                }
-               filePath = path.join(__dirname, `../public/images/tracks/img/img_${track?.toLowerCase()}.png`)
-               if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath)
+               filePaths = fileEx.map(fx => path.join(__dirname, `../public/images/tracks/img/img_${track?.toLowerCase()}.${fx}`))
+               for (let index = 0; index < filePaths.length; index++) {
+                    const filePath = filePaths[index];
+                    if (fs.existsSync(filePath)) {
+                         fs.unlinkSync(filePath)
+                         break
+                    }
                }
+
           }
           return res.status(200).json({
                ok: true,

@@ -1,7 +1,51 @@
 const { Op } = require('sequelize');
 const models = require('../models');
-const Teacher = models.Teacher;
-const Student = models.Student;
+const {
+     Student,
+     Teacher,
+     Program,
+     User,
+     StudentStatus,
+     Enrollment,
+     Subject,
+} = models
+
+const getStudentInAdvise = async (req, res) => {
+     const { email, id: stdId } = req.params
+     try {
+          const student = await Student.findOne({
+               where: {
+                    stu_id: stdId
+               },
+               include: [
+                    { model: Program, },
+                    { model: User, },
+                    { model: StudentStatus, },
+                    {
+                         model: Enrollment,
+                         include: [
+                              { model: Subject, },
+                         ]
+                    },
+                    {
+                         model: Teacher,
+                         as: "Advisor",
+                         where: { email }
+                    },
+               ],
+          })
+          return res.status(200).json({
+               ok: true,
+               data: student
+          })
+     } catch (error) {
+          console.error(error);
+          return res.status(500).json({
+               ok: false,
+               message: "Server error."
+          })
+     }
+};
 
 const getAllTeachers = async (req, res) => {
      try {
@@ -155,6 +199,7 @@ const deleteFromAdvisor = async (req, res) => {
 
 
 module.exports = {
+     getStudentInAdvise,
      getAllTeachers,
      getTeacherByEmail,
      hasAdvisor,
