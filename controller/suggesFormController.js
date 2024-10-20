@@ -176,25 +176,27 @@ const getAvailableForm = async (req, res) => {
                     },
                ]
           })
-          const formatFormData = suggestForms.dataValues
+          const formatFormData = suggestForms?.dataValues
 
-          formatFormData.Questions = shuffleArray(formatFormData?.FormQuestions.map(fq => {
-               const question = fq?.QuestionBank;
-               if (question.Answers) {
-                    question.Answers = shuffleArray(question.Answers);
-               }
-               return question;
-          }));
-          formatFormData.Assessments = shuffleArray(formatFormData?.FormAssessmentQuestions.map(fq => fq?.AssessmentQuestionBank));
-          formatFormData.Careers = shuffleArray(formatFormData?.FormCareers.map(fq => fq?.Career));
+          if (formatFormData) {
+               formatFormData.Questions = shuffleArray(formatFormData?.FormQuestions.map(fq => {
+                    const question = fq?.QuestionBank;
+                    if (question.Answers) {
+                         question.Answers = shuffleArray(question.Answers);
+                    }
+                    return question;
+               }));
+               formatFormData.Assessments = shuffleArray(formatFormData?.FormAssessmentQuestions.map(fq => fq?.AssessmentQuestionBank));
+               formatFormData.Careers = shuffleArray(formatFormData?.FormCareers.map(fq => fq?.Career));
 
-          delete formatFormData.FormQuestions
-          delete formatFormData.FormAssessmentQuestions
-          delete formatFormData.FormCareers
+               delete formatFormData.FormQuestions
+               delete formatFormData.FormAssessmentQuestions
+               delete formatFormData.FormCareers
+          }
 
           return res.status(200).json({
                ok: true,
-               data: formatFormData
+               data: formatFormData || {}
           })
      } catch (error) {
           console.log(error);
@@ -683,7 +685,7 @@ const summaryAnswers = async (req, res) => {
                });
           }
           await sleep(2000)
-          
+
           const result = await sequelize.transaction(async (t) => {
                const suggestionHistory = await SuggestionHistory.create({
                     user_id: userId?.dataValues?.id,
