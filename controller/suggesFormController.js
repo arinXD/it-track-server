@@ -708,7 +708,7 @@ const summaryAnswers = async (req, res) => {
                     return acc;
                }, {});
 
-               // Process question scores
+               // คำถาม
                const questionScores = await Promise.all(value.questions.map(async (q) => {
                     const question = await QuestionBank.findByPk(q.qId, { transaction: t });
                     const correctAnswer = await Answer.findOne({
@@ -727,7 +727,7 @@ const summaryAnswers = async (req, res) => {
                          }
                     }
 
-                    // Store QuestionScore
+                    // เก็บคะแนน
                     await QuestionScore.create({
                          suggestion_id: suggestionHistory.id,
                          question: question?.dataValues?.question,
@@ -745,7 +745,7 @@ const summaryAnswers = async (req, res) => {
                     };
                }));
 
-               // Process assessment scores
+               // ความชอบ
                const assessmentScores = await Promise.all(value.assessments.map(async (a) => {
                     const assessment = await AssessmentQuestionBank.findByPk(a.assId, { transaction: t });
                     const score = [5, 4, 3, 2, 1, 0][a.index] || 0;
@@ -754,7 +754,7 @@ const summaryAnswers = async (req, res) => {
                          trackScores[assessment?.dataValues?.track].assessmentScore += score;
                     }
 
-                    // Store AssessmentScore
+                    // เก็บคะแนน
                     await AssessmentScore.create({
                          suggestion_id: suggestionHistory.id,
                          question: assessment?.dataValues?.question,
@@ -770,14 +770,14 @@ const summaryAnswers = async (req, res) => {
                     };
                }));
 
-               // Process career scores
+               // อาชีพ
                const careersScores = await Promise.all(value.careers.map(async (careerId) => {
                     const career = await Career.findByPk(careerId, { transaction: t });
                     if (career && career?.dataValues?.track) {
                          trackScores[career?.dataValues?.track].careerScore += 5;
                     }
 
-                    // Store CareerScore
+                    // คะแนนอาชีพ
                     await CareerScore.create({
                          suggestion_id: suggestionHistory.id,
                          name_th: career?.dataValues?.name_th,
@@ -794,7 +794,7 @@ const summaryAnswers = async (req, res) => {
                     };
                }));
 
-               // Process track summaries
+               // สรุปผล
                const trackSummaries = await Promise.all(Object.entries(trackScores).map(async ([track, scores]) => {
                     const correctPercentage = scores.totalQuestions > 0
                          ? (scores.correctAnswers / scores.totalQuestions * 100).toFixed(2)
