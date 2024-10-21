@@ -88,7 +88,13 @@ const hasAdvisor = async (req, res) => {
                     advisor: {
                          [Op.ne]: null
                     }
-               }
+               },
+               include: [
+                    {
+                         model: Teacher,
+                         as: "Advisor",
+                    },
+               ]
           });
           return res.status(200).json({
                ok: true,
